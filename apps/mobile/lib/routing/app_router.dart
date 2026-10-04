@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/config/app_constants.dart';
+import '../models/meeting.dart';
 import '../presentation/auth/forgot_password_screen.dart';
 import '../presentation/auth/login_screen.dart';
 import '../presentation/auth/register_screen.dart';
@@ -10,6 +11,8 @@ import '../presentation/main/join_class_screen.dart';
 import '../presentation/main/main_shell.dart';
 import '../presentation/main/placeholder_screen.dart';
 import '../presentation/main/profile_screen.dart';
+import '../presentation/meeting/meeting_detail_screen.dart';
+import '../presentation/meeting/meeting_list_screen.dart';
 import '../services/auth_provider.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -76,6 +79,18 @@ class AppRouter {
           parentNavigatorKey: _rootNavigatorKey,
           builder: (context, state) => const JoinClassScreen(),
         ),
+        GoRoute(
+          path: '/meetings/:meetingId',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final meetingId = state.pathParameters['meetingId'] ?? '';
+            final extraMeeting = state.extra as Meeting?;
+            return MeetingDetailScreen(
+              meetingId: meetingId,
+              initialMeeting: extraMeeting,
+            );
+          },
+        ),
 
         // Main Navigation Shell (5 floating menu items)
         ShellRoute(
@@ -91,13 +106,7 @@ class AppRouter {
             GoRoute(
               path: AppConstants.materiRoute,
               pageBuilder: (context, state) => const NoTransitionPage(
-                child: PlaceholderScreen(
-                  title: 'Materi Pembelajaran',
-                  description:
-                      'Modul pembelajaran terstruktur, video materi, dan manual book akan hadir pada Phase 2.',
-                  icon: Icons.menu_book_rounded,
-                  targetPhase: 'Segera Hadir di Phase 2',
-                ),
+                child: MeetingListScreen(),
               ),
             ),
             GoRoute(
