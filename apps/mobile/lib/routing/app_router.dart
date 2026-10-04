@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/config/app_constants.dart';
+import '../models/material_content.dart';
 import '../models/meeting.dart';
 import '../presentation/auth/forgot_password_screen.dart';
 import '../presentation/auth/login_screen.dart';
@@ -11,6 +12,8 @@ import '../presentation/main/join_class_screen.dart';
 import '../presentation/main/main_shell.dart';
 import '../presentation/main/placeholder_screen.dart';
 import '../presentation/main/profile_screen.dart';
+import '../presentation/material/material_editor_screen.dart';
+import '../presentation/material/material_reader_screen.dart';
 import '../presentation/meeting/meeting_detail_screen.dart';
 import '../presentation/meeting/meeting_list_screen.dart';
 import '../services/auth_provider.dart';
@@ -88,6 +91,36 @@ class AppRouter {
             return MeetingDetailScreen(
               meetingId: meetingId,
               initialMeeting: extraMeeting,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/materials/:materiId',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final materiId = state.pathParameters['materiId'] ?? '';
+            final classId = state.uri.queryParameters['classId'] ?? '';
+            final meetingId = state.uri.queryParameters['meetingId'] ?? '';
+            return MaterialReaderScreen(
+              materiId: materiId,
+              classId: classId,
+              meetingId: meetingId,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/materials/:materiId/edit',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final materiId = state.pathParameters['materiId'] ?? '';
+            final extraMaterial = state.extra as MaterialContent?;
+            final classId = state.uri.queryParameters['classId'] ?? '';
+            final meetingId = state.uri.queryParameters['meetingId'] ?? '';
+            return MaterialEditorScreen(
+              materiId: materiId,
+              initialMaterial: extraMaterial,
+              classId: classId,
+              meetingId: meetingId,
             );
           },
         ),
