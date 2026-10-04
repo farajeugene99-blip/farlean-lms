@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import '../../core/config/app_constants.dart';
+import 'package:provider/provider.dart';
+import '../../core/theme/app_theme.dart';
+import '../../services/auth_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -16,7 +17,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -27,15 +27,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    if (!_formKey.currentState!.validate() || _isLoading) return;
-    setState(() => _isLoading = true);
-    // Akan diintegrasikan dengan AuthService di Step 1.3
-    context.push(AppConstants.verifyEmailRoute);
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.register(
+      name: _nameController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
+
+    if (!mounted) return;
+
+    if (!success && authProvider.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage!),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final isLoading = authProvider.isLoading;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Buat Akun Baru')),
       body: SafeArea(
@@ -58,6 +76,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _nameController,
+                  enabled: !isLoading,
                   decoration: const InputDecoration(
                     labelText: 'Nama Lengkap',
                     prefixIcon: Icon(Icons.person_outline, size: 20),
@@ -71,6 +90,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  enabled: !isLoading,
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     prefixIcon: Icon(Icons.email_outlined, size: 20),
@@ -85,6 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
+                  enabled: !isLoading,
                   decoration: InputDecoration(
                     labelText: 'Kata Sandi (min. 6 karakter)',
                     prefixIcon: const Icon(Icons.lock_outline, size: 20),
@@ -109,6 +130,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: _obscurePassword,
+                  enabled: !isLoading,
                   decoration: const InputDecoration(
                     labelText: 'Konfirmasi Kata Sandi',
                     prefixIcon: Icon(Icons.lock_reset_outlined, size: 20),
@@ -122,8 +144,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading
+                  onPressed: isLoading ? null : _submit,
+                  child: isLoading
                       ? const SizedBox(
                           width: 20,
                           height: 20,

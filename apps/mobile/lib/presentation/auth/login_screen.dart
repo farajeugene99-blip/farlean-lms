@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../services/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,7 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -24,15 +25,32 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    if (!_formKey.currentState!.validate() || _isLoading) return;
-    setState(() => _isLoading = true);
-    // Akan diintegrasikan dengan AuthService di Step 1.3
-    context.go(AppConstants.dashboardRoute);
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.signIn(
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
+
+    if (!mounted) return;
+
+    if (!success && authProvider.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage!),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final isLoading = authProvider.isLoading;
+
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -73,6 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    enabled: !isLoading,
                     decoration: const InputDecoration(
                       labelText: 'Email Kampus / Umum',
                       prefixIcon: Icon(Icons.email_outlined, size: 20),
@@ -87,6 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
+                    enabled: !isLoading,
                     decoration: InputDecoration(
                       labelText: 'Kata Sandi',
                       prefixIcon: const Icon(Icons.lock_outline, size: 20),
@@ -111,14 +131,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () => context.push(AppConstants.forgotPasswordRoute),
+                      onPressed: isLoading
+                          ? null
+                          : () => context.push(AppConstants.forgotPasswordRoute),
                       child: const Text('Lupa Kata Sandi?'),
                     ),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _submit,
-                    child: _isLoading
+                    onPressed: isLoading ? null : _submit,
+                    child: isLoading
                         ? const SizedBox(
                             width: 20,
                             height: 20,
@@ -135,7 +157,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const Text('Belum memiliki akun? '),
                       TextButton(
-                        onPressed: () => context.push(AppConstants.registerRoute),
+                        onPressed: isLoading
+                            ? null
+                            : () => context.push(AppConstants.registerRoute),
                         child: const Text('Daftar Sekarang'),
                       ),
                     ],
@@ -149,3 +173,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
