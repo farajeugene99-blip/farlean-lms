@@ -1,37 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
-
-// Domain mapping kanonis untuk penentuan account_type saat transaksi
-const INSTITUTION_DOMAINS: Record<string, 'MAHASISWA' | 'DOSEN'> = {
-  'kampus.ac.id': 'MAHASISWA',
-  'dosen.kampus.ac.id': 'DOSEN',
-  'farlean.edu': 'MAHASISWA',
-  'dosen.farlean.edu': 'DOSEN',
-};
-
-function resolveAccountTypeFromEmail(email?: string): 'MAHASISWA' | 'DOSEN' | 'UMUM' {
-  if (!email || !email.includes('@')) return 'UMUM';
-  const domain = email.toLowerCase().split('@')[1];
-  if (!domain) return 'UMUM';
-
-  for (const [instDomain, type] of Object.entries(INSTITUTION_DOMAINS)) {
-    if (type === 'DOSEN') {
-      if (domain === instDomain || domain.endsWith('.' + instDomain)) {
-        return 'DOSEN';
-      }
-    }
-  }
-
-  for (const [instDomain, type] of Object.entries(INSTITUTION_DOMAINS)) {
-    if (type === 'MAHASISWA') {
-      if (domain === instDomain || domain.endsWith('.' + instDomain)) {
-        return 'MAHASISWA';
-      }
-    }
-  }
-
-  return 'UMUM';
-}
+import { resolveAccountType } from '../lib/domains';
 
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 menit
 const MAX_FAILED_ATTEMPTS = 5;
@@ -68,6 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // A. Cek & Update Rate Limit
       const rateDoc = await transaction.get(rateLimitRef);
+      const userDoc = await transaction.get(db.collection('users').doc(user.uid));
       let failedAttempts = 0;
       let windowStart = now;
 
@@ -139,16 +109,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // D. Hitung ulang account_type langsung dari email token saat ini (bukan dari cache dokumen)
-      const calculatedAccountType = resolveAccountTypeFromEmail(user.email);
+      const calculatedAccountType = resolveAccountType(user.email);
       const newStatus = (calculatedAccountType === 'MAHASISWA' || calculatedAccountType === 'DOSEN')
         ? 'active'
         : 'pending';
 
       // E. Daftarkan pengguna ke sub-koleksi members
+      const resolvedDisplayName = userDoc.data()?.name || user.email?.split('@')[0] || 'Anggota';
       transaction.set(
         memberRef,
         {
-          display_name: (user as any).name || user.email?.split('@')[0] || 'Anggota',
+          display_name: resolvedDisplayName,
           account_type: calculatedAccountType,
           status: newStatus,
           joined_at: FieldValue.serverTimestamp(),

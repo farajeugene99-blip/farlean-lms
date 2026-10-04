@@ -1,39 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
-
-// Domain mapping kanonis (Label boundary rules)
-const INSTITUTION_DOMAINS: Record<string, 'MAHASISWA' | 'DOSEN'> = {
-  'kampus.ac.id': 'MAHASISWA',
-  'dosen.kampus.ac.id': 'DOSEN',
-  'farlean.edu': 'MAHASISWA',
-  'dosen.farlean.edu': 'DOSEN',
-};
-
-function resolveAccountType(email?: string): 'MAHASISWA' | 'DOSEN' | 'UMUM' {
-  if (!email || !email.includes('@')) return 'UMUM';
-  const domain = email.toLowerCase().split('@')[1];
-  if (!domain) return 'UMUM';
-
-  // 1. Cek DOSEN terlebih dahulu
-  for (const [instDomain, type] of Object.entries(INSTITUTION_DOMAINS)) {
-    if (type === 'DOSEN') {
-      if (domain === instDomain || domain.endsWith('.' + instDomain)) {
-        return 'DOSEN';
-      }
-    }
-  }
-
-  // 2. Cek MAHASISWA
-  for (const [instDomain, type] of Object.entries(INSTITUTION_DOMAINS)) {
-    if (type === 'MAHASISWA') {
-      if (domain === instDomain || domain.endsWith('.' + instDomain)) {
-        return 'MAHASISWA';
-      }
-    }
-  }
-
-  return 'UMUM';
-}
+import { resolveAccountType } from '../lib/domains';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
