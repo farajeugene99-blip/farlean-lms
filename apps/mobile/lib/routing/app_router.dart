@@ -13,6 +13,7 @@ import '../presentation/main/join_class_screen.dart';
 import '../presentation/main/main_shell.dart';
 import '../presentation/main/placeholder_screen.dart';
 import '../presentation/main/profile_screen.dart';
+import '../presentation/manual_book/manual_book_list_screen.dart';
 import '../presentation/material/material_editor_screen.dart';
 import '../presentation/material/material_reader_screen.dart';
 import '../presentation/meeting/meeting_detail_screen.dart';
@@ -136,6 +137,14 @@ class AppRouter {
               videoId: videoId,
               initialVideo: extraVideo,
             );
+          },
+        ),
+        GoRoute(
+          path: '/manual-books',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final classId = state.uri.queryParameters['classId'] ?? 'default_class';
+            return ManualBookListScreen(classId: classId);
           },
         ),
 
