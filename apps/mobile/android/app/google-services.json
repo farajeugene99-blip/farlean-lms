@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "944426438548",
+    "project_id": "farlean-lms",
+    "storage_bucket": "farlean-lms.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:944426438548:android:208749d7947364b7b3c981",
+        "android_client_info": {
+          "package_name": "com.farlean.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXAermh09KUl_Gf6K9R8DCLTiM4LY1ncg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
