@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../core/config/app_constants.dart';
 import '../models/material_content.dart';
 import '../models/meeting.dart';
+import '../models/video_item.dart';
 import '../presentation/auth/forgot_password_screen.dart';
 import '../presentation/auth/login_screen.dart';
 import '../presentation/auth/register_screen.dart';
@@ -16,6 +17,7 @@ import '../presentation/material/material_editor_screen.dart';
 import '../presentation/material/material_reader_screen.dart';
 import '../presentation/meeting/meeting_detail_screen.dart';
 import '../presentation/meeting/meeting_list_screen.dart';
+import '../presentation/video/video_player_screen.dart';
 import '../services/auth_provider.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -121,6 +123,18 @@ class AppRouter {
               initialMaterial: extraMaterial,
               classId: classId,
               meetingId: meetingId,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/videos/:videoId',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final videoId = state.pathParameters['videoId'] ?? '';
+            final extraVideo = state.extra as VideoItem?;
+            return VideoPlayerScreen(
+              videoId: videoId,
+              initialVideo: extraVideo,
             );
           },
         ),
