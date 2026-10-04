@@ -1,13 +1,202 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import '../../core/config/app_constants.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../repositories/user_repository.dart';
+import '../../services/auth_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+class ProfileScreen extends StatefulWidget {
+  final UserRepository? userRepository;
+
+  const ProfileScreen({super.key, this.userRepository});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late final UserRepository _userRepository;
+  String? _nimNip;
+  bool _isLoadingIdentity = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _userRepository = widget.userRepository ?? UserRepository();
+    _loadPrivateIdentity();
+  }
+
+  Future<void> _loadPrivateIdentity() async {
+    final authProvider = context.read<AuthProvider>();
+    final uid = authProvider.firebaseUser?.uid;
+    if (uid == null) return;
+
+    setState(() => _isLoadingIdentity = true);
+    try {
+      final identity = await _userRepository.getPrivateIdentity(uid);
+      if (mounted) {
+        setState(() {
+          _nimNip = identity;
+          _isLoadingIdentity = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingIdentity = false);
+    }
+  }
+
+  Future<void> _showEditNameDialog(String currentName) async {
+    final controller = TextEditingController(text: currentName);
+    final formKey = GlobalKey<FormState>();
+
+    final updated = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Ubah Nama Lengkap'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return 'Nama wajib diisi';
+              if (v.trim().length > 100) return 'Maksimal 100 karakter';
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              final authProvider = context.read<AuthProvider>();
+              final uid = authProvider.firebaseUser?.uid;
+              if (uid == null) return;
+
+              try {
+                await _userRepository.updateName(uid, controller.text.trim());
+                if (ctx.mounted) Navigator.pop(ctx, true);
+              } catch (e) {
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    SnackBar(
+                      content: Text('Gagal memperbarui nama: $e'),
+                      backgroundColor: AppTheme.error,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+
+    if (updated == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nama profil berhasil diperbarui.'),
+          backgroundColor: AppTheme.success,
+        ),
+      );
+    }
+  }
+
+  Future<void> _showEditNimDialog() async {
+    final controller = TextEditingController(text: _nimNip ?? '');
+    final formKey = GlobalKey<FormState>();
+
+    final updated = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Nomor Induk (NIM / NIP)'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Data ini disimpan di sub-koleksi private/identity yang terisolasi dan hanya dapat diakses oleh Anda, Dosen/Guru, dan Admin.',
+                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: controller,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'NIM / NIP',
+                  prefixIcon: Icon(Icons.badge_outlined, size: 20),
+                ),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'NIM/NIP wajib diisi';
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              final authProvider = context.read<AuthProvider>();
+              final uid = authProvider.firebaseUser?.uid;
+              if (uid == null) return;
+
+              try {
+                await _userRepository.setPrivateIdentity(uid, controller.text.trim());
+                if (ctx.mounted) Navigator.pop(ctx, true);
+              } catch (e) {
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    SnackBar(
+                      content: Text('Gagal menyimpan NIM/NIP: $e'),
+                      backgroundColor: AppTheme.error,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+
+    if (updated == true && mounted) {
+      setState(() => _nimNip = controller.text.trim());
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('NIM/NIP berhasil disimpan di private identity.'),
+          backgroundColor: AppTheme.success,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final firebaseUser = authProvider.firebaseUser;
+    final appUser = authProvider.appUser;
+
+    final displayName = appUser?.name ?? firebaseUser?.displayName ?? 'Pengguna Farlean';
+    final email = firebaseUser?.email ?? appUser?.email ?? '-';
+    final accountType = appUser?.accountType.value ?? 'UMUM';
+    final role = appUser?.role.value ?? 'USER';
+    final isVerified = firebaseUser?.emailVerified ?? false;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profil Pengguna'),
@@ -15,9 +204,8 @@ class ProfileScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout_rounded),
             tooltip: 'Keluar',
-            onPressed: () {
-              // Akan diintegrasikan dengan AuthService di Step 1.3
-              context.go(AppConstants.loginRoute);
+            onPressed: () async {
+              await authProvider.signOut();
             },
           ),
           const SizedBox(width: 8),
@@ -41,22 +229,36 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    'Pengguna Farlean',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'user@example.com',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildBadge('Tipe: UMUM', AppTheme.primary),
-                      const SizedBox(width: 8),
-                      _buildBadge('Role: USER', AppTheme.secondary),
+                      Flexible(
+                        child: Text(
+                          displayName,
+                          style: Theme.of(context).textTheme.titleLarge,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        tooltip: 'Ubah Nama',
+                        onPressed: () => _showEditNameDialog(displayName),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    email,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildBadge('Tipe: $accountType', AppTheme.primary),
+                      _buildBadge('Role: $role', AppTheme.secondary),
                     ],
                   ),
                 ],
@@ -70,17 +272,24 @@ class ProfileScreen extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.badge_outlined),
                   title: const Text('Nomor Induk (NIM / NIP)'),
-                  subtitle: const Text('Tersimpan di private identity'),
-                  trailing: const Icon(Icons.lock_outline, size: 18),
+                  subtitle: Text(
+                    _isLoadingIdentity
+                        ? 'Memuat...'
+                        : (_nimNip != null ? _nimNip! : 'Belum diisi (Klik untuk menambahkan)'),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    onPressed: _showEditNimDialog,
+                  ),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.security_rounded),
-                  title: const Text('Status Email'),
-                  subtitle: const Text('Terverifikasi'),
-                  trailing: const Icon(
-                    Icons.check_circle_rounded,
-                    color: AppTheme.success,
+                  title: const Text('Status Verifikasi Email'),
+                  subtitle: Text(isVerified ? 'Email Terverifikasi' : 'Menunggu Verifikasi'),
+                  trailing: Icon(
+                    isVerified ? Icons.check_circle_rounded : Icons.pending_rounded,
+                    color: isVerified ? AppTheme.success : AppTheme.warning,
                     size: 20,
                   ),
                 ),
@@ -94,11 +303,11 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildBadge(String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withAlpha(25),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withAlpha(50)),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withAlpha(60)),
       ),
       child: Text(
         text,
