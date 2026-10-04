@@ -2,8 +2,127 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Phase 1.0 Baseline: Deny-by-default total
-    // Aturan spesifik akan diuji dan dibuka secara bertahap pada Step 1.2b
+
+    // ============================================================================
+    // HELPER FUNCTIONS
+    // ============================================================================
+
+    // Memeriksa apakah request berasal dari pengguna yang terotentikasi
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Memeriksa apakah email pengguna sudah diverifikasi (Syarat Wajib Blueprint)
+    function isVerified() {
+      return isAuthenticated() && request.auth.token.email_verified == true;
+    }
+
+    // Memeriksa apakah request berasal dari pemilik dokumen (wajib terverifikasi)
+    function isOwner(uid) {
+      return isVerified() && request.auth.uid == uid;
+    }
+
+    // Mengambil role dari Custom Claims token (Source of Truth Role)
+    function getRole() {
+      return request.auth.token.get('role', 'USER');
+    }
+
+    // Memeriksa role GURU
+    function isGuru() {
+      return isVerified() && getRole() == 'GURU';
+    }
+
+    // Memeriksa role ADMIN
+    function isAdmin() {
+      return isVerified() && getRole() == 'ADMIN';
+    }
+
+    // Memeriksa role pengelola (GURU atau ADMIN)
+    function isStaff() {
+      return isGuru() || isAdmin();
+    }
+
+    // Memeriksa apakah user adalah anggota AKTIF di kelas yang diminta
+    function isClassMemberActive(classId) {
+      return isVerified() &&
+        exists(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.status == 'active';
+    }
+
+    // Validasi field yang boleh diubah sendiri oleh user pada profilnya
+    function isValidUserSelfUpdate() {
+      let diff = request.resource.data.diff(resource.data);
+      return diff.affectedKeys().hasOnly(['name', 'photo_url', 'last_active'])
+        // Validasi format name: string 1-100 karakter
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        // Validasi photo_url: string atau null
+        && (request.resource.data.photo_url == null || request.resource.data.photo_url is string)
+        // Validasi last_active wajib server timestamp
+        && request.resource.data.last_active == request.time
+        // Field terproteksi IMMUTABLE (tidak boleh dimanipulasi client)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.account_type == resource.data.account_type
+        && request.resource.data.mfa_enabled == resource.data.mfa_enabled;
+    }
+
+    // ============================================================================
+    // COLLECTION RULES
+    // ============================================================================
+
+    // 1. users/{uid}
+    // Profil publik dibatasi: hanya pemilik terverifikasi atau GURU/ADMIN yang boleh membaca.
+    // Client dilarang membuat akun langsung (create harus via endpoint bootstrap Admin SDK).
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isStaff();
+      allow create: if false;
+      allow update: if isOwner(uid) && isValidUserSelfUpdate();
+      allow delete: if false;
+
+      // 1b. users/{uid}/private/identity (NIM / NIP)
+      // Hanya pemilik, GURU, atau ADMIN yang boleh membaca.
+      match /private/identity {
+        allow read: if isOwner(uid) || isStaff();
+        allow write: if isOwner(uid) || isAdmin();
+      }
+    }
+
+    // 2. classes/{class_id}
+    // Hanya anggota kelas berstatus 'active' atau GURU/ADMIN yang dapat membaca detail kelas.
+    // Hanya GURU atau ADMIN yang boleh membuat/mengubah kelas.
+    match /classes/{classId} {
+      allow read: if isClassMemberActive(classId) || isStaff();
+      allow create, update, delete: if isStaff();
+
+      // 2b. classes/{class_id}/members/{memberUid}
+      // Member sendiri dapat membaca statusnya; sesama member aktif atau GURU/ADMIN dapat membaca daftar.
+      // Seluruh penulisan membership DILARANG untuk client (wajib via backend /api/join-class).
+      match /members/{memberUid} {
+        allow read: if (isVerified() && request.auth.uid == memberUid)
+                    || isClassMemberActive(classId)
+                    || isStaff();
+        allow write: if false;
+      }
+    }
+
+    // 3. class_codes/{code}
+    // Koleksi pemetaan kode unik ke classId: Terproteksi penuh dari akses client.
+    match /class_codes/{code} {
+      allow read, write: if false;
+    }
+
+    // 4. rate_limits/{uid}
+    // Internal rate limiting untuk endpoint backend: Terproteksi penuh dari akses client.
+    match /rate_limits/{uid} {
+      allow read, write: if false;
+    }
+
+    // ============================================================================
+    // GLOBAL CATCH-ALL: Deny-by-default untuk dokumen lainnya
+    // ============================================================================
     match /{document=**} {
       allow read, write: if false;
     }
