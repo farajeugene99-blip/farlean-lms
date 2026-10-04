@@ -18,6 +18,7 @@ import '../presentation/material/material_editor_screen.dart';
 import '../presentation/material/material_reader_screen.dart';
 import '../presentation/meeting/meeting_detail_screen.dart';
 import '../presentation/meeting/meeting_list_screen.dart';
+import '../presentation/pretest/pretest_screen.dart';
 import '../presentation/video/video_player_screen.dart';
 import '../services/auth_provider.dart';
 
@@ -145,6 +146,20 @@ class AppRouter {
           builder: (context, state) {
             final classId = state.uri.queryParameters['classId'] ?? 'default_class';
             return ManualBookListScreen(classId: classId);
+          },
+        ),
+        GoRoute(
+          path: '/pretests/:pretestId',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final pretestId = state.pathParameters['pretestId'] ?? '';
+            final classId = state.uri.queryParameters['classId'] ?? '';
+            final meetingId = state.uri.queryParameters['meetingId'] ?? '';
+            return PretestScreen(
+              pretestId: pretestId,
+              classId: classId,
+              meetingId: meetingId,
+            );
           },
         ),
 
