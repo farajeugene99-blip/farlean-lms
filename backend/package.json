@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test:rules": "tsx test/firestore-rules.test.ts"
+    "test:rules": "tsx test/firestore-rules.test.ts",
+    "test:api": "tsx test/api-endpoints.test.ts"
   },
   "keywords": [],
   "author": "",

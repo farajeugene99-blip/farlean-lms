@@ -48,6 +48,17 @@ export interface VerifyAuthOptions {
   requireEmailVerified?: boolean;
 }
 
+export type TokenVerifier = (token: string) => Promise<any>;
+let tokenVerifier: TokenVerifier = (token: string) => auth.verifyIdToken(token);
+
+export function setTokenVerifier(verifier: TokenVerifier) {
+  tokenVerifier = verifier;
+}
+
+export function resetTokenVerifier() {
+  tokenVerifier = (token: string) => auth.verifyIdToken(token);
+}
+
 /**
  * Middleware untuk memverifikasi Authorization: Bearer <ID_TOKEN>
  * Default: mewajibkan email_verified == true (sesuai Blueprint Farlean LMS)
@@ -65,7 +76,7 @@ export async function verifyAuth(
 
   const token = authHeader.split('Bearer ')[1];
   try {
-    const decodedToken = await auth.verifyIdToken(token);
+    const decodedToken = await tokenVerifier(token);
 
     // Syarat Blueprint: jika requireEmailVerified aktif, email wajib terverifikasi
     if (options.requireEmailVerified && !decodedToken.email_verified) {

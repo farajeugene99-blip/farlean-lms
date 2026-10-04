@@ -99,7 +99,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
-      // G. Ambil Kunci Jawaban Rahasia Server-Side dari answer_keys/{testId}/items
+      // G. Baca Dokumen Best Score sebelumnya (Semua read harus sebelum write)
+      let bestDoc: any = null;
+      let bestScoreRef: any = null;
+      if (classId) {
+        bestScoreRef = db
+            .collection('classes')
+            .doc(classId)
+            .collection('pretest_scores')
+            .doc(`${testId}_${user.uid}`);
+        bestDoc = await transaction.get(bestScoreRef);
+      }
+
+      // H. Ambil Kunci Jawaban Rahasia Server-Side dari answer_keys/{testId}/items
       const keysSnapshot = await db
           .collection('answer_keys')
           .doc(testId)
@@ -142,15 +154,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       // I. Simpan / Perbarui Best Score Pengguna
-      if (classId) {
-        const bestScoreRef = db
-            .collection('classes')
-            .doc(classId)
-            .collection('pretest_scores')
-            .doc(`${testId}_${user.uid}`);
-
-        const bestDoc = await transaction.get(bestScoreRef);
-        const prevBest = bestDoc.exists ? (bestDoc.data()?.best_score || 0) : -1;
+      if (classId && bestScoreRef) {
+        const prevBest = bestDoc?.exists ? (bestDoc.data()?.best_score || 0) : -1;
 
         if (finalScore > prevBest) {
           transaction.set(
