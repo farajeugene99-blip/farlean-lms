@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
+import '../../services/join_class_service.dart';
 
 class JoinClassScreen extends StatefulWidget {
-  const JoinClassScreen({super.key});
+  final JoinClassService? joinClassService;
+
+  const JoinClassScreen({super.key, this.joinClassService});
 
   @override
   State<JoinClassScreen> createState() => _JoinClassScreenState();
@@ -10,7 +14,14 @@ class JoinClassScreen extends StatefulWidget {
 class _JoinClassScreenState extends State<JoinClassScreen> {
   final _formKey = GlobalKey<FormState>();
   final _codeController = TextEditingController();
+  late final JoinClassService _joinClassService;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _joinClassService = widget.joinClassService ?? JoinClassService();
+  }
 
   @override
   void dispose() {
@@ -18,10 +29,87 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate() || _isLoading) return;
+
     setState(() => _isLoading = true);
-    // Akan diintegrasikan dengan JoinClassService di Step 1.9
+
+    try {
+      final result = await _joinClassService.joinClass(_codeController.text);
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      await _showResultDialog(result);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _showResultDialog(JoinClassResult result) async {
+    final isActive = result.isActive;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              isActive ? Icons.check_circle_rounded : Icons.pending_rounded,
+              color: isActive ? AppTheme.success : AppTheme.warning,
+            ),
+            const SizedBox(width: 8),
+            Text(isActive ? 'Berhasil Bergabung' : 'Menunggu Persetujuan'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              result.className,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Text(result.message),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: (isActive ? AppTheme.success : AppTheme.warning).withAlpha(25),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                'Status: ${result.status.value.toUpperCase()}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isActive ? AppTheme.success : AppTheme.warning,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+            },
+            child: const Text('Selesai'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -49,23 +137,12 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
                 TextFormField(
                   controller: _codeController,
                   textCapitalization: TextCapitalization.characters,
+                  enabled: !_isLoading,
                   decoration: const InputDecoration(
                     labelText: 'Kode Kelas (misal: FARLEAN1)',
                     prefixIcon: Icon(Icons.pin_outlined, size: 20),
                   ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Kode kelas wajib diisi';
-                    }
-                    final clean = v.trim().toUpperCase();
-                    if (clean.length < 6 || clean.length > 12) {
-                      return 'Panjang kode harus 6 - 12 karakter';
-                    }
-                    if (!RegExp(r'^[A-Z0-9]+$').hasMatch(clean)) {
-                      return 'Kode hanya boleh berupa huruf kapital dan angka';
-                    }
-                    return null;
-                  },
+                  validator: JoinClassService.validateCodeFormat,
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
