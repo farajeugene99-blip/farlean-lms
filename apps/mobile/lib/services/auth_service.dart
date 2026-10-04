@@ -239,7 +239,7 @@ class AuthService {
         case 'too-many-requests':
           return 'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat lagi.';
         case 'network-request-failed':
-          return 'Koneksi internet bermasalah. Periksa jaringan Anda.';
+          return 'Koneksi ke emulator/server Firebase gagal. Pastikan Firebase Emulator aktif dan dapat dijangkau dari perangkat Anda.';
         case 'user-disabled':
           return 'Akun ini telah dinonaktifkan oleh administrator.';
         default:

@@ -56,7 +56,7 @@ void main() {
       final error = FirebaseAuthException(code: 'network-request-failed');
       expect(
         AuthService.translateError(error),
-        equals('Koneksi internet bermasalah. Periksa jaringan Anda.'),
+        equals('Koneksi ke emulator/server Firebase gagal. Pastikan Firebase Emulator aktif dan dapat dijangkau dari perangkat Anda.'),
       );
     });
   });
