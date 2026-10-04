@@ -9,6 +9,7 @@ import '../../repositories/attempt_repository.dart';
 import '../../repositories/material_repository.dart';
 import '../../repositories/pretest_repository.dart';
 import '../../services/auth_provider.dart';
+import '../../services/grade_service.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
 
@@ -282,6 +283,15 @@ class _PretestScreenState extends State<PretestScreen> {
         answers: _answers,
       );
 
+      // Panggil backend /api/grade untuk grading server-side yang idempoten
+      GradeResult? gradeResult;
+      try {
+        final gradeService = GradeService();
+        gradeResult = await gradeService.submitAndGrade(_currentAttempt!.id);
+      } catch (e) {
+        debugPrint('Catatan grading backend: $e');
+      }
+
       // Pengerjaan disimpan, navigasi kembali dengan pesan
       if (!mounted) return;
       setState(() => _isSubmitting = false);
@@ -294,11 +304,34 @@ class _PretestScreenState extends State<PretestScreen> {
             children: [
               Icon(Icons.check_circle_rounded, color: AppTheme.success),
               SizedBox(width: 8),
-              Text('Kuis Selesai Dikumpulkan'),
+              Text('Kuis Selesai Dinilai'),
             ],
           ),
-          content: const Text(
-            'Jawaban Anda telah tersimpan dengan aman dan sesi kuis telah dikunci untuk penilaian.',
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (gradeResult != null) ...[
+                Text(
+                  'Skor Akhir: ${gradeResult.score}',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Poin diperoleh: ${gradeResult.pointsEarned} dari ${gradeResult.totalPoints} poin',
+                  style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 12),
+              ],
+              const Text(
+                'Jawaban Anda telah tersimpan dengan aman dan sesi kuis telah dikunci.',
+                style: TextStyle(color: AppTheme.textSecondary),
+              ),
+            ],
           ),
           actions: [
             ElevatedButton(
