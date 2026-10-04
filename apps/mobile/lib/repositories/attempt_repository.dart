@@ -4,20 +4,10 @@ import 'package:flutter/foundation.dart';
 import '../models/test_attempt.dart';
 
 class AttemptRepository {
-  final FirebaseFirestore? _injectedFirestore;
+  final FirebaseFirestore? _firestore;
 
   AttemptRepository({FirebaseFirestore? firestore})
-      : _injectedFirestore = firestore;
-
-  FirebaseFirestore? get _firestore {
-    if (_injectedFirestore != null) return _injectedFirestore;
-    try {
-      if (Firebase.apps.isNotEmpty) {
-        return FirebaseFirestore.instance;
-      }
-    } catch (_) {}
-    return null;
-  }
+      : _firestore = firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null);
 
   /// Mengambil attempt yang sedang berjalan (status == in_progress) untuk sesi recovery
   Future<TestAttempt?> getInProgressAttempt({

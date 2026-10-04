@@ -6,20 +6,10 @@ import '../models/pretest.dart';
 import '../models/question.dart';
 
 class PretestRepository {
-  final FirebaseFirestore? _injectedFirestore;
+  final FirebaseFirestore? _firestore;
 
   PretestRepository({FirebaseFirestore? firestore})
-      : _injectedFirestore = firestore;
-
-  FirebaseFirestore? get _firestore {
-    if (_injectedFirestore != null) return _injectedFirestore;
-    try {
-      if (Firebase.apps.isNotEmpty) {
-        return FirebaseFirestore.instance;
-      }
-    } catch (_) {}
-    return null;
-  }
+      : _firestore = firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null);
 
   /// Mengambil metadata kuis pretest
   Future<Pretest?> getPretest(String testId) async {

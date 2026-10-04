@@ -8,37 +8,17 @@ import '../core/config/api_config.dart';
 import '../models/app_user.dart';
 
 class AuthService {
-  final FirebaseAuth? _injectedAuth;
-  final FirebaseFirestore? _injectedFirestore;
+  final FirebaseAuth? _auth;
+  final FirebaseFirestore? _firestore;
   final http.Client _httpClient;
 
   AuthService({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     http.Client? httpClient,
-  })  : _injectedAuth = auth,
-        _injectedFirestore = firestore,
+  })  : _auth = auth ?? (Firebase.apps.isNotEmpty ? FirebaseAuth.instance : null),
+        _firestore = firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null),
         _httpClient = httpClient ?? http.Client();
-
-  FirebaseAuth? get _auth {
-    if (_injectedAuth != null) return _injectedAuth;
-    try {
-      if (Firebase.apps.isNotEmpty) {
-        return FirebaseAuth.instance;
-      }
-    } catch (_) {}
-    return null;
-  }
-
-  FirebaseFirestore? get _firestore {
-    if (_injectedFirestore != null) return _injectedFirestore;
-    try {
-      if (Firebase.apps.isNotEmpty) {
-        return FirebaseFirestore.instance;
-      }
-    } catch (_) {}
-    return null;
-  }
 
   User? get currentFirebaseUser => _auth?.currentUser;
   Stream<User?> get authStateChanges => _auth?.authStateChanges() ?? const Stream.empty();

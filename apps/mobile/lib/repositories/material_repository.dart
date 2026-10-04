@@ -6,20 +6,10 @@ import '../models/delta_sanitizer.dart';
 import '../models/material_content.dart';
 
 class MaterialRepository {
-  final FirebaseFirestore? _injectedFirestore;
+  final FirebaseFirestore? _firestore;
 
   MaterialRepository({FirebaseFirestore? firestore})
-      : _injectedFirestore = firestore;
-
-  FirebaseFirestore? get _firestore {
-    if (_injectedFirestore != null) return _injectedFirestore;
-    try {
-      if (Firebase.apps.isNotEmpty) {
-        return FirebaseFirestore.instance;
-      }
-    } catch (_) {}
-    return null;
-  }
+      : _firestore = firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null);
 
   /// Mengambil satu dokumen materi berdasarkan ID
   Future<MaterialContent?> getMaterial(String materiId) async {

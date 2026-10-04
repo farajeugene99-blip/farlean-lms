@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:http/http.dart' as http;
 import '../core/config/api_config.dart';
 
@@ -49,23 +50,14 @@ class GradeException implements Exception {
 }
 
 class GradeService {
-  final FirebaseAuth? _injectedAuth;
+  final FirebaseAuth? _auth;
   final http.Client _httpClient;
 
   GradeService({
     FirebaseAuth? auth,
     http.Client? httpClient,
-  })  : _injectedAuth = auth,
+  })  : _auth = auth ?? (Firebase.apps.isNotEmpty ? FirebaseAuth.instance : null),
         _httpClient = httpClient ?? http.Client();
-
-  FirebaseAuth? get _auth {
-    if (_injectedAuth != null) return _injectedAuth;
-    try {
-      return FirebaseAuth.instance;
-    } catch (_) {
-      return null;
-    }
-  }
 
   /// Mengirim attempt ke backend serverless /api/grade untuk dinilai secara transaksional
   Future<GradeResult> submitAndGrade(String attemptId) async {
