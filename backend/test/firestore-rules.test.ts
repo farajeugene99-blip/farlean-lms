@@ -25,15 +25,17 @@ async function setupDatabase() {
 }
 
 async function runTests() {
-  console.log('🚀 Memulai Firestore Security Rules Test Suite...');
+  console.log('🚀 Memulai Firestore Security Rules Test Suite (Phase 1 & Phase 2)...');
   await setupDatabase();
 
   const userVerifiedUid = 'user_mhs_01';
   const userUnverifiedUid = 'user_unverified_01';
   const otherUserUid = 'user_mhs_02';
+  const removedUserUid = 'user_removed_01';
   const guruUid = 'guru_dosen_01';
   const adminUid = 'admin_super_01';
   const classId = 'class_test_01';
+  const otherClassId = 'class_other_02';
 
   // Seed data awal menggunakan context admin (bypass rules)
   await testEnv.withSecurityRulesDisabled(async (context) => {
@@ -70,7 +72,7 @@ async function runTests() {
       .doc('identity')
       .set({ nim_nip: '12345678' });
 
-    // 3. Seed class
+    // 3. Seed class A
     await adminDb.collection('classes').doc(classId).set({
       name: 'Pemrograman Mobile Terapan',
       teacher_id: guruUid,
@@ -105,7 +107,7 @@ async function runTests() {
       .collection('classes')
       .doc(classId)
       .collection('members')
-      .doc('user_removed_01')
+      .doc(removedUserUid)
       .set({
         display_name: 'Removed User',
         account_type: 'UMUM',
@@ -113,7 +115,77 @@ async function runTests() {
         joined_at: new Date(),
       });
 
-    // 5. Seed class_codes & rate_limits
+    // 5. Seed class B (Kelas Lain untuk tes isolasi)
+    await adminDb.collection('classes').doc(otherClassId).set({
+      name: 'Rekayasa Perangkat Lunak',
+      teacher_id: guruUid,
+    });
+
+    // 6. Seed Materials (Published vs Draft)
+    await adminDb.collection('materials').doc('mat_published').set({
+      class_id: classId,
+      title: 'Materi 1: Pengenalan Flutter',
+      status: 'Published',
+    });
+    await adminDb.collection('materials').doc('mat_draft').set({
+      class_id: classId,
+      title: 'Materi 2: State Management Draft',
+      status: 'Draft',
+    });
+    await adminDb.collection('materials').doc('mat_other_class').set({
+      class_id: otherClassId,
+      title: 'Materi Rahasia Kelas Lain',
+      status: 'Published',
+    });
+
+    // 7. Seed Pretests & Questions & Answer Keys
+    await adminDb.collection('pretests').doc('pretest_published').set({
+      class_id: classId,
+      title: 'Kuis Pretest 1',
+      status: 'Published',
+    });
+    await adminDb
+      .collection('pretests')
+      .doc('pretest_published')
+      .collection('questions')
+      .doc('q1')
+      .set({
+        text: 'Manakah widget immutable?',
+        options: ['StatefulWidget', 'StatelessWidget'],
+        points: 10,
+        tag: 'widgets',
+      });
+    await adminDb
+      .collection('answer_keys')
+      .doc('pretest_published')
+      .collection('items')
+      .doc('q1')
+      .set({
+        correct_option: 1,
+        points: 10,
+      });
+
+    // 8. Seed Attempts (In-Progress vs Graded)
+    await adminDb.collection('attempts').doc('attempt_inprogress_01').set({
+      user_id: userVerifiedUid,
+      class_id: classId,
+      test_id: 'pretest_published',
+      status: 'in_progress',
+      score: null,
+      answers: {},
+      started_at: new Date(),
+    });
+    await adminDb.collection('attempts').doc('attempt_graded_01').set({
+      user_id: userVerifiedUid,
+      class_id: classId,
+      test_id: 'pretest_published',
+      status: 'graded',
+      score: 100,
+      answers: { q1: 1 },
+      started_at: new Date(),
+    });
+
+    // 9. Seed class_codes & rate_limits
     await adminDb.collection('class_codes').doc('FARLEAN1').set({
       class_id: classId,
     });
@@ -129,6 +201,14 @@ async function runTests() {
 
   const unverifiedUserDb = testEnv
     .authenticatedContext(userUnverifiedUid, { email_verified: false, role: 'USER' })
+    .firestore();
+
+  const pendingUserDb = testEnv
+    .authenticatedContext(otherUserUid, { email_verified: true, role: 'USER' })
+    .firestore();
+
+  const removedUserDb = testEnv
+    .authenticatedContext(removedUserUid, { email_verified: true, role: 'USER' })
     .firestore();
 
   const guruDb = testEnv
@@ -265,21 +345,13 @@ async function runTests() {
   });
 
   // ============================================================================
-  // SKENARIO 12 - 15: CLASSES & MEMBERSHIP ENFORCEMENT
+  // SKENARIO 12 - 17: CLASSES & MEMBERSHIP ENFORCEMENT
   // ============================================================================
   await test('Skenario 12: Member AKTIF dapat membaca detail kelas', async () => {
     await assertSucceeds(verifiedUserDb.collection('classes').doc(classId).get());
   });
 
   await test('Skenario 13: Member PENDING atau REMOVED DIBLOKIR membaca detail kelas', async () => {
-    const pendingUserDb = testEnv
-      .authenticatedContext(otherUserUid, { email_verified: true, role: 'USER' })
-      .firestore();
-
-    const removedUserDb = testEnv
-      .authenticatedContext('user_removed_01', { email_verified: true, role: 'USER' })
-      .firestore();
-
     await assertFails(pendingUserDb.collection('classes').doc(classId).get());
     await assertFails(removedUserDb.collection('classes').doc(classId).get());
   });
@@ -290,7 +362,7 @@ async function runTests() {
         .collection('classes')
         .doc(classId)
         .collection('members')
-        .doc(verifiedUserDb.app.options.authDomain || 'any')
+        .doc(userVerifiedUid)
         .set({
           display_name: 'Hacker',
           status: 'active',
@@ -315,6 +387,130 @@ async function runTests() {
   await test('Skenario 17: User tanpa otentikasi DIBLOKIR dari semua dokumen', async () => {
     await assertFails(unauthenticatedDb.collection('users').doc(userVerifiedUid).get());
     await assertFails(unauthenticatedDb.collection('classes').doc(classId).get());
+  });
+
+  // ============================================================================
+  // SKENARIO 18 - 29: PHASE 2 PEMBELAJARAN, QUIL, PRETEST, ATTEMPTS
+  // ============================================================================
+  await test('Skenario 18: Member aktif DAPAT membaca Materi Published', async () => {
+    await assertSucceeds(verifiedUserDb.collection('materials').doc('mat_published').get());
+  });
+
+  await test('Skenario 19: Member PENDING atau REMOVED DIBLOKIR membaca Materi Published', async () => {
+    await assertFails(pendingUserDb.collection('materials').doc('mat_published').get());
+    await assertFails(removedUserDb.collection('materials').doc('mat_published').get());
+  });
+
+  await test('Skenario 20: Member aktif DIBLOKIR membaca Materi berstatus Draft', async () => {
+    await assertFails(verifiedUserDb.collection('materials').doc('mat_draft').get());
+  });
+
+  await test('Skenario 21: GURU DAPAT membuat dan mengedit Materi (Draft maupun Published)', async () => {
+    await assertSucceeds(
+      guruDb.collection('materials').doc('mat_new').set({
+        class_id: classId,
+        title: 'Materi Baru Guru',
+        status: 'Draft',
+      })
+    );
+    await assertSucceeds(
+      guruDb.collection('materials').doc('mat_draft').update({
+        title: 'Materi Revisi Guru',
+      })
+    );
+  });
+
+  await test('Skenario 22: Siswa DILARANG membaca koleksi answer_keys (100% Deny)', async () => {
+    await assertFails(
+      verifiedUserDb
+        .collection('answer_keys')
+        .doc('pretest_published')
+        .collection('items')
+        .doc('q1')
+        .get()
+    );
+    await assertFails(
+      verifiedUserDb
+        .collection('answer_keys')
+        .doc('pretest_published')
+        .get()
+    );
+  });
+
+  await test('Skenario 23: Siswa DAPAT membuat attempt dengan in_progress dan started_at == serverTimestamp', async () => {
+    await assertSucceeds(
+      verifiedUserDb.collection('attempts').doc('att_student_new').set({
+        user_id: userVerifiedUid,
+        class_id: classId,
+        test_id: 'pretest_published',
+        status: 'in_progress',
+        score: null,
+        started_at: serverTimestamp(),
+      })
+    );
+  });
+
+  await test('Skenario 24: Siswa DIBLOKIR membuat attempt jika langsung mengisi field score', async () => {
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc('att_hacker_score').set({
+        user_id: userVerifiedUid,
+        class_id: classId,
+        test_id: 'pretest_published',
+        status: 'in_progress',
+        score: 100, // ILEGAL: score harus null saat create!
+        started_at: serverTimestamp(),
+      })
+    );
+  });
+
+  await test('Skenario 25: Siswa DAPAT mengautosave field answers selama attempt masih in_progress', async () => {
+    await assertSucceeds(
+      verifiedUserDb.collection('attempts').doc('attempt_inprogress_01').update({
+        answers: { q1: 1 },
+        last_saved_at: serverTimestamp(),
+      })
+    );
+  });
+
+  await test('Skenario 26: Siswa DIBLOKIR mengupdate answers setelah attempt berstatus graded/submitted', async () => {
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc('attempt_graded_01').update({
+        answers: { q1: 0 },
+        last_saved_at: serverTimestamp(),
+      })
+    );
+  });
+
+  await test('Skenario 27: Siswa DIBLOKIR mengubah field score atau status pada attempt', async () => {
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc('attempt_inprogress_01').update({
+        score: 100, // ILEGAL
+      })
+    );
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc('attempt_inprogress_01').update({
+        status: 'graded', // ILEGAL: status hanya diubah oleh /api/grade
+      })
+    );
+  });
+
+  await test('Skenario 28: Siswa kelas A DIBLOKIR mengakses materi/pretest kelas B (Isolasi antar-kelas)', async () => {
+    await assertFails(
+      verifiedUserDb.collection('materials').doc('mat_other_class').get()
+    );
+  });
+
+  await test('Skenario 29: Akun REMOVED DIBLOKIR membuat attempt baru di kelas tersebut', async () => {
+    await assertFails(
+      removedUserDb.collection('attempts').doc('att_removed_user').set({
+        user_id: removedUserUid,
+        class_id: classId,
+        test_id: 'pretest_published',
+        status: 'in_progress',
+        score: null,
+        started_at: serverTimestamp(),
+      })
+    );
   });
 
   // Cleanup
