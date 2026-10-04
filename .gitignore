@@ -1,0 +1,49 @@
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Environment Variables & Secrets (PENTING!)
+.env
+.env.*
+*.json.secret
+service-account*.json
+*firebase-adminsdk*.json
+
+# Firebase Emulator
+*-debug.log
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.firebase/
+
+# Backend (Node.js)
+backend/node_modules/
+backend/dist/
+backend/.vercel/
+
+# Mobile (Flutter/Dart)
+apps/mobile/.dart_tool/
+apps/mobile/.flutter-plugins
+apps/mobile/.flutter-plugins-dependencies
+apps/mobile/.packages
+apps/mobile/build/
+apps/mobile/.pub-cache/
+apps/mobile/.pub/
+
+# Android build outputs
+apps/mobile/android/**/*.iml
+apps/mobile/android/.gradle
+apps/mobile/android/local.properties
+apps/mobile/android/app/build/
+
+# iOS build outputs
+apps/mobile/ios/.generated/
+apps/mobile/ios/Flutter/Flutter.framework
+apps/mobile/ios/Flutter/Flutter.podspec
+apps/mobile/ios/Pods/
+apps/mobile/ios/.symlinks/

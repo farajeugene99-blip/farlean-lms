@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Phase 1.0 Baseline: Deny-by-default total
+    // Aturan spesifik akan diuji dan dibuka secara bertahap pada Step 1.2b
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
