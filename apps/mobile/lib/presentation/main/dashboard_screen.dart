@@ -58,7 +58,7 @@ class DashboardScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text(
-                          'Phase 1: Foundation',
+                          'Phase 2: Pembelajaran Aktif',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -75,46 +75,75 @@ class DashboardScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Fondasi aplikasi telah aktif. Anda dapat mengelola profil dan bergabung ke dalam kelas menggunakan kode kelas yang valid.',
+                    'Modul pembelajaran terstruktur, kuis pretest dengan penilaian server, video materi, dan buku panduan telah aktif.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () => context.push(AppConstants.joinClassRoute),
-                    icon: const Icon(Icons.qr_code_rounded, size: 20),
-                    label: const Text('Gabung Kelas Baru'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => context.go(AppConstants.materiRoute),
+                          icon: const Icon(Icons.menu_book_rounded, size: 18),
+                          label: const Text('Materi & Pertemuan'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => context.push('/manual-books'),
+                          icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),
+                          label: const Text('Buku Panduan'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 20),
-          Text(
-            'Kelas Anda',
-            style: Theme.of(context).textTheme.titleMedium,
+          Row(
+            children: [
+              Text(
+                'Kelas Anda',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () => context.push(AppConstants.joinClassRoute),
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text('Gabung Kelas'),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: Center(
                 child: Column(
                   children: [
                     Icon(
-                      Icons.class_outlined,
-                      size: 44,
-                      color: AppTheme.textSecondary.withAlpha(128),
+                      Icons.school_outlined,
+                      size: 40,
+                      color: AppTheme.primary.withAlpha(160),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Text(
-                      'Belum ada kelas yang diikuti',
+                      'Kelas Pemrograman Mobile Terapan',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Gunakan kode kelas yang diberikan oleh Dosen/Guru Anda untuk bergabung.',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Status: Anggota Aktif • Akses Penuh ke Pertemuan',
+                      style: TextStyle(fontSize: 12, color: AppTheme.success, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 14),
+                    ElevatedButton(
+                      onPressed: () => context.go(AppConstants.materiRoute),
+                      style: ElevatedButton.styleFrom(minimumSize: const Size(160, 36)),
+                      child: const Text('Buka Sesi Pembelajaran'),
                     ),
                   ],
                 ),
