@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth/role_guard.dart';
+import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/content_status.dart';
 import '../../models/meeting.dart';
@@ -11,12 +12,12 @@ import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
 
 class MeetingListScreen extends StatefulWidget {
-  final String classId;
+  final String? classId;
   final MeetingRepository? meetingRepository;
 
   const MeetingListScreen({
     super.key,
-    this.classId = 'default_class',
+    this.classId,
     this.meetingRepository,
   });
 
@@ -38,6 +39,18 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
   }
 
   Future<void> _loadMeetings() async {
+    final effectiveClassId = widget.classId?.trim() ?? '';
+    if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
+      if (mounted) {
+        setState(() {
+          _meetings = [];
+          _isLoading = false;
+          _errorMessage = null;
+        });
+      }
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -48,7 +61,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
 
     try {
       final list = await _meetingRepository.getMeetingsByClass(
-        widget.classId,
+        effectiveClassId,
         isStaff: isStaff,
       );
       if (mounted) {
@@ -59,8 +72,20 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
       }
     } catch (e) {
       if (mounted) {
+        String friendlyMessage;
+        final errorString = e.toString().toLowerCase();
+        if (errorString.contains('permission-denied') || errorString.contains('evaluation error')) {
+          friendlyMessage = isStaff
+              ? 'Akses ditolak: Anda tidak memiliki wewenang untuk mengelola kelas ini.'
+              : 'Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini. Pastikan Anda telah bergabung dan disetujui.';
+        } else if (errorString.contains('network') || errorString.contains('unavailable')) {
+          friendlyMessage = 'Koneksi ke server bermasalah. Periksa jaringan internet atau emulator Anda.';
+        } else {
+          friendlyMessage = 'Gagal memuat daftar pertemuan: $e';
+        }
+
         setState(() {
-          _errorMessage = 'Gagal memuat daftar pertemuan: $e';
+          _errorMessage = friendlyMessage;
           _isLoading = false;
         });
       }
@@ -68,6 +93,17 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
   }
 
   Future<void> _showCreateMeetingDialog() async {
+    final effectiveClassId = widget.classId?.trim() ?? '';
+    if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pilih kelas yang valid terlebih dahulu untuk membuat pertemuan.'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+      return;
+    }
+
     final titleController = TextEditingController();
     final numberController = TextEditingController(text: '${_meetings.length + 1}');
     final formKey = GlobalKey<FormState>();
@@ -115,7 +151,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
               try {
                 final meeting = Meeting(
                   id: '',
-                  classId: widget.classId,
+                  classId: effectiveClassId,
                   number: int.parse(numberController.text.trim()),
                   title: titleController.text.trim(),
                   date: DateTime.now(),
@@ -173,6 +209,42 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
   }
 
   Widget _buildBody(bool isStaff) {
+    final effectiveClassId = widget.classId?.trim() ?? '';
+    if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.class_outlined,
+                size: 56,
+                color: AppTheme.textSecondary.withAlpha(128),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Pilih Kelas Pembelajaran',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Anda belum memilih kelas. Silakan bergabung menggunakan kode kelas atau pilih kelas dari Beranda untuk melihat pertemuan.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: () => context.push(AppConstants.joinClassRoute),
+                icon: const Icon(Icons.qr_code_rounded),
+                label: const Text('Gabung Kelas Baru'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (_isLoading) {
       return const LoadingIndicator(message: 'Memuat pertemuan...');
     }

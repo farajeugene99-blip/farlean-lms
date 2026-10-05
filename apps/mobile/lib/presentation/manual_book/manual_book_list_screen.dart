@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/auth/role_guard.dart';
+import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/manual_book.dart';
 import '../../repositories/manual_book_repository.dart';
@@ -10,12 +12,12 @@ import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
 
 class ManualBookListScreen extends StatefulWidget {
-  final String classId;
+  final String? classId;
   final ManualBookRepository? manualBookRepository;
 
   const ManualBookListScreen({
     super.key,
-    this.classId = 'default_class',
+    this.classId,
     this.manualBookRepository,
   });
 
@@ -37,13 +39,28 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
   }
 
   Future<void> _loadBooks() async {
+    final effectiveClassId = widget.classId?.trim() ?? '';
+    if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
+      if (mounted) {
+        setState(() {
+          _books = [];
+          _isLoading = false;
+          _errorMessage = null;
+        });
+      }
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
+    final authProvider = context.read<AuthProvider>();
+    final isStaff = RoleGuard.isStaff(authProvider.appUser);
+
     try {
-      final list = await _manualBookRepository.getManualBooksByClass(widget.classId);
+      final list = await _manualBookRepository.getManualBooksByClass(effectiveClassId);
       if (mounted) {
         setState(() {
           _books = list;
@@ -52,8 +69,20 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
       }
     } catch (e) {
       if (mounted) {
+        String friendlyMessage;
+        final errorString = e.toString().toLowerCase();
+        if (errorString.contains('permission-denied') || errorString.contains('evaluation error')) {
+          friendlyMessage = isStaff
+              ? 'Akses ditolak: Anda tidak memiliki wewenang untuk melihat berkas panduan kelas ini.'
+              : 'Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini.';
+        } else if (errorString.contains('network') || errorString.contains('unavailable')) {
+          friendlyMessage = 'Koneksi ke server bermasalah. Periksa jaringan internet atau emulator Anda.';
+        } else {
+          friendlyMessage = 'Gagal memuat manual book: $e';
+        }
+
         setState(() {
-          _errorMessage = 'Gagal memuat manual book: $e';
+          _errorMessage = friendlyMessage;
           _isLoading = false;
         });
       }
@@ -85,6 +114,17 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
   }
 
   Future<void> _showAddBookDialog() async {
+    final effectiveClassId = widget.classId?.trim() ?? '';
+    if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pilih kelas yang valid terlebih dahulu untuk mengunggah buku panduan.'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+      return;
+    }
+
     final titleController = TextEditingController();
     final descController = TextEditingController();
     final urlController = TextEditingController();
@@ -147,7 +187,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
               try {
                 final book = ManualBook(
                   id: '',
-                  classId: widget.classId,
+                  classId: effectiveClassId,
                   title: titleController.text.trim(),
                   description: descController.text.trim(),
                   fileUrl: urlController.text.trim(),
@@ -207,6 +247,42 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
   }
 
   Widget _buildBody() {
+    final effectiveClassId = widget.classId?.trim() ?? '';
+    if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.menu_book_outlined,
+                size: 56,
+                color: AppTheme.textSecondary.withAlpha(128),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Pilih Kelas Pembelajaran',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Anda belum memilih kelas. Silakan bergabung menggunakan kode kelas atau pilih kelas dari Beranda untuk mengakses Buku Panduan.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: () => context.push(AppConstants.joinClassRoute),
+                icon: const Icon(Icons.qr_code_rounded),
+                label: const Text('Gabung Kelas Baru'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (_isLoading) {
       return const LoadingIndicator(message: 'Memuat buku panduan...');
     }

@@ -69,6 +69,52 @@ service cloud.firestore {
         && request.resource.data.mfa_enabled == resource.data.mfa_enabled;
     }
 
+    // Validasi integritas data saat penulisan konten pembelajaran oleh Staff
+    function isValidMeetingWrite() {
+      return isStaff()
+        && request.resource.data.class_id is string
+        && request.resource.data.class_id.size() > 0
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.status in ['Draft', 'Published', 'Archived'];
+    }
+
+    function isValidMaterialWrite() {
+      return isStaff()
+        && request.resource.data.class_id is string
+        && request.resource.data.class_id.size() > 0
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.status in ['Draft', 'Published', 'Archived'];
+    }
+
+    function isValidManualBookWrite() {
+      return isStaff()
+        && request.resource.data.class_id is string
+        && request.resource.data.class_id.size() > 0
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.file_url is string
+        && request.resource.data.file_url.size() > 0;
+    }
+
+    function isValidVideoWrite() {
+      return isStaff()
+        && request.resource.data.class_id is string
+        && request.resource.data.class_id.size() > 0
+        && request.resource.data.url is string
+        && request.resource.data.url.size() > 0;
+    }
+
+    function isValidPretestWrite() {
+      return isStaff()
+        && request.resource.data.class_id is string
+        && request.resource.data.class_id.size() > 0
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.status in ['Draft', 'Published', 'Archived'];
+    }
+
     // ============================================================================
     // 1. USERS & PRIVATE IDENTITY
     // ============================================================================
@@ -115,7 +161,8 @@ service cloud.firestore {
     match /meetings/{meetingId} {
       allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status == 'Published')
                   || isStaff();
-      allow create, update, delete: if isStaff();
+      allow create, update: if isValidMeetingWrite();
+      allow delete: if isStaff();
     }
 
     // ============================================================================
@@ -124,7 +171,8 @@ service cloud.firestore {
     match /materials/{materiId} {
       allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status == 'Published')
                   || isStaff();
-      allow create, update, delete: if isStaff();
+      allow create, update: if isValidMaterialWrite();
+      allow delete: if isStaff();
     }
 
     // ============================================================================
@@ -132,7 +180,8 @@ service cloud.firestore {
     // ============================================================================
     match /videos/{videoId} {
       allow read: if isClassMemberActive(resource.data.class_id) || isStaff();
-      allow create, update, delete: if isStaff();
+      allow create, update: if isValidVideoWrite();
+      allow delete: if isStaff();
     }
 
     // ============================================================================
@@ -140,7 +189,8 @@ service cloud.firestore {
     // ============================================================================
     match /manual_books/{bookId} {
       allow read: if isClassMemberActive(resource.data.class_id) || isStaff();
-      allow create, update, delete: if isStaff();
+      allow create, update: if isValidManualBookWrite();
+      allow delete: if isStaff();
     }
 
     // ============================================================================
@@ -149,7 +199,8 @@ service cloud.firestore {
     match /pretests/{testId} {
       allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status == 'Published')
                   || isStaff();
-      allow create, update, delete: if isStaff();
+      allow create, update: if isValidPretestWrite();
+      allow delete: if isStaff();
 
       match /questions/{qid} {
         allow read: if (isClassMemberActive(get(/databases/$(database)/documents/pretests/$(testId)).data.class_id)

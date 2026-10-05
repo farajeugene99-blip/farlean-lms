@@ -144,7 +144,7 @@ class AppRouter {
           path: '/manual-books',
           parentNavigatorKey: _rootNavigatorKey,
           builder: (context, state) {
-            final classId = state.uri.queryParameters['classId'] ?? 'default_class';
+            final classId = state.uri.queryParameters['classId'];
             return ManualBookListScreen(classId: classId);
           },
         ),
@@ -176,9 +176,12 @@ class AppRouter {
             ),
             GoRoute(
               path: AppConstants.materiRoute,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: MeetingListScreen(),
-              ),
+              pageBuilder: (context, state) {
+                final classId = state.uri.queryParameters['classId'];
+                return NoTransitionPage(
+                  child: MeetingListScreen(classId: classId),
+                );
+              },
             ),
             GoRoute(
               path: AppConstants.aiRoute,

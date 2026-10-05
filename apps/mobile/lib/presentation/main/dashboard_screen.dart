@@ -83,7 +83,7 @@ class DashboardScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => context.go(AppConstants.materiRoute),
+                          onPressed: () => context.go('${AppConstants.materiRoute}?classId=class_test_qa'),
                           icon: const Icon(Icons.menu_book_rounded, size: 18),
                           label: const Text('Materi & Pertemuan'),
                         ),
@@ -91,7 +91,7 @@ class DashboardScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => context.push('/manual-books'),
+                          onPressed: () => context.push('/manual-books?classId=class_test_qa'),
                           icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),
                           label: const Text('Buku Panduan'),
                         ),
@@ -141,7 +141,7 @@ class DashboardScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     ElevatedButton(
-                      onPressed: () => context.go(AppConstants.materiRoute),
+                      onPressed: () => context.go('${AppConstants.materiRoute}?classId=class_test_qa'),
                       style: ElevatedButton.styleFrom(minimumSize: const Size(160, 36)),
                       child: const Text('Buka Sesi Pembelajaran'),
                     ),
