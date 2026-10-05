@@ -4,9 +4,13 @@ import {
   assertSucceeds,
   RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
+import { setLogLevel } from '@firebase/firestore';
 import * as fs from 'fs';
 import * as path from 'path';
 import { serverTimestamp } from 'firebase/firestore';
+
+// Bungkam log internal gRPC Firestore
+setLogLevel('silent');
 
 let testEnv: RulesTestEnvironment;
 
@@ -227,10 +231,10 @@ async function runTests() {
   async function test(name: string, fn: () => Promise<void>) {
     try {
       await fn();
-      console.log(`  ✅ PASS: ${name}`);
+      console.log(`  [PASS] ${name}`);
       passed++;
     } catch (err: any) {
-      console.error(`  ❌ FAIL: ${name}`);
+      console.error(`  [FAIL] ${name}`);
       console.error(`     Error: ${err.message || err}`);
       failed++;
     }
@@ -520,9 +524,7 @@ async function runTests() {
   console.log(`TEST SUMMARY: ${passed} PASSED, ${failed} FAILED`);
   console.log(`========================================\n`);
 
-  if (failed > 0) {
-    process.exit(1);
-  }
+  process.exit(failed > 0 ? 1 : 0);
 }
 
 runTests().catch((e) => {

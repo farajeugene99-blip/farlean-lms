@@ -4,8 +4,12 @@ import {
   assertSucceeds,
   RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
+import { setLogLevel } from '@firebase/firestore';
 import * as fs from 'fs';
 import * as path from 'path';
+
+// Bungkam log internal gRPC Firestore agar tidak mencemari terminal output
+setLogLevel('silent');
 
 let testEnv: RulesTestEnvironment;
 
@@ -103,10 +107,10 @@ async function runListRegressionTests() {
   async function test(name: string, fn: () => Promise<void>) {
     try {
       await fn();
-      console.log(`  ✅ PASS: ${name}`);
+      console.log(`  [PASS] ${name}`);
       passed++;
     } catch (err: any) {
-      console.error(`  ❌ FAIL: ${name}`);
+      console.error(`  [FAIL] ${name}`);
       console.error(`     Error: ${err.message || err}`);
       failed++;
     }
@@ -249,7 +253,7 @@ async function runListRegressionTests() {
   console.log(`LIST REGRESSION TEST SUMMARY: ${passed} PASSED, ${failed} FAILED`);
   console.log(`========================================\n`);
 
-  if (failed > 0) process.exit(1);
+  process.exit(failed > 0 ? 1 : 0);
 }
 
 runListRegressionTests().catch((e) => {

@@ -54,19 +54,14 @@ service cloud.firestore {
       let diff = request.resource.data.diff(resource.data);
       return diff.affectedKeys().hasOnly(['name', 'photo_url', 'last_active'])
         // Validasi format name: string 1-100 karakter
+        && request.resource.data.keys().hasAll(['name', 'last_active'])
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 100
         // Validasi photo_url: string atau null
-        && (request.resource.data.photo_url == null || request.resource.data.photo_url is string)
+        && (!('photo_url' in request.resource.data) || request.resource.data.photo_url == null || request.resource.data.photo_url is string)
         // Validasi last_active wajib server timestamp
-        && request.resource.data.last_active == request.time
-        // Field terproteksi IMMUTABLE (tidak boleh dimanipulasi client)
-        && request.resource.data.uid == resource.data.uid
-        && request.resource.data.email == resource.data.email
-        && request.resource.data.role == resource.data.role
-        && request.resource.data.account_type == resource.data.account_type
-        && request.resource.data.mfa_enabled == resource.data.mfa_enabled;
+        && request.resource.data.last_active == request.time;
     }
 
     // Validasi integritas data saat penulisan konten pembelajaran oleh Staff
@@ -232,29 +227,24 @@ service cloud.firestore {
       // - Wajib active member di kelas tersebut
       // - Status awal wajib 'in_progress'
       // - started_at wajib server timestamp
-      // - score wajib null (Client dilarang menyetel skor)
+      // - score wajib null jika disertakan
       allow create: if isVerified()
+        && request.resource.data.keys().hasAll(['user_id', 'class_id', 'test_id', 'status', 'started_at'])
         && request.auth.uid == request.resource.data.user_id
         && isClassMemberActive(request.resource.data.class_id)
         && request.resource.data.status == 'in_progress'
         && request.resource.data.started_at == request.time
-        && request.resource.data.score == null;
+        && (!('score' in request.resource.data) || request.resource.data.score == null);
 
       // Mengupdate attempt (Autosave Jawaban):
       // - Hanya boleh selama status masih 'in_progress'
       // - Setelah submitted / graded: DILARANG mengupdate jawaban!
       // - Hanya boleh mengupdate field 'answers' dan 'last_saved_at'
-      // - Field 'status', 'started_at', 'score', 'user_id', 'test_id', 'class_id' IMMUTABLE
+      // - affectedKeys().hasOnly menjamin semua field lain (user_id, test_id, class_id, status, score, started_at) IMMUTABLE
       allow update: if isVerified()
         && request.auth.uid == resource.data.user_id
         && resource.data.status == 'in_progress'
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answers', 'last_saved_at'])
-        && request.resource.data.user_id == resource.data.user_id
-        && request.resource.data.test_id == resource.data.test_id
-        && request.resource.data.class_id == resource.data.class_id
-        && request.resource.data.status == resource.data.status
-        && request.resource.data.score == resource.data.score
-        && request.resource.data.started_at == resource.data.started_at;
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answers', 'last_saved_at']);
 
       allow delete: if false;
     }

@@ -50,10 +50,10 @@ async function runApiTests() {
   async function test(name: string, fn: () => Promise<void>) {
     try {
       await fn();
-      console.log(`  ✅ PASS: ${name}`);
+      console.log(`  [PASS] ${name}`);
       passed++;
     } catch (err: any) {
-      console.error(`  ❌ FAIL: ${name}`);
+      console.error(`  [FAIL] ${name}`);
       console.error(`     Error: ${err.message || err}`);
       failed++;
     }
@@ -318,7 +318,7 @@ async function runApiTests() {
   console.log(`BACKEND API TEST SUMMARY: ${passed} PASSED, ${failed} FAILED`);
   console.log(`========================================\n`);
 
-  if (failed > 0) process.exit(1);
+  process.exit(failed > 0 ? 1 : 0);
 }
 
 runApiTests().catch((e) => {
