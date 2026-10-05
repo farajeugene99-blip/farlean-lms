@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:device_preview/device_preview.dart';
 import 'app.dart';
 import 'core/config/firebase_config.dart';
 import 'presentation/common/startup_error_screen.dart';
@@ -7,7 +9,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await FirebaseConfig.initialize();
-    runApp(const FarleanApp());
+    runApp(
+      DevicePreview(
+        enabled: kIsWeb && kDebugMode,
+        builder: (context) => const FarleanApp(),
+      ),
+    );
   } catch (error, stackTrace) {
     debugPrint('🚨 [Fatal Startup] Firebase initialization failed: $error');
     runApp(

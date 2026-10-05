@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -43,10 +42,11 @@ class FirebaseConfig {
 
     // A. Auth Emulator
     try {
+      // Di Flutter Web, useAuthEmulator tidak mengembalikan Future
       await FirebaseAuth.instance.useAuthEmulator(host, authEmulatorPort);
-      debugPrint('🛡️ [FirebaseConfig] Auth Emulator aktif di $host:$authEmulatorPort');
+      debugPrint('🛡️️ [FirebaseConfig] Auth Emulator aktif di $host:$authEmulatorPort');
     } catch (e) {
-      debugPrint('⚠️ [FirebaseConfig] Auth emulator hook note: $e');
+      debugPrint('🚨 [FirebaseConfig] Gagal hook Auth emulator: $e');
     }
 
     // B. Firestore Emulator
@@ -61,20 +61,22 @@ class FirebaseConfig {
       );
       debugPrint('🛡️ [FirebaseConfig] Firestore Emulator aktif di $host:$firestoreEmulatorPort');
     } catch (e) {
-      debugPrint('⚠️ [FirebaseConfig] Firestore emulator hook note: $e');
+      debugPrint('🚨 [FirebaseConfig] Gagal hook Firestore emulator: $e');
     }
   }
 
-  /// Menyelesaikan host emulator:
-  /// 1. Prioritas utama: Nilai dari `--dart-define=EMULATOR_HOST=<ip-lan>`
-  /// 2. Android Virtual Device (AVD): 10.0.2.2
-  /// 3. iOS / Desktop / Web: 127.0.0.1
+  /// Menyelesaikan host emulator aman lintas platform (Web, Android, iOS, Desktop)
   static String resolveEmulatorHost() {
     if (_emulatorHostOverride.isNotEmpty) {
       return _emulatorHostOverride.trim();
     }
-    if (kIsWeb) return '127.0.0.1';
-    if (Platform.isAndroid) return '10.0.2.2';
-    return '127.0.0.1';
+    // Wajib cek kIsWeb terlebih dahulu sebelum mengecek platform OS
+    if (kIsWeb) return 'localhost';
+    
+    // Gunakan defaultTargetPlatform agar aman tanpa import dart:io
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return '10.0.2.2';
+    }
+    return 'localhost';
   }
 }

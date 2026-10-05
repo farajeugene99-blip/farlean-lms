@@ -49,3 +49,6 @@ apps/mobile/ios/Flutter/Flutter.framework
 apps/mobile/ios/Flutter/Flutter.podspec
 apps/mobile/ios/Pods/
 apps/mobile/ios/.symlinks/
+
+.vercel
+.env*

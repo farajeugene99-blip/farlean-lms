@@ -1,3 +1,4 @@
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -35,8 +36,10 @@ class _FarleanAppState extends State<FarleanApp> {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         routerConfig: _router,
+        // Konfigurasi frame DevicePreview:
+        locale: DevicePreview.locale(context),
+        builder: DevicePreview.appBuilder,
       ),
     );
   }
 }
-
