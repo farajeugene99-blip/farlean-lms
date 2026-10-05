@@ -1,23 +1,28 @@
 import '../../models/app_user.dart';
 
-class DomainMap {
-  // Single Source of Truth untuk pemetaan domain kampus
-  // Format: domain kanonis -> AccountType
-  static const Map<String, AccountType> _institutionDomains = {
-    // Contoh domain institusi terdaftar
-    'kampus.ac.id': AccountType.mahasiswa,
-    'dosen.kampus.ac.id': AccountType.dosen,
-    'farlean.edu': AccountType.mahasiswa,
-    'dosen.farlean.edu': AccountType.dosen,
-  };
+class DomainEntry {
+  final String domain;
+  final AccountType type;
 
-  /// Menyelesaikan AccountType dari alamat email dengan aturan Label Boundary ketat.
+  const DomainEntry({required this.domain, required this.type});
+}
+
+class DomainMap {
+  // Single Source of Truth cerminan untuk pemetaan domain kampus (display-only)
+  // Format longest-match: domain lebih spesifik/panjang berada di prioritas atas
+  static const List<DomainEntry> institutionDomains = [
+    DomainEntry(domain: 'dosen.farlean.edu', type: AccountType.dosen),
+    DomainEntry(domain: 'farlean.edu', type: AccountType.mahasiswa),
+  ];
+
+  /// Menyelesaikan AccountType dari alamat email dengan aturan Longest-Match & Label Boundary ketat.
   /// Contoh:
-  /// - budi@kampus.ac.id -> MAHASISWA
-  /// - siti@mhs.kampus.ac.id -> MAHASISWA (subdomain valid)
-  /// - pak_joko@dosen.kampus.ac.id -> DOSEN
-  /// - hacker@evilkampus.ac.id -> UMUM (bukan label boundary)
-  /// - user@gmail.com -> UMUM
+  /// - student@farlean.edu -> MAHASISWA
+  /// - mhs@sub.farlean.edu -> MAHASISWA (subdomain valid)
+  /// - teacher@dosen.farlean.edu -> DOSEN
+  /// - guru@x.dosen.farlean.edu -> DOSEN (longest match mengutamakan dosen.farlean.edu)
+  /// - hacker@evilfarlean.edu -> UMUM (bukan label boundary)
+  /// - user@example.com -> UMUM
   static AccountType resolveAccountType(String? email) {
     if (email == null || !email.contains('@')) {
       return AccountType.umum;
@@ -30,21 +35,13 @@ class DomainMap {
     final domain = parts[1].trim();
     if (domain.isEmpty) return AccountType.umum;
 
-    // 1. Cek kecocokan exact subdomain spesifik dosen terlebih dahulu
-    for (final entry in _institutionDomains.entries) {
-      if (entry.value == AccountType.dosen) {
-        if (_matchesDomainWithLabelBoundary(domain, entry.key)) {
-          return AccountType.dosen;
-        }
-      }
-    }
+    // Urutkan longest-match (domain terpanjang dicek terlebih dahulu)
+    final sorted = List<DomainEntry>.from(institutionDomains)
+      ..sort((a, b) => b.domain.length.compareTo(a.domain.length));
 
-    // 2. Cek kecocokan mahasiswa / institusi umum
-    for (final entry in _institutionDomains.entries) {
-      if (entry.value == AccountType.mahasiswa) {
-        if (_matchesDomainWithLabelBoundary(domain, entry.key)) {
-          return AccountType.mahasiswa;
-        }
+    for (final entry in sorted) {
+      if (_matchesDomainWithLabelBoundary(domain, entry.domain)) {
+        return entry.type;
       }
     }
 

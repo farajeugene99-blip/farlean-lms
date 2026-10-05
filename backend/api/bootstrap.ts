@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
-import { resolveAccountType } from '../lib/domains';
+import { verifyAuth } from '../lib/firebaseAdmin';
+import { bootstrapUser } from '../lib/bootstrapUser';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -11,71 +11,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const token = await verifyAuth(req, res, { requireEmailVerified: false });
   if (!token) return;
 
-  const uid = token.uid;
-  const email = token.email || '';
-  const isVerified = token.email_verified === true;
   const { name, photoUrl } = req.body || {};
 
   try {
-    const userRef = db.collection('users').doc(uid);
-    const existingDoc = await userRef.get();
+    const result = await bootstrapUser({
+      uid: token.uid,
+      email: token.email || '',
+      emailVerified: token.email_verified === true,
+      name,
+      photoUrl,
+    });
 
-    // Aturan Addendum Farlean LMS:
-    // - Jika email belum diverifikasi: simpan 'UMUM'
-    // - Jika email sudah terverifikasi: hitung ulang dari domain
-    const calculatedAccountType = isVerified ? resolveAccountType(email) : 'UMUM';
-
-    if (!existingDoc.exists) {
-      // Pembuatan dokumen awal
-      const newUserData = {
-        uid,
-        name: typeof name === 'string' && name.trim().length > 0 ? name.trim() : email.split('@')[0] || 'Pengguna',
-        email,
-        account_type: calculatedAccountType,
-        role: 'USER', // Seluruh akun baru default role USER
-        photo_url: typeof photoUrl === 'string' ? photoUrl : null,
-        last_active: FieldValue.serverTimestamp(),
-        mfa_enabled: false,
-      };
-
-      await userRef.set(newUserData);
-
-      return res.status(200).json({
-        success: true,
-        isNew: true,
-        accountType: calculatedAccountType,
-        emailVerified: isVerified,
-        message: 'Profil pengguna berhasil diinisialisasi.',
-      });
-    } else {
-      // Dokumen sudah ada: idempoten, pertahankan role yang ada (jangan menimpa GURU/ADMIN)
-      const currentData = existingDoc.data() || {};
-      const updates: Record<string, any> = {
-        last_active: FieldValue.serverTimestamp(),
-      };
-
-      // Jika user baru saja verifikasi email, tingkatkan account_type jika sesuai domain
-      if (isVerified && currentData.account_type === 'UMUM') {
-        const upgradedType = resolveAccountType(email);
-        if (upgradedType !== 'UMUM') {
-          updates.account_type = upgradedType;
-        }
-      }
-
-      if (typeof name === 'string' && name.trim().length > 0) {
-        updates.name = name.trim();
-      }
-
-      await userRef.update(updates);
-
-      return res.status(200).json({
-        success: true,
-        isNew: false,
-        accountType: updates.account_type || currentData.account_type,
-        emailVerified: isVerified,
-        message: 'Profil pengguna berhasil diperbarui.',
-      });
-    }
+    return res.status(200).json({
+      success: true,
+      ...result,
+    });
   } catch (error: any) {
     console.error('Error bootstrap user:', error);
     return res.status(500).json({ error: 'Gagal menginisialisasi profil pengguna di server.' });

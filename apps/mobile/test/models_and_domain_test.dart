@@ -7,35 +7,46 @@ import 'package:mobile/models/classroom.dart';
 
 void main() {
   group('DomainMap Resolver Tests', () {
-    test('Exact domain kampus.ac.id menghasilkan MAHASISWA', () {
+    test('Exact domain farlean.edu menghasilkan MAHASISWA', () {
       expect(
-        DomainMap.resolveAccountType('budi@kampus.ac.id'),
+        DomainMap.resolveAccountType('testing.student@farlean.edu'),
         equals(AccountType.mahasiswa),
       );
     });
 
-    test('Subdomain sah mhs.kampus.ac.id menghasilkan MAHASISWA', () {
+    test('Subdomain sah mhs.farlean.edu menghasilkan MAHASISWA', () {
       expect(
-        DomainMap.resolveAccountType('siti@mhs.kampus.ac.id'),
+        DomainMap.resolveAccountType('siti@mhs.farlean.edu'),
         equals(AccountType.mahasiswa),
       );
     });
 
-    test('Subdomain dosen.kampus.ac.id menghasilkan DOSEN', () {
+    test('Domain dosen.farlean.edu menghasilkan DOSEN', () {
       expect(
-        DomainMap.resolveAccountType('dosen.eko@dosen.kampus.ac.id'),
+        DomainMap.resolveAccountType('testing.teacher@dosen.farlean.edu'),
         equals(AccountType.dosen),
       );
     });
 
-    test('Domain penipu evilkampus.ac.id DITOLAK menjadi UMUM (Label Boundary Check)', () {
+    test('Subdomain x.dosen.farlean.edu menghasilkan DOSEN (Longest Match)', () {
       expect(
-        DomainMap.resolveAccountType('hacker@evilkampus.ac.id'),
+        DomainMap.resolveAccountType('guru@x.dosen.farlean.edu'),
+        equals(AccountType.dosen),
+      );
+    });
+
+    test('Domain penipu evilfarlean.edu DITOLAK menjadi UMUM (Label Boundary Check)', () {
+      expect(
+        DomainMap.resolveAccountType('hacker@evilfarlean.edu'),
         equals(AccountType.umum),
       );
     });
 
-    test('Domain publik seperti gmail.com menghasilkan UMUM', () {
+    test('Domain publik/example seperti example.com menghasilkan UMUM', () {
+      expect(
+        DomainMap.resolveAccountType('testing.user@example.com'),
+        equals(AccountType.umum),
+      );
       expect(
         DomainMap.resolveAccountType('farlean@gmail.com'),
         equals(AccountType.umum),
@@ -44,7 +55,7 @@ void main() {
 
     test('Case-insensitivity bekerja dengan benar', () {
       expect(
-        DomainMap.resolveAccountType('BUDI@KAMPUS.AC.ID'),
+        DomainMap.resolveAccountType('BUDI@FARLEAN.EDU'),
         equals(AccountType.mahasiswa),
       );
     });

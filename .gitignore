@@ -20,6 +20,8 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 .firebase/
+emulator-data/
+**/emulator-data/
 
 # Backend (Node.js)
 backend/node_modules/
