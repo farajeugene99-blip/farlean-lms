@@ -28,6 +28,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const cleanClassId = classId.trim();
+
+  // 2b. Validasi kepemilikan kelas: Guru hanya boleh meminta signature untuk kelas yang dia miliki (Admin bebas)
+  if (role !== 'ADMIN') {
+    const classDoc = await db.collection('classes').doc(cleanClassId).get();
+    if (!classDoc.exists) {
+      return res.status(404).json({ error: 'Kelas tidak ditemukan.' });
+    }
+    const classData = classDoc.data() || {};
+    if (classData.teacher_id !== user.uid) {
+      return res.status(403).json({
+        error: 'Akses ditolak: Anda bukan pengajar/pemilik kelas ini.',
+      });
+    }
+  }
+
   const folder = `farlean/classes/${cleanClassId}/${folderType === 'images' ? 'images' : 'manual_books'}`;
 
   // 3. Rate Limiting Request Signature (Mencegah flooding upload)

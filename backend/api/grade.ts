@@ -72,20 +72,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
-      // E. Baca Dokumen Pretest & Validasi Status dan Deadline
-      const testRef = db.collection('pretests').doc(testId);
-      const testDoc = await transaction.get(testRef);
+      // E. Baca Dokumen Pretest atau Posttest & Validasi Status dan Deadline
+      const isPosttest = attemptData.kind === 'posttest';
+      let testDoc = await transaction.get(
+        db.collection(isPosttest ? 'posttests' : 'pretests').doc(testId)
+      );
+
+      // Fallback: jika kind tidak diset, periksa apakah dokumen ada di posttests
+      let resolvedScoreSubcol = isPosttest ? 'posttest_scores' : 'pretest_scores';
+      if (!testDoc.exists && !isPosttest) {
+        const altDoc = await transaction.get(db.collection('posttests').doc(testId));
+        if (altDoc.exists) {
+          testDoc = altDoc;
+          resolvedScoreSubcol = 'posttest_scores';
+        }
+      }
 
       if (!testDoc.exists) {
-        throw { status: 404, message: 'Kuis pretest tidak ditemukan.' };
+        throw { status: 404, message: 'Kuis pembelajaran tidak ditemukan.' };
       }
 
       const testData = testDoc.data() || {};
       if (testData.status === 'Draft') {
-        throw { status: 400, message: 'Kuis pretest masih berstatus Draft dan belum dibuka.' };
+        throw { status: 400, message: 'Kuis masih berstatus Draft dan belum dibuka.' };
       }
       if (testData.status === 'Archived') {
-        throw { status: 400, message: 'Kuis pretest telah diarsipkan.' };
+        throw { status: 400, message: 'Kuis telah diarsipkan.' };
       }
 
       // F. Validasi Deadline Waktu Server (+ 60 detik toleransi)
@@ -106,7 +118,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         bestScoreRef = db
             .collection('classes')
             .doc(classId)
-            .collection('pretest_scores')
+            .collection(resolvedScoreSubcol)
             .doc(`${testId}_${user.uid}`);
         bestDoc = await transaction.get(bestScoreRef);
       }

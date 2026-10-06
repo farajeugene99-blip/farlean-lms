@@ -86,6 +86,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const classId = classDoc.id;
       const classData = classDoc.data();
 
+      // B2. Tolak pendaftaran jika kelas berstatus Archived
+      if (classData.status === 'Archived') {
+        throw { status: 400, message: 'Kelas ini telah diarsipkan dan tidak lagi menerima pendaftaran anggota baru.' };
+      }
+
       // C. Periksa status keanggotaan pengguna saat ini
       const memberRef = db.collection('classes').doc(classId).collection('members').doc(user.uid);
       const existingMember = await transaction.get(memberRef);
@@ -114,13 +119,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ? 'active'
         : 'pending';
 
-      // E. Daftarkan pengguna ke sub-koleksi members
+      // E. Daftarkan pengguna ke sub-koleksi members dan enrolled_classes pengguna
       const resolvedDisplayName = userDoc.data()?.name || user.email?.split('@')[0] || 'Anggota';
       transaction.set(
         memberRef,
         {
           display_name: resolvedDisplayName,
           account_type: calculatedAccountType,
+          status: newStatus,
+          joined_at: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      const enrolledRef = db.collection('users').doc(user.uid).collection('enrolled_classes').doc(classId);
+      transaction.set(
+        enrolledRef,
+        {
+          class_id: classId,
           status: newStatus,
           joined_at: FieldValue.serverTimestamp(),
         },
