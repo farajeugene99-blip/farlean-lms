@@ -19,6 +19,7 @@ import '../presentation/material/material_editor_screen.dart';
 import '../presentation/material/material_reader_screen.dart';
 import '../presentation/meeting/meeting_detail_screen.dart';
 import '../presentation/meeting/meeting_list_screen.dart';
+import '../presentation/posttest/posttest_screen.dart';
 import '../presentation/pretest/pretest_screen.dart';
 import '../presentation/video/video_player_screen.dart';
 import '../services/auth_provider.dart';
@@ -166,6 +167,20 @@ class AppRouter {
             final meetingId = state.uri.queryParameters['meetingId'] ?? '';
             return PretestScreen(
               pretestId: pretestId,
+              classId: classId,
+              meetingId: meetingId,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/posttests/:posttestId',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final posttestId = state.pathParameters['posttestId'] ?? '';
+            final classId = state.uri.queryParameters['classId'] ?? '';
+            final meetingId = state.uri.queryParameters['meetingId'] ?? '';
+            return PosttestScreen(
+              posttestId: posttestId,
               classId: classId,
               meetingId: meetingId,
             );

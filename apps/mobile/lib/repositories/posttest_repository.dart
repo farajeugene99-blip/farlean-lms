@@ -119,7 +119,7 @@ class PosttestRepository {
     if (question.text.trim().isEmpty) {
       throw ArgumentError('Teks pertanyaan tidak boleh kosong.');
     }
-    if (question.options.isEmpty) {
+    if (question.options.length < 2) {
       throw ArgumentError('Opsi pilihan jawaban minimal 2.');
     }
     if (correctOptionIndex < 0 || correctOptionIndex >= question.options.length) {

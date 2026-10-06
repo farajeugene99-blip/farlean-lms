@@ -69,6 +69,7 @@ class AttemptRepository {
     required String classId,
     required int attemptNo,
     required List<String> questionOrder,
+    String kind = 'pretest',
   }) async {
     if (userId.trim().isEmpty) throw ArgumentError('userId tidak boleh kosong.');
     if (testId.trim().isEmpty) throw ArgumentError('testId tidak boleh kosong.');
@@ -90,10 +91,12 @@ class AttemptRepository {
         score: null,
         status: AttemptStatus.inProgress,
         startedAt: DateTime.now(),
+        kind: kind,
       );
 
       final map = attempt.toMap();
       map['started_at'] = FieldValue.serverTimestamp();
+      map['kind'] = kind;
 
       await docRef.set(map);
       return attempt;

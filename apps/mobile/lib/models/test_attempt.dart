@@ -34,6 +34,8 @@ class TestAttempt {
   final DateTime? startedAt;
   final DateTime? submittedAt;
 
+  final String kind; // 'pretest' | 'posttest'
+
   const TestAttempt({
     required this.id,
     required this.userId,
@@ -46,6 +48,7 @@ class TestAttempt {
     this.status = AttemptStatus.inProgress,
     this.startedAt,
     this.submittedAt,
+    this.kind = 'pretest',
   });
 
   factory TestAttempt.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -86,6 +89,7 @@ class TestAttempt {
       status: AttemptStatus.fromString(map['status'] as String?),
       startedAt: parseDate(map['started_at']),
       submittedAt: parseDate(map['submitted_at']),
+      kind: map['kind'] as String? ?? 'pretest',
     );
   }
 
@@ -101,6 +105,7 @@ class TestAttempt {
       'status': status.value,
       'started_at': startedAt != null ? Timestamp.fromDate(startedAt!) : FieldValue.serverTimestamp(),
       'submitted_at': submittedAt != null ? Timestamp.fromDate(submittedAt!) : null,
+      'kind': kind,
     };
   }
 
