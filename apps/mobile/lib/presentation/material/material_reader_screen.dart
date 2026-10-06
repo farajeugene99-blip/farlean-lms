@@ -146,7 +146,14 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
               icon: const Icon(Icons.edit_note_rounded),
               tooltip: 'Edit Materi',
               onPressed: () async {
-                await context.push('/materials/${material.id}/edit', extra: material);
+                final queryParams = <String, String>{};
+                if (widget.classId.isNotEmpty) queryParams['classId'] = widget.classId;
+                if (widget.meetingId.isNotEmpty) queryParams['meetingId'] = widget.meetingId;
+                final uri = Uri(
+                  path: '/materials/${material.id}/edit',
+                  queryParameters: queryParams.isEmpty ? null : queryParams,
+                );
+                await context.push(uri.toString(), extra: material);
                 _loadMaterial();
               },
             ),

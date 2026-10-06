@@ -8,8 +8,15 @@ class MainShell extends StatelessWidget {
 
   const MainShell({super.key, required this.child});
 
+  static String? activeClassId;
+
   int _calculateSelectedIndex(BuildContext context) {
-    final String location = GoRouterState.of(context).uri.path;
+    final uri = GoRouterState.of(context).uri;
+    final String location = uri.path;
+    final queryClassId = uri.queryParameters['classId'];
+    if (queryClassId != null && queryClassId.trim().isNotEmpty && queryClassId.trim() != 'default_class') {
+      activeClassId = queryClassId.trim();
+    }
     if (location.startsWith(AppConstants.dashboardRoute)) return 0;
     if (location.startsWith(AppConstants.materiRoute)) return 1;
     if (location.startsWith(AppConstants.aiRoute)) return 2;
@@ -24,7 +31,11 @@ class MainShell extends StatelessWidget {
         context.go(AppConstants.dashboardRoute);
         break;
       case 1:
-        context.go(AppConstants.materiRoute);
+        if (activeClassId != null && activeClassId!.isNotEmpty) {
+          context.go('${AppConstants.materiRoute}?classId=$activeClassId');
+        } else {
+          context.go(AppConstants.materiRoute);
+        }
         break;
       case 2:
         context.go(AppConstants.aiRoute);
