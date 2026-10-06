@@ -101,8 +101,6 @@ class MaterialRepository {
 
     try {
       final viewRef = firestore
-          .collection('classes')
-          .doc(classId)
           .collection('meetings')
           .doc(meetingId)
           .collection('materi_views')
@@ -129,8 +127,6 @@ class MaterialRepository {
 
     try {
       final doc = await firestore
-          .collection('classes')
-          .doc(classId)
           .collection('meetings')
           .doc(meetingId)
           .collection('materi_views')

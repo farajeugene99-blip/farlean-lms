@@ -61,5 +61,19 @@ void main() {
       final meeting = await repository.getMeeting('meeting_01');
       expect(meeting, isNull);
     });
+
+    test('linkModule melempar StateError saat Firestore uninitialized', () async {
+      expect(
+        () => repository.linkModule('m1', posttestId: 'post_01'),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('deleteMeeting melempar StateError saat Firestore uninitialized', () async {
+      expect(
+        () => repository.deleteMeeting('m1'),
+        throwsA(isA<StateError>()),
+      );
+    });
   });
 }

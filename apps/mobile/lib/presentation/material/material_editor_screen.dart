@@ -161,6 +161,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
     final uid = authProvider.firebaseUser?.uid ?? 'unknown_user';
 
     try {
+      String? savedId;
       if (widget.initialMaterial != null) {
         // Update materi
         final updated = widget.initialMaterial!.copyWith(
@@ -170,6 +171,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
           updatedBy: uid,
         );
         await _materialRepository.updateMaterial(updated);
+        savedId = updated.id;
       } else {
         // Buat materi baru
         final newMaterial = MaterialContent(
@@ -181,7 +183,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
           status: status,
           updatedBy: uid,
         );
-        await _materialRepository.createMaterial(newMaterial);
+        savedId = await _materialRepository.createMaterial(newMaterial);
       }
 
       if (!mounted) return;
@@ -193,7 +195,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
           backgroundColor: AppTheme.success,
         ),
       );
-      Navigator.pop(context, true);
+      Navigator.pop(context, savedId);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);

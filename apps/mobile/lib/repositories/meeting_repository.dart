@@ -109,12 +109,13 @@ class MeetingRepository {
     }
   }
 
-  /// Menautkan referensi modul (pretest, materi, video) ke pertemuan
+  /// Menautkan referensi modul (pretest, materi, video, posttest) ke pertemuan
   Future<void> linkModule(
     String meetingId, {
     String? pretestId,
     String? materiId,
     String? videoId,
+    String? posttestId,
   }) async {
     final firestore = _firestore;
     if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
@@ -124,12 +125,26 @@ class MeetingRepository {
       if (pretestId != null) updates['pretest_id'] = pretestId;
       if (materiId != null) updates['materi_id'] = materiId;
       if (videoId != null) updates['video_id'] = videoId;
+      if (posttestId != null) updates['posttest_id'] = posttestId;
 
       if (updates.isNotEmpty) {
         await firestore.collection('meetings').doc(meetingId).update(updates);
       }
     } catch (e) {
       debugPrint('Gagal menautkan modul ke pertemuan: $e');
+      rethrow;
+    }
+  }
+
+  /// Menghapus pertemuan
+  Future<void> deleteMeeting(String meetingId) async {
+    final firestore = _firestore;
+    if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
+
+    try {
+      await firestore.collection('meetings').doc(meetingId).delete();
+    } catch (e) {
+      debugPrint('Gagal menghapus pertemuan: $e');
       rethrow;
     }
   }
