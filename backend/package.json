@@ -9,7 +9,8 @@
     "test:api": "tsx test/api-endpoints.test.ts",
     "test:testing-accounts": "tsx test/testing-accounts.test.ts",
     "test:list-queries": "tsx test/list-queries-regression.test.ts",
-    "seed:testing": "tsx ../emulator/seed-testing-accounts.mjs"
+    "seed:testing": "tsx ../emulator/seed-testing-accounts.mjs",
+    "migrate": "tsx scripts/migrate-phase1-phase2.ts"
   },
   "keywords": [],
   "author": "",

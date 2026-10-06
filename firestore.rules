@@ -49,6 +49,16 @@ service cloud.firestore {
         get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.status == 'active';
     }
 
+    // Memeriksa apakah staf adalah PEMILIK kelas aktif atau ADMIN
+    function isClassOwner(classId) {
+      return isAdmin() || (
+        isGuru() &&
+        exists(/databases/$(database)/documents/classes/$(classId)) &&
+        get(/databases/$(database)/documents/classes/$(classId)).data.teacher_id == request.auth.uid &&
+        (!('status' in get(/databases/$(database)/documents/classes/$(classId)).data) || get(/databases/$(database)/documents/classes/$(classId)).data.status == 'Active')
+      );
+    }
+
     // Validasi field yang boleh diubah sendiri oleh user pada profilnya
     function isValidUserSelfUpdate() {
       let diff = request.resource.data.diff(resource.data);
@@ -90,7 +100,8 @@ service cloud.firestore {
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0
         && request.resource.data.file_url is string
-        && request.resource.data.file_url.size() > 0;
+        && request.resource.data.file_url.size() > 0
+        && (!('status' in request.resource.data) || request.resource.data.status in ['Draft', 'Published', 'Archived']);
     }
 
     function isValidVideoWrite() {
@@ -98,10 +109,20 @@ service cloud.firestore {
         && request.resource.data.class_id is string
         && request.resource.data.class_id.size() > 0
         && request.resource.data.url is string
-        && request.resource.data.url.size() > 0;
+        && request.resource.data.url.size() > 0
+        && (!('status' in request.resource.data) || request.resource.data.status in ['Draft', 'Published', 'Archived']);
     }
 
     function isValidPretestWrite() {
+      return isStaff()
+        && request.resource.data.class_id is string
+        && request.resource.data.class_id.size() > 0
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.status in ['Draft', 'Published', 'Archived'];
+    }
+
+    function isValidPosttestWrite() {
       return isStaff()
         && request.resource.data.class_id is string
         && request.resource.data.class_id.size() > 0
@@ -130,7 +151,14 @@ service cloud.firestore {
     // ============================================================================
     match /classes/{classId} {
       allow read: if isClassMemberActive(classId) || isStaff();
-      allow create, update, delete: if isStaff();
+      // Pembuatan kelas WAJIB melalui backend (/api/create-class) demi atomisitas unik kode
+      allow create: if false;
+      // Update kelas: hanya owner/admin; kode kelas dan teacher_id IMMUTABLE
+      allow update: if isClassOwner(classId)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['code', 'teacher_id'])
+        && (!('status' in request.resource.data) || request.resource.data.status in ['Active', 'Archived']);
+      // Penghapusan kelas dari client DILARANG (hanya melalui admin purge backend)
+      allow delete: if false;
 
       match /members/{memberUid} {
         allow read: if (isVerified() && request.auth.uid == memberUid)
@@ -139,12 +167,12 @@ service cloud.firestore {
         allow write: if false;
       }
 
-      match /meetings/{meetingId}/materi_views/{uid} {
-        allow read: if isOwner(uid) || isStaff();
-        allow write: if isOwner(uid) || isStaff();
+      match /pretest_scores/{scoreDoc} {
+        allow read: if isClassMemberActive(classId) || isStaff();
+        allow write: if false;
       }
 
-      match /pretest_scores/{scoreDoc} {
+      match /posttest_scores/{scoreDoc} {
         allow read: if isClassMemberActive(classId) || isStaff();
         allow write: if false;
       }
@@ -156,8 +184,17 @@ service cloud.firestore {
     match /meetings/{meetingId} {
       allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status == 'Published')
                   || isStaff();
-      allow create, update: if isValidMeetingWrite();
-      allow delete: if isStaff();
+      allow create: if isValidMeetingWrite()
+                    && isClassOwner(request.resource.data.class_id);
+      allow update: if isValidMeetingWrite()
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && isClassOwner(resource.data.class_id);
+      allow delete: if isClassOwner(resource.data.class_id);
+
+      match /materi_views/{uid} {
+        allow read: if isOwner(uid) || isStaff();
+        allow write: if isOwner(uid) || isStaff();
+      }
     }
 
     // ============================================================================
@@ -166,26 +203,40 @@ service cloud.firestore {
     match /materials/{materiId} {
       allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status == 'Published')
                   || isStaff();
-      allow create, update: if isValidMaterialWrite();
-      allow delete: if isStaff();
+      allow create: if isValidMaterialWrite()
+                    && isClassOwner(request.resource.data.class_id);
+      allow update: if isValidMaterialWrite()
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && isClassOwner(resource.data.class_id);
+      allow delete: if isClassOwner(resource.data.class_id);
     }
 
     // ============================================================================
     // 5. VIDEOS (YOUTUBE & CLOUDINARY)
     // ============================================================================
     match /videos/{videoId} {
-      allow read: if isClassMemberActive(resource.data.class_id) || isStaff();
-      allow create, update: if isValidVideoWrite();
-      allow delete: if isStaff();
+      allow read: if (isClassMemberActive(resource.data.class_id) && (!('status' in resource.data) || resource.data.status == 'Published'))
+                  || isStaff();
+      allow create: if isValidVideoWrite()
+                    && isClassOwner(request.resource.data.class_id);
+      allow update: if isValidVideoWrite()
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && isClassOwner(resource.data.class_id);
+      allow delete: if isClassOwner(resource.data.class_id);
     }
 
     // ============================================================================
     // 6. MANUAL BOOKS (BUKU PANDUAN PDF)
     // ============================================================================
     match /manual_books/{bookId} {
-      allow read: if isClassMemberActive(resource.data.class_id) || isStaff();
-      allow create, update: if isValidManualBookWrite();
-      allow delete: if isStaff();
+      allow read: if (isClassMemberActive(resource.data.class_id) && (!('status' in resource.data) || resource.data.status == 'Published'))
+                  || isStaff();
+      allow create: if isValidManualBookWrite()
+                    && isClassOwner(request.resource.data.class_id);
+      allow update: if isValidManualBookWrite()
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && isClassOwner(resource.data.class_id);
+      allow delete: if isClassOwner(resource.data.class_id);
     }
 
     // ============================================================================
@@ -194,19 +245,44 @@ service cloud.firestore {
     match /pretests/{testId} {
       allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status == 'Published')
                   || isStaff();
-      allow create, update: if isValidPretestWrite();
-      allow delete: if isStaff();
+      allow create: if isValidPretestWrite()
+                    && isClassOwner(request.resource.data.class_id);
+      allow update: if isValidPretestWrite()
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && isClassOwner(resource.data.class_id);
+      allow delete: if isClassOwner(resource.data.class_id);
 
       match /questions/{qid} {
         allow read: if (isClassMemberActive(get(/databases/$(database)/documents/pretests/$(testId)).data.class_id)
                         && get(/databases/$(database)/documents/pretests/$(testId)).data.status == 'Published')
                     || isStaff();
-        allow write: if isStaff();
+        allow write: if isClassOwner(get(/databases/$(database)/documents/pretests/$(testId)).data.class_id);
       }
     }
 
     // ============================================================================
-    // 8. ANSWER KEYS (100% ISOLASI RAHASIA: SERVER-ONLY)
+    // 8. POSTTESTS & QUESTIONS SUBCOLLECTION
+    // ============================================================================
+    match /posttests/{testId} {
+      allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status == 'Published')
+                  || isStaff();
+      allow create: if isValidPosttestWrite()
+                    && isClassOwner(request.resource.data.class_id);
+      allow update: if isValidPosttestWrite()
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && isClassOwner(resource.data.class_id);
+      allow delete: if isClassOwner(resource.data.class_id);
+
+      match /questions/{qid} {
+        allow read: if (isClassMemberActive(get(/databases/$(database)/documents/posttests/$(testId)).data.class_id)
+                        && get(/databases/$(database)/documents/posttests/$(testId)).data.status == 'Published')
+                    || isStaff();
+        allow write: if isClassOwner(get(/databases/$(database)/documents/posttests/$(testId)).data.class_id);
+      }
+    }
+
+    // ============================================================================
+    // 9. ANSWER KEYS (100% ISOLASI RAHASIA: SERVER-ONLY)
     // ============================================================================
     match /answer_keys/{testId} {
       allow read, write: if false;
@@ -217,7 +293,7 @@ service cloud.firestore {
     }
 
     // ============================================================================
-    // 9. ATTEMPTS (PENGERJAAN PRETEST - OPTION A DENGAN KUNCI KEAMANAN)
+    // 10. ATTEMPTS (PENGERJAAN PRETEST & POSTTEST)
     // ============================================================================
     match /attempts/{attemptId} {
       // Membaca: Pemilik attempt atau Staff
@@ -228,19 +304,20 @@ service cloud.firestore {
       // - Status awal wajib 'in_progress'
       // - started_at wajib server timestamp
       // - score wajib null jika disertakan
+      // - kind opsional/valid: 'pretest' atau 'posttest'
       allow create: if isVerified()
         && request.resource.data.keys().hasAll(['user_id', 'class_id', 'test_id', 'status', 'started_at'])
         && request.auth.uid == request.resource.data.user_id
         && isClassMemberActive(request.resource.data.class_id)
         && request.resource.data.status == 'in_progress'
         && request.resource.data.started_at == request.time
-        && (!('score' in request.resource.data) || request.resource.data.score == null);
+        && (!('score' in request.resource.data) || request.resource.data.score == null)
+        && (!('kind' in request.resource.data) || request.resource.data.kind in ['pretest', 'posttest']);
 
       // Mengupdate attempt (Autosave Jawaban):
       // - Hanya boleh selama status masih 'in_progress'
       // - Setelah submitted / graded: DILARANG mengupdate jawaban!
       // - Hanya boleh mengupdate field 'answers' dan 'last_saved_at'
-      // - affectedKeys().hasOnly menjamin semua field lain (user_id, test_id, class_id, status, score, started_at) IMMUTABLE
       allow update: if isVerified()
         && request.auth.uid == resource.data.user_id
         && resource.data.status == 'in_progress'
@@ -250,7 +327,7 @@ service cloud.firestore {
     }
 
     // ============================================================================
-    // 10. SYSTEM INTERNAL COLLECTIONS (CLASS CODES & RATE LIMITS)
+    // 11. SYSTEM INTERNAL COLLECTIONS (CLASS CODES & RATE LIMITS)
     // ============================================================================
     match /class_codes/{code} {
       allow read, write: if false;

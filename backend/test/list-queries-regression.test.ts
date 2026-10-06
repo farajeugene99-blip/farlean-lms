@@ -83,6 +83,17 @@ async function runListRegressionTests() {
       file_name: 'book.pdf',
       file_size: 1024,
     });
+
+    await adminDb.collection('posttests').doc('post_reg_pub_1').set({
+      class_id: realClassId,
+      title: 'Posttest 1 Published',
+      status: 'Published',
+    });
+    await adminDb.collection('posttests').doc('post_reg_draft_1').set({
+      class_id: realClassId,
+      title: 'Posttest 2 Draft',
+      status: 'Draft',
+    });
   });
 
   const activeStudentDb = testEnv
@@ -99,6 +110,10 @@ async function runListRegressionTests() {
 
   const teacherDb = testEnv
     .authenticatedContext(teacherUid, { email_verified: true, role: 'GURU' })
+    .firestore();
+
+  const otherTeacherDb = testEnv
+    .authenticatedContext('other_guru_list_uid', { email_verified: true, role: 'GURU' })
     .firestore();
 
   let passed = 0;
@@ -242,6 +257,39 @@ async function runListRegressionTests() {
         class_id: realClassId,
         number: 5,
         title: 'Meeting Valid Guru',
+        status: 'Draft',
+      })
+    );
+  });
+
+  // 13. Query Posttests Varian Siswa
+  await test('13. Siswa AKTIF dapat query list posttests Published di kelasnya', async () => {
+    await assertSucceeds(
+      activeStudentDb
+        .collection('posttests')
+        .where('class_id', '==', realClassId)
+        .where('status', '==', 'Published')
+        .get()
+    );
+  });
+
+  // 14. Query Posttests Varian Guru
+  await test('14. GURU dapat query list posttests (termasuk Draft) di kelasnya', async () => {
+    await assertSucceeds(
+      teacherDb
+        .collection('posttests')
+        .where('class_id', '==', realClassId)
+        .get()
+    );
+  });
+
+  // 15. Validasi Tulis: GURU Non-Owner DIBLOKIR membuat meeting di kelas Guru lain
+  await test('15. GURU Non-Owner DIBLOKIR membuat meeting di kelas Guru lain', async () => {
+    await assertFails(
+      otherTeacherDb.collection('meetings').doc('meet_illegal_teacher').set({
+        class_id: realClassId,
+        number: 6,
+        title: 'Meeting Ilegal Guru Luar',
         status: 'Draft',
       })
     );

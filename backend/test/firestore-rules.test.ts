@@ -37,9 +37,11 @@ async function runTests() {
   const otherUserUid = 'user_mhs_02';
   const removedUserUid = 'user_removed_01';
   const guruUid = 'guru_dosen_01';
+  const otherGuruUid = 'guru_other_02';
   const adminUid = 'admin_super_01';
   const classId = 'class_test_01';
   const otherClassId = 'class_other_02';
+  const archivedClassId = 'class_archived_03';
 
   // Seed data awal menggunakan context admin (bypass rules)
   await testEnv.withSecurityRulesDisabled(async (context) => {
@@ -79,7 +81,25 @@ async function runTests() {
     // 3. Seed class A
     await adminDb.collection('classes').doc(classId).set({
       name: 'Pemrograman Mobile Terapan',
+      code: 'MOB123',
       teacher_id: guruUid,
+      status: 'Active',
+    });
+
+    // 3b. Seed class B (Dikelola oleh Guru Lain)
+    await adminDb.collection('classes').doc(otherClassId).set({
+      name: 'Rekayasa Perangkat Lunak',
+      code: 'RPL456',
+      teacher_id: otherGuruUid,
+      status: 'Active',
+    });
+
+    // 3c. Seed class Archived (Milik Guru 1 tapi sudah diarsip)
+    await adminDb.collection('classes').doc(archivedClassId).set({
+      name: 'Kelas Arsip Lama',
+      code: 'ARS789',
+      teacher_id: guruUid,
+      status: 'Archived',
     });
 
     // 4. Seed members: userVerifiedUid = active, otherUserUid = pending, removedUser = removed
@@ -119,11 +139,7 @@ async function runTests() {
         joined_at: new Date(),
       });
 
-    // 5. Seed class B (Kelas Lain untuk tes isolasi)
-    await adminDb.collection('classes').doc(otherClassId).set({
-      name: 'Rekayasa Perangkat Lunak',
-      teacher_id: guruUid,
-    });
+    // 5. Members in otherClassId: userVerifiedUid is NOT in otherClassId
 
     // 6. Seed Materials (Published vs Draft)
     await adminDb.collection('materials').doc('mat_published').set({
@@ -141,6 +157,29 @@ async function runTests() {
       title: 'Materi Rahasia Kelas Lain',
       status: 'Published',
     });
+
+    // 6b. Seed Posttests (Published vs Draft)
+    await adminDb.collection('posttests').doc('posttest_published').set({
+      class_id: classId,
+      title: 'Post Test Evaluasi 1',
+      status: 'Published',
+    });
+    await adminDb.collection('posttests').doc('posttest_draft').set({
+      class_id: classId,
+      title: 'Post Test Draft 2',
+      status: 'Draft',
+    });
+    await adminDb
+      .collection('posttests')
+      .doc('posttest_published')
+      .collection('questions')
+      .doc('q1')
+      .set({
+        text: 'Manakah widget immutable?',
+        options: ['StatefulWidget', 'StatelessWidget'],
+        points: 10,
+        tag: 'widgets',
+      });
 
     // 7. Seed Pretests & Questions & Answer Keys
     await adminDb.collection('pretests').doc('pretest_published').set({
@@ -170,6 +209,7 @@ async function runTests() {
       });
 
     // 8. Seed Attempts (In-Progress vs Graded)
+    await adminDb.collection('attempts').doc('att_student_new').delete().catch(() => {});
     await adminDb.collection('attempts').doc('attempt_inprogress_01').set({
       user_id: userVerifiedUid,
       class_id: classId,
@@ -217,6 +257,10 @@ async function runTests() {
 
   const guruDb = testEnv
     .authenticatedContext(guruUid, { email_verified: true, role: 'GURU' })
+    .firestore();
+
+  const otherGuruDb = testEnv
+    .authenticatedContext(otherGuruUid, { email_verified: true, role: 'GURU' })
     .firestore();
 
   const adminDb = testEnv
@@ -513,6 +557,109 @@ async function runTests() {
         status: 'in_progress',
         score: null,
         started_at: serverTimestamp(),
+      })
+    );
+  });
+
+  // ============================================================================
+  // SKENARIO 30 - 37: STRICT OWNERSHIP, CLASS IMMUTABILITY & POSTTEST RULES
+  // ============================================================================
+  await test('Skenario 30: Guru Non-Owner DIBLOKIR membuat materi di kelas milik Guru lain (Strict Ownership)', async () => {
+    // otherGuruDb mencoba membuat materi di classId (yang dimiliki guruUid)
+    await assertFails(
+      otherGuruDb.collection('materials').doc('mat_cross_teacher').set({
+        class_id: classId,
+        title: 'Materi Ilegal Guru Lain',
+        status: 'Draft',
+      })
+    );
+  });
+
+  await test('Skenario 31: Guru DIBLOKIR memodifikasi class_id saat update materi (Immutability class_id)', async () => {
+    await assertFails(
+      guruDb.collection('materials').doc('mat_published').update({
+        class_id: otherClassId,
+      })
+    );
+  });
+
+  await test('Skenario 32: Guru DIBLOKIR membuat materi di kelas yang berstatus Archived (Write-Lock)', async () => {
+    await assertFails(
+      guruDb.collection('materials').doc('mat_archived_fail').set({
+        class_id: archivedClassId,
+        title: 'Materi di Kelas Arsip',
+        status: 'Draft',
+      })
+    );
+  });
+
+  await test('Skenario 33: Client DIBLOKIR membuat dokumen classes/{id} langsung (Wajib via backend /api/create-class)', async () => {
+    await assertFails(
+      guruDb.collection('classes').doc('class_direct_client').set({
+        name: 'Kelas Direct',
+        code: 'DIRECT12',
+        teacher_id: guruUid,
+        status: 'Active',
+      })
+    );
+  });
+
+  await test('Skenario 34: Guru Owner DIBLOKIR mengubah code atau teacher_id pada update kelas (Immutable Code)', async () => {
+    await assertFails(
+      guruDb.collection('classes').doc(classId).update({
+        code: 'HACKED123',
+      })
+    );
+    await assertFails(
+      guruDb.collection('classes').doc(classId).update({
+        teacher_id: otherGuruUid,
+      })
+    );
+    // Tapi boleh mengubah name atau status
+    await assertSucceeds(
+      guruDb.collection('classes').doc(classId).update({
+        name: 'Pemrograman Mobile Terapan Revisi',
+      })
+    );
+  });
+
+  await test('Skenario 35: Siswa aktif DAPAT membaca Posttest Published dan DIBLOKIR membaca Posttest Draft', async () => {
+    await assertSucceeds(
+      verifiedUserDb.collection('posttests').doc('posttest_published').get()
+    );
+    await assertFails(
+      verifiedUserDb.collection('posttests').doc('posttest_draft').get()
+    );
+  });
+
+  await test('Skenario 36: Guru Owner DAPAT membuat Posttest dan Subkoleksi Questions di kelasnya', async () => {
+    await assertSucceeds(
+      guruDb.collection('posttests').doc('posttest_new').set({
+        class_id: classId,
+        title: 'Posttest Baru Guru',
+        status: 'Draft',
+      })
+    );
+    await assertSucceeds(
+      guruDb
+        .collection('posttests')
+        .doc('posttest_new')
+        .collection('questions')
+        .doc('q_new_1')
+        .set({
+          text: 'Soal Baru',
+          options: ['A', 'B'],
+          points: 10,
+        })
+    );
+  });
+
+  await test('Skenario 37: Guru Non-Owner DIBLOKIR membuat Posttest di kelas Guru lain', async () => {
+    await assertFails(
+      otherGuruDb.collection('posttests').doc('posttest_illegal').set({
+        class_id: classId,
+        title: 'Posttest Ilegal',
+        status: 'Draft',
       })
     );
   });
