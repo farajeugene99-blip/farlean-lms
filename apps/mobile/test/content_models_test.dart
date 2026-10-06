@@ -4,6 +4,7 @@ import 'package:mobile/models/delta_sanitizer.dart';
 import 'package:mobile/models/manual_book.dart';
 import 'package:mobile/models/material_content.dart';
 import 'package:mobile/models/meeting.dart';
+import 'package:mobile/models/posttest.dart';
 import 'package:mobile/models/pretest.dart';
 import 'package:mobile/models/question.dart';
 import 'package:mobile/models/test_attempt.dart';
@@ -28,10 +29,12 @@ void main() {
         classId: 'class_01',
         number: 1,
         title: 'Pengantar Dart & Flutter',
+        description: 'Pembahasan arsitektur Flutter',
         date: now,
         pretestId: 'pretest_01',
         materiId: 'materi_01',
         videoId: 'video_01',
+        posttestId: 'posttest_01',
         status: ContentStatus.published,
       );
 
@@ -39,15 +42,49 @@ void main() {
       expect(map['class_id'], equals('class_01'));
       expect(map['number'], equals(1));
       expect(map['title'], equals('Pengantar Dart & Flutter'));
+      expect(map['description'], equals('Pembahasan arsitektur Flutter'));
       expect(map['pretest_id'], equals('pretest_01'));
       expect(map['materi_id'], equals('materi_01'));
       expect(map['video_id'], equals('video_01'));
+      expect(map['posttest_id'], equals('posttest_01'));
       expect(map['status'], equals('Published'));
 
       final fromMap = Meeting.fromMap(map, id: 'meeting_01');
       expect(fromMap.id, equals('meeting_01'));
       expect(fromMap.status, equals(ContentStatus.published));
+      expect(fromMap.description, equals('Pembahasan arsitektur Flutter'));
       expect(fromMap.pretestId, equals('pretest_01'));
+      expect(fromMap.posttestId, equals('posttest_01'));
+    });
+  });
+
+  group('Posttest Model Tests', () {
+    test('Posttest serialization stores duration and max_attempts', () {
+      final now = DateTime(2026, 10, 4, 23, 59);
+      final posttest = Posttest(
+        id: 'posttest_01',
+        classId: 'class_01',
+        meetingId: 'meeting_01',
+        title: 'Post Test Evaluasi',
+        duration: 20,
+        deadline: now,
+        maxAttempts: 2,
+        status: ContentStatus.published,
+      );
+
+      final map = posttest.toMap();
+      expect(map['class_id'], equals('class_01'));
+      expect(map['meeting_id'], equals('meeting_01'));
+      expect(map['title'], equals('Post Test Evaluasi'));
+      expect(map['duration'], equals(20));
+      expect(map['max_attempts'], equals(2));
+      expect(map['status'], equals('Published'));
+
+      final recreated = Posttest.fromMap(map, id: 'posttest_01');
+      expect(recreated.id, equals('posttest_01'));
+      expect(recreated.duration, equals(20));
+      expect(recreated.maxAttempts, equals(2));
+      expect(recreated.status, equals(ContentStatus.published));
     });
   });
 

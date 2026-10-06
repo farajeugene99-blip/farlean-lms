@@ -29,6 +29,8 @@ const db = getFirestore();
 
 const TEST_CLASS_ID = 'class_test_qa';
 const TEST_CLASS_CODE = 'QATEST123';
+const TEST_CLASS_ID_B = 'class_test_qb';
+const TEST_CLASS_CODE_B = 'QATEST456';
 
 const ACCOUNTS = [
   {
@@ -185,16 +187,33 @@ async function seed() {
     console.log(`   └─ Profil Firestore: account_type=${profileResult.accountType}, role=${profileResult.role}, verified=${profileResult.emailVerified}`);
   }
 
-  // D. Buat Kelas QA Testing
+  // D. Buat Kelas QA Testing (Kelas A & Kelas B untuk Multi-Class Testing)
   await db.collection('classes').doc(TEST_CLASS_ID).set({
     name: 'Kelas QA — Testing Only',
     code: TEST_CLASS_CODE,
+    description: 'Kelas Pengujian QA Farlean LMS',
     teacher_id: teacherUid,
+    status: 'Active',
+    created_at: FieldValue.serverTimestamp(),
     updated_at: FieldValue.serverTimestamp(),
   }, { merge: true });
 
   await db.collection('class_codes').doc(TEST_CLASS_CODE).set({
     class_id: TEST_CLASS_ID,
+  }, { merge: true });
+
+  await db.collection('classes').doc(TEST_CLASS_ID_B).set({
+    name: 'Kelas QA B — Secondary',
+    code: TEST_CLASS_CODE_B,
+    description: 'Kelas Pengujian Isolasi Multi-Class B',
+    teacher_id: teacherUid,
+    status: 'Active',
+    created_at: FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
+  }, { merge: true });
+
+  await db.collection('class_codes').doc(TEST_CLASS_CODE_B).set({
+    class_id: TEST_CLASS_ID_B,
   }, { merge: true });
 
   // E. Pasang Membership Sesuai Skenario Pengujian

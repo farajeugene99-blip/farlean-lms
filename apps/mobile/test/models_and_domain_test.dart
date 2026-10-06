@@ -112,14 +112,31 @@ void main() {
 
   group('Classroom & ClassMember Model Tests', () {
     test('Classroom serialisasi bekerja', () {
+      final now = DateTime(2026, 10, 5, 8, 30);
       final classroom = Classroom.fromMap({
         'name': 'Fisika Dasar',
+        'code': 'FISIK123',
+        'description': 'Kelas kuliah fisika dasar',
         'teacher_id': 'teacher_01',
+        'status': 'Active',
+        'created_at': now,
+        'updated_at': now,
       }, id: 'class_01');
 
       expect(classroom.id, equals('class_01'));
       expect(classroom.name, equals('Fisika Dasar'));
+      expect(classroom.code, equals('FISIK123'));
+      expect(classroom.description, equals('Kelas kuliah fisika dasar'));
       expect(classroom.teacherId, equals('teacher_01'));
+      expect(classroom.status, equals('Active'));
+      expect(classroom.isActive, isTrue);
+      expect(classroom.isArchived, isFalse);
+
+      final map = classroom.toMap();
+      expect(map['name'], equals('Fisika Dasar'));
+      expect(map['code'], equals('FISIK123'));
+      expect(map['description'], equals('Kelas kuliah fisika dasar'));
+      expect(map['status'], equals('Active'));
     });
 
     test('ClassMember status enum diparse dengan benar', () {
