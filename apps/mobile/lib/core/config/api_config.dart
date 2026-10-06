@@ -13,4 +13,8 @@ class ApiConfig {
 
   static String get bootstrapUrl => '$baseUrl/api/bootstrap';
   static String get joinClassUrl => '$baseUrl/api/join-class';
+  static String get createClassUrl => '$baseUrl/api/create-class';
+  static String get myClassesUrl => '$baseUrl/api/my-classes';
+  static String get classMembersUrl => '$baseUrl/api/class-members';
+  static String get classPurgeUrl => '$baseUrl/api/class-purge';
 }

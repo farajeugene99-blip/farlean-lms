@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../services/class_provider.dart';
 
 class MainShell extends StatelessWidget {
   final Widget child;
@@ -31,10 +33,23 @@ class MainShell extends StatelessWidget {
         context.go(AppConstants.dashboardRoute);
         break;
       case 1:
-        if (activeClassId != null && activeClassId!.isNotEmpty) {
-          context.go('${AppConstants.materiRoute}?classId=$activeClassId');
+        // Smart Tab: jika user punya 1 kelas atau ada kelas yang terpilih, buka langsung
+        final classProvider = context.read<ClassProvider>();
+        final targetClassId = classProvider.selectedClassId ??
+            (classProvider.hasSingleClass ? classProvider.singleClassId : null) ??
+            activeClassId;
+
+        if (targetClassId != null && targetClassId.isNotEmpty && targetClassId != 'default_class') {
+          context.go('${AppConstants.materiRoute}?classId=$targetClassId');
         } else {
-          context.go(AppConstants.materiRoute);
+          // Arahkan ke Beranda agar pengguna memilih kelas terlebih dahulu
+          context.go(AppConstants.dashboardRoute);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Pilih salah satu kelas terlebih dahulu untuk melihat pertemuan & materi.'),
+              duration: Duration(seconds: 2),
+            ),
+          );
         }
         break;
       case 2:

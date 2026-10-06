@@ -6,11 +6,13 @@ import 'core/config/app_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'routing/app_router.dart';
 import 'services/auth_provider.dart';
+import 'services/class_provider.dart';
 
 class FarleanApp extends StatefulWidget {
   final AuthProvider? authProvider;
+  final ClassProvider? classProvider;
 
-  const FarleanApp({super.key, this.authProvider});
+  const FarleanApp({super.key, this.authProvider, this.classProvider});
 
   @override
   State<FarleanApp> createState() => _FarleanAppState();
@@ -18,19 +20,24 @@ class FarleanApp extends StatefulWidget {
 
 class _FarleanAppState extends State<FarleanApp> {
   late final AuthProvider _authProvider;
+  late final ClassProvider _classProvider;
   late final GoRouter _router;
 
   @override
   void initState() {
     super.initState();
     _authProvider = widget.authProvider ?? AuthProvider();
+    _classProvider = widget.classProvider ?? ClassProvider();
     _router = AppRouter.createRouter(_authProvider);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<AuthProvider>.value(
-      value: _authProvider,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AuthProvider>.value(value: _authProvider),
+        ChangeNotifierProvider<ClassProvider>.value(value: _classProvider),
+      ],
       child: MaterialApp.router(
         title: AppConstants.appName,
         debugShowCheckedModeBanner: false,

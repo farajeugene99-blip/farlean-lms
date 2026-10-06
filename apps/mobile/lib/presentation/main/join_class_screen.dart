@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../services/class_provider.dart';
 import '../../services/join_class_service.dart';
 
 class JoinClassScreen extends StatefulWidget {
@@ -103,9 +107,16 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              Navigator.pop(context);
+              if (result.classId.isNotEmpty) {
+                final classProvider = context.read<ClassProvider>();
+                classProvider.selectClass(result.classId);
+                classProvider.loadClasses();
+                context.go('${AppConstants.materiRoute}?classId=${result.classId}');
+              } else {
+                Navigator.pop(context);
+              }
             },
-            child: const Text('Selesai'),
+            child: const Text('Buka Kelas'),
           ),
         ],
       ),

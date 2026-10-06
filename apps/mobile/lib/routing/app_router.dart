@@ -8,6 +8,7 @@ import '../presentation/auth/forgot_password_screen.dart';
 import '../presentation/auth/login_screen.dart';
 import '../presentation/auth/register_screen.dart';
 import '../presentation/auth/verify_email_screen.dart';
+import '../presentation/class/class_detail_screen.dart';
 import '../presentation/main/dashboard_screen.dart';
 import '../presentation/main/join_class_screen.dart';
 import '../presentation/main/main_shell.dart';
@@ -85,6 +86,14 @@ class AppRouter {
           path: AppConstants.joinClassRoute,
           parentNavigatorKey: _rootNavigatorKey,
           builder: (context, state) => const JoinClassScreen(),
+        ),
+        GoRoute(
+          path: '/classes/:classId',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final classId = state.pathParameters['classId'] ?? '';
+            return ClassDetailScreen(classId: classId);
+          },
         ),
         GoRoute(
           path: '/meetings/:meetingId',
