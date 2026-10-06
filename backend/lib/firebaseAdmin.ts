@@ -6,9 +6,23 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 // Emulator Safety Guard (Blueprint Phase 1 Rule)
 const isProduction =
   process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+const allowLiveProd = process.env.ALLOW_PRODUCTION_MODE === 'true';
+
+// Auto-fallback ke emulator lokal jika berada di environment dev/test
+if (!isProduction && !allowLiveProd) {
+  if (!process.env.FIRESTORE_EMULATOR_HOST) {
+    process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080';
+  }
+  if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+    process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
+  }
+  if (!process.env.FIREBASE_PROJECT_ID) {
+    process.env.FIREBASE_PROJECT_ID = 'farlean-lms';
+  }
+}
+
 const hasAuthEmulator = Boolean(process.env.FIREBASE_AUTH_EMULATOR_HOST);
 const hasFirestoreEmulator = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
-const allowLiveProd = process.env.ALLOW_PRODUCTION_MODE === 'true';
 
 // Pastikan inisialisasi hanya terjadi sekali (singleton)
 if (!getApps().length) {

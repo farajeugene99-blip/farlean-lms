@@ -71,12 +71,12 @@ class FirebaseConfig {
       return _emulatorHostOverride.trim();
     }
     // Wajib cek kIsWeb terlebih dahulu sebelum mengecek platform OS
-    if (kIsWeb) return 'localhost';
+    if (kIsWeb) return '127.0.0.1';
     
     // Gunakan defaultTargetPlatform agar aman tanpa import dart:io
     if (defaultTargetPlatform == TargetPlatform.android) {
       return '10.0.2.2';
     }
-    return 'localhost';
+    return '127.0.0.1';
   }
 }

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  static const int backendPort = 3000;
+  static const int backendPort = 3001;
 
   /// Mendapatkan Base URL backend Vercel / local serverless dev
   static String get baseUrl {
