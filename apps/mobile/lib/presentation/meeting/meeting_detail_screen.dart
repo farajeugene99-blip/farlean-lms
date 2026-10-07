@@ -300,59 +300,35 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
 
     final titleController = TextEditingController(text: 'Pretest Pertemuan ${meeting.number}');
     final durationController = TextEditingController(text: '15');
-    final qTextController = TextEditingController(text: 'Pertanyaan konsep dasar');
-    final optAController = TextEditingController(text: 'Jawaban Benar');
-    final optBController = TextEditingController(text: 'Jawaban Salah');
     final formKey = GlobalKey<FormState>();
 
+    String? createdTestId;
     final created = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Buat Kuis Pretest'),
         content: Form(
           key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Judul Pretest'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
-                ),
-                const SizedBox(height: 10),
-                TextFormField(
-                  controller: durationController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
-                  validator: (v) {
-                    final num = int.tryParse(v?.trim() ?? '');
-                    if (num == null || num <= 0) return 'Durasi harus > 0 menit';
-                    return null;
-                  },
-                ),
-                const Divider(height: 24),
-                const Text('Soal Pertama (Pilihan Ganda):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: qTextController,
-                  decoration: const InputDecoration(labelText: 'Teks Soal'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Soal wajib diisi' : null,
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: optAController,
-                  decoration: const InputDecoration(labelText: 'Pilihan A (Kunci Benar)'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Pilihan A wajib diisi' : null,
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: optBController,
-                  decoration: const InputDecoration(labelText: 'Pilihan B'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Pilihan B wajib diisi' : null,
-                ),
-              ],
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: titleController,
+                decoration: const InputDecoration(labelText: 'Judul Pretest'),
+                validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: durationController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
+                validator: (v) {
+                  final num = int.tryParse(v?.trim() ?? '');
+                  if (num == null || num <= 0) return 'Durasi harus > 0 menit';
+                  return null;
+                },
+              ),
+            ],
           ),
         ),
         actions: [
@@ -370,25 +346,11 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                   meetingId: meeting.id,
                   title: titleController.text.trim(),
                   duration: int.parse(durationController.text.trim()),
-                  status: ContentStatus.published,
+                  status: ContentStatus.draft,
                 );
                 final testId = await _pretestRepository.createPretest(pretest);
-
-                final question = Question(
-                  id: '',
-                  text: qTextController.text.trim(),
-                  options: [optAController.text.trim(), optBController.text.trim()],
-                  points: 100,
-                  tag: 'dasar',
-                );
-                await _pretestRepository.saveQuestionAndKey(
-                  testId: testId,
-                  question: question,
-                  correctOptionIndex: 0,
-                  explanation: 'Opsi A merupakan jawaban yang benar.',
-                );
-
                 await _meetingRepository.linkModule(meeting.id, pretestId: testId);
+                createdTestId = testId;
                 if (ctx.mounted) Navigator.pop(ctx, true);
               } catch (e) {
                 if (ctx.mounted) {
@@ -398,14 +360,20 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                 }
               }
             },
-            child: const Text('Simpan Pretest'),
+            child: const Text('Simpan & Kelola Soal'),
           ),
         ],
       ),
-    );
+    ).whenComplete(() {
+      titleController.dispose();
+      durationController.dispose();
+    });
 
-    if (created == true) {
-      _loadMeetingDetail();
+    if (created == true && createdTestId != null) {
+      await _loadMeetingDetail();
+      if (mounted) {
+        _showManageQuestionsDialog(createdTestId!, 'Pretest', true);
+      }
     }
   }
 
@@ -415,59 +383,35 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
 
     final titleController = TextEditingController(text: 'Post Test Pertemuan ${meeting.number}');
     final durationController = TextEditingController(text: '20');
-    final qTextController = TextEditingController(text: 'Pertanyaan evaluasi pemahaman');
-    final optAController = TextEditingController(text: 'Jawaban Benar');
-    final optBController = TextEditingController(text: 'Jawaban Salah');
     final formKey = GlobalKey<FormState>();
 
+    String? createdTestId;
     final created = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Buat Kuis Post Test'),
         content: Form(
           key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Judul Post Test'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
-                ),
-                const SizedBox(height: 10),
-                TextFormField(
-                  controller: durationController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
-                  validator: (v) {
-                    final num = int.tryParse(v?.trim() ?? '');
-                    if (num == null || num <= 0) return 'Durasi harus > 0 menit';
-                    return null;
-                  },
-                ),
-                const Divider(height: 24),
-                const Text('Soal Pertama (Pilihan Ganda):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: qTextController,
-                  decoration: const InputDecoration(labelText: 'Teks Soal'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Soal wajib diisi' : null,
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: optAController,
-                  decoration: const InputDecoration(labelText: 'Pilihan A (Kunci Benar)'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Pilihan A wajib diisi' : null,
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: optBController,
-                  decoration: const InputDecoration(labelText: 'Pilihan B'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Pilihan B wajib diisi' : null,
-                ),
-              ],
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: titleController,
+                decoration: const InputDecoration(labelText: 'Judul Post Test'),
+                validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: durationController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
+                validator: (v) {
+                  final num = int.tryParse(v?.trim() ?? '');
+                  if (num == null || num <= 0) return 'Durasi harus > 0 menit';
+                  return null;
+                },
+              ),
+            ],
           ),
         ),
         actions: [
@@ -485,25 +429,11 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                   meetingId: meeting.id,
                   title: titleController.text.trim(),
                   duration: int.parse(durationController.text.trim()),
-                  status: ContentStatus.published,
+                  status: ContentStatus.draft,
                 );
                 final testId = await _posttestRepository.createPosttest(posttest);
-
-                final question = Question(
-                  id: '',
-                  text: qTextController.text.trim(),
-                  options: [optAController.text.trim(), optBController.text.trim()],
-                  points: 100,
-                  tag: 'evaluasi',
-                );
-                await _posttestRepository.saveQuestionAndKey(
-                  testId: testId,
-                  question: question,
-                  correctOptionIndex: 0,
-                  explanation: 'Opsi A merupakan jawaban evaluasi yang tepat.',
-                );
-
                 await _meetingRepository.linkModule(meeting.id, posttestId: testId);
+                createdTestId = testId;
                 if (ctx.mounted) Navigator.pop(ctx, true);
               } catch (e) {
                 if (ctx.mounted) {
@@ -513,14 +443,20 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                 }
               }
             },
-            child: const Text('Simpan Post Test'),
+            child: const Text('Simpan & Kelola Soal'),
           ),
         ],
       ),
-    );
+    ).whenComplete(() {
+      titleController.dispose();
+      durationController.dispose();
+    });
 
-    if (created == true) {
-      _loadMeetingDetail();
+    if (created == true && createdTestId != null) {
+      await _loadMeetingDetail();
+      if (mounted) {
+        _showManageQuestionsDialog(createdTestId!, 'Post Test', false);
+      }
     }
   }
 
@@ -843,425 +779,20 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
 
   /// Menampilkan dialog daftar soal dan manajemen soal untuk Staff / Guru
   Future<void> _showManageQuestionsDialog(String testId, String testTitle, bool isPretest) async {
-    showModalBottomSheet(
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (ctx, setModalState) {
-            return DraggableScrollableSheet(
-              initialChildSize: 0.8,
-              minChildSize: 0.5,
-              maxChildSize: 0.95,
-              expand: false,
-              builder: (_, scrollController) {
-                return FutureBuilder<List<Question>>(
-                  future: isPretest
-                      ? _pretestRepository.getQuestions(testId)
-                      : _posttestRepository.getQuestions(testId),
-                  builder: (context, snapshot) {
-                    final questions = snapshot.data ?? [];
-                    final isLoading = snapshot.connectionState == ConnectionState.waiting;
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Container(
-                              width: 40,
-                              height: 4,
-                              margin: const EdgeInsets.only(bottom: 16),
-                              decoration: BoxDecoration(
-                                color: AppTheme.border,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Kelola Soal $testTitle',
-                                      style: Theme.of(context).textTheme.titleLarge,
-                                    ),
-                                    Text(
-                                      'Total: ${questions.length} soal aktif',
-                                      style: Theme.of(context).textTheme.bodySmall,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.add_rounded, size: 18),
-                                label: const Text('Tambah Soal'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primary,
-                                  foregroundColor: Colors.white,
-                                ),
-                                onPressed: () {
-                                  _showQuestionEditorDialog(
-                                    testId: testId,
-                                    existing: null,
-                                    isPretest: isPretest,
-                                    onSaved: () => setModalState(() {}),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                          const Divider(height: 24),
-                          if (isLoading)
-                            const Expanded(child: Center(child: CircularProgressIndicator()))
-                          else if (questions.isEmpty)
-                            Expanded(
-                              child: Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.quiz_outlined, size: 48, color: AppTheme.textSecondary.withAlpha(100)),
-                                    const SizedBox(height: 12),
-                                    const Text('Belum ada soal pada kuis ini.'),
-                                    const SizedBox(height: 8),
-                                    const Text(
-                                      'Klik tombol "Tambah Soal" untuk membuat soal baru.',
-                                      style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            )
-                          else
-                            Expanded(
-                              child: ListView.separated(
-                                controller: scrollController,
-                                itemCount: questions.length,
-                                separatorBuilder: (context, index) => const SizedBox(height: 10),
-                                itemBuilder: (context, idx) {
-                                  final q = questions[idx];
-                                  return Card(
-                                    elevation: 1,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      side: const BorderSide(color: AppTheme.border),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              CircleAvatar(
-                                                radius: 12,
-                                                backgroundColor: AppTheme.primary.withAlpha(30),
-                                                child: Text(
-                                                  '${idx + 1}',
-                                                  style: const TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: AppTheme.primary,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(
-                                                  q.text,
-                                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                                                ),
-                                              ),
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: AppTheme.background,
-                                                  borderRadius: BorderRadius.circular(4),
-                                                  border: Border.all(color: AppTheme.border),
-                                                ),
-                                                child: Text(
-                                                  '${q.points} poin',
-                                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 8),
-                                          ...q.options.asMap().entries.map((opt) {
-                                            return Padding(
-                                              padding: const EdgeInsets.only(left: 32, top: 2),
-                                              child: Text(
-                                                '${String.fromCharCode(65 + opt.key)}. ${opt.value}',
-                                                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                                              ),
-                                            );
-                                          }),
-                                          const SizedBox(height: 8),
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.end,
-                                            children: [
-                                              TextButton.icon(
-                                                icon: const Icon(Icons.edit_outlined, size: 16),
-                                                label: const Text('Edit'),
-                                                onPressed: () {
-                                                  _showQuestionEditorDialog(
-                                                    testId: testId,
-                                                    existing: q,
-                                                    isPretest: isPretest,
-                                                    onSaved: () => setModalState(() {}),
-                                                  );
-                                                },
-                                              ),
-                                              TextButton.icon(
-                                                icon: const Icon(Icons.delete_outline_rounded, size: 16, color: AppTheme.error),
-                                                label: const Text('Hapus', style: TextStyle(color: AppTheme.error)),
-                                                onPressed: () async {
-                                                  final confirm = await showDialog<bool>(
-                                                    context: context,
-                                                    builder: (dCtx) => AlertDialog(
-                                                      title: const Text('Konfirmasi Hapus Soal'),
-                                                      content: const Text(
-                                                        'Apakah Anda yakin ingin menghapus soal ini? Jika kuis sudah pernah dikerjakan siswa, soal akan diarsipkan agar riwayat nilai tetap aman.',
-                                                      ),
-                                                      actions: [
-                                                        TextButton(
-                                                          onPressed: () => Navigator.pop(dCtx, false),
-                                                          child: const Text('Batal'),
-                                                        ),
-                                                        ElevatedButton(
-                                                          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-                                                          onPressed: () => Navigator.pop(dCtx, true),
-                                                          child: const Text('Hapus'),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                  if (confirm == true) {
-                                                    try {
-                                                      if (isPretest) {
-                                                        await _pretestRepository.deleteQuestion(testId: testId, qid: q.id);
-                                                      } else {
-                                                        await _posttestRepository.deleteQuestion(testId: testId, qid: q.id);
-                                                      }
-                                                      setModalState(() {});
-                                                    } catch (e) {
-                                                      if (ctx.mounted) {
-                                                        ScaffoldMessenger.of(ctx).showSnackBar(
-                                                          SnackBar(content: Text('Gagal menghapus: $e'), backgroundColor: AppTheme.error),
-                                                        );
-                                                      }
-                                                    }
-                                                  }
-                                                },
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-
-  /// Menampilkan dialog form Tambah / Edit Soal secara interaktif
-  Future<void> _showQuestionEditorDialog({
-    required String testId,
-    required Question? existing,
-    required bool isPretest,
-    required VoidCallback onSaved,
-  }) async {
-    final textController = TextEditingController(text: existing?.text ?? '');
-    final pointsController = TextEditingController(text: '${existing?.points ?? 10}');
-    final optionControllers = (existing != null && existing.options.isNotEmpty)
-        ? existing.options.map((o) => TextEditingController(text: o)).toList()
-        : [TextEditingController(), TextEditingController()];
-
-    int selectedCorrectIndex = 0;
-    final formKey = GlobalKey<FormState>();
-
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dlgCtx) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(existing == null ? 'Tambah Soal Baru' : 'Edit Soal'),
-              content: SizedBox(
-                width: 520,
-                child: Form(
-                  key: formKey,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextFormField(
-                          controller: textController,
-                          decoration: const InputDecoration(
-                            labelText: 'Teks Pertanyaan *',
-                            hintText: 'Masukkan pertanyaan...',
-                          ),
-                          maxLines: 3,
-                          validator: (v) => v == null || v.trim().isEmpty ? 'Teks pertanyaan wajib diisi' : null,
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: pointsController,
-                          decoration: const InputDecoration(
-                            labelText: 'Poin Soal (1 - 100) *',
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) return 'Poin wajib diisi';
-                            final parsed = int.tryParse(v.trim());
-                            if (parsed == null || parsed < 1 || parsed > 100) return 'Poin harus antara 1 - 100';
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Pilihan Jawaban & Kunci *',
-                              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                            ),
-                            if (optionControllers.length < 6)
-                              TextButton.icon(
-                                icon: const Icon(Icons.add, size: 16),
-                                label: const Text('Tambah Opsi', style: TextStyle(fontSize: 12)),
-                                onPressed: () {
-                                  setDialogState(() {
-                                    optionControllers.add(TextEditingController());
-                                  });
-                                },
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        ...optionControllers.asMap().entries.map((entry) {
-                          final idx = entry.key;
-                          final ctrl = entry.value;
-                          final label = String.fromCharCode(65 + idx);
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child: Row(
-                              children: [
-                                // ignore: deprecated_member_use
-                                Radio<int>(
-                                  value: idx,
-                                  // ignore: deprecated_member_use
-                                  groupValue: selectedCorrectIndex,
-                                  // ignore: deprecated_member_use
-                                  onChanged: (val) {
-                                    setDialogState(() {
-                                      selectedCorrectIndex = val ?? 0;
-                                    });
-                                  },
-                                ),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: ctrl,
-                                    decoration: InputDecoration(
-                                      labelText: 'Opsi $label ${selectedCorrectIndex == idx ? "(KUNCI BENAR)" : ""}',
-                                      isDense: true,
-                                    ),
-                                    validator: (v) => v == null || v.trim().isEmpty ? 'Opsi $label tidak boleh kosong' : null,
-                                  ),
-                                ),
-                                if (optionControllers.length > 2)
-                                  IconButton(
-                                    icon: const Icon(Icons.close_rounded, size: 18, color: AppTheme.textSecondary),
-                                    onPressed: () {
-                                      setDialogState(() {
-                                        optionControllers.removeAt(idx);
-                                        if (selectedCorrectIndex >= optionControllers.length) {
-                                          selectedCorrectIndex = 0;
-                                        }
-                                      });
-                                    },
-                                  ),
-                              ],
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dlgCtx),
-                  child: const Text('Batal'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (!formKey.currentState!.validate()) return;
-                    final optionsList = optionControllers.map((c) => c.text.trim()).toList();
-                    final points = int.parse(pointsController.text.trim());
-
-                    final question = Question(
-                      id: existing?.id ?? '',
-                      text: textController.text.trim(),
-                      options: optionsList,
-                      points: points,
-                      tag: 'general',
-                    );
-
-                    try {
-                      if (isPretest) {
-                        await _pretestRepository.saveQuestionAndKey(
-                          testId: testId,
-                          question: question,
-                          correctOptionIndex: selectedCorrectIndex,
-                        );
-                      } else {
-                        await _posttestRepository.saveQuestionAndKey(
-                          testId: testId,
-                          question: question,
-                          correctOptionIndex: selectedCorrectIndex,
-                        );
-                      }
-                      if (dlgCtx.mounted) Navigator.pop(dlgCtx);
-                      onSaved();
-                    } catch (e) {
-                      if (dlgCtx.mounted) {
-                        ScaffoldMessenger.of(dlgCtx).showSnackBar(
-                          SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
-                        );
-                      }
-                    }
-                  },
-                  child: const Text('Simpan'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (sheetContext) => _ManageQuestionsSheet(
+        testId: testId,
+        testTitle: testTitle,
+        isPretest: isPretest,
+        pretestRepository: _pretestRepository,
+        posttestRepository: _posttestRepository,
+        onStatusChanged: _loadMeetingDetail,
+      ),
     );
   }
 
@@ -1421,6 +952,588 @@ class _AddVideoDialogState extends State<_AddVideoDialog> {
           child: _isSaving
               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
               : const Text('Simpan Video'),
+        ),
+      ],
+    );
+  }
+}
+
+class _ManageQuestionsSheet extends StatefulWidget {
+  final String testId;
+  final String testTitle;
+  final bool isPretest;
+  final PretestRepository pretestRepository;
+  final PosttestRepository posttestRepository;
+  final VoidCallback? onStatusChanged;
+
+  const _ManageQuestionsSheet({
+    required this.testId,
+    required this.testTitle,
+    required this.isPretest,
+    required this.pretestRepository,
+    required this.posttestRepository,
+    this.onStatusChanged,
+  });
+
+  @override
+  State<_ManageQuestionsSheet> createState() => _ManageQuestionsSheetState();
+}
+
+class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
+  late Future<List<Question>> _questionsFuture;
+  ContentStatus? _status;
+  bool _isPublishing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _reloadQuestions();
+    _loadStatus();
+  }
+
+  void _reloadQuestions() {
+    setState(() {
+      _questionsFuture = widget.isPretest
+          ? widget.pretestRepository.getQuestions(widget.testId)
+          : widget.posttestRepository.getQuestions(widget.testId);
+    });
+  }
+
+  Future<void> _loadStatus() async {
+    try {
+      if (widget.isPretest) {
+        final pretest = await widget.pretestRepository.getPretest(widget.testId);
+        if (mounted) setState(() => _status = pretest?.status);
+      } else {
+        final posttest = await widget.posttestRepository.getPosttest(widget.testId);
+        if (mounted) setState(() => _status = posttest?.status);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _publish(List<Question> questions) async {
+    if (questions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tambahkan minimal 1 soal sebelum mempublikasikan kuis.'),
+          backgroundColor: AppTheme.warning,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isPublishing = true);
+    try {
+      if (widget.isPretest) {
+        await widget.pretestRepository.updatePretestStatus(widget.testId, ContentStatus.published);
+      } else {
+        await widget.posttestRepository.updatePosttestStatus(widget.testId, ContentStatus.published);
+      }
+      if (mounted) {
+        setState(() {
+          _status = ContentStatus.published;
+          _isPublishing = false;
+        });
+        widget.onStatusChanged?.call();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Kuis berhasil dipublikasikan! Mahasiswa sekarang dapat mengakses kuis ini.'),
+            backgroundColor: AppTheme.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isPublishing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal publikasi: $e'), backgroundColor: AppTheme.error),
+        );
+      }
+    }
+  }
+
+  Future<void> _openEditor(Question? existing) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dlgCtx) => _QuestionEditorDialog(
+        testId: widget.testId,
+        existing: existing,
+        isPretest: widget.isPretest,
+        pretestRepository: widget.pretestRepository,
+        posttestRepository: widget.posttestRepository,
+        onSaved: _reloadQuestions,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (_, scrollController) {
+        return FutureBuilder<List<Question>>(
+          future: _questionsFuture,
+          builder: (context, snapshot) {
+            final questions = snapshot.data ?? [];
+            final isLoading = snapshot.connectionState == ConnectionState.waiting;
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Kelola Soal ${widget.testTitle}',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text(
+                                  'Total: ${questions.length} soal aktif',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                                if (_status != null) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: (_status == ContentStatus.published ? AppTheme.success : AppTheme.warning).withAlpha(30),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      _status == ContentStatus.draft ? 'Draft' : _status!.value,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: _status == ContentStatus.published ? AppTheme.success : AppTheme.warning,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          if (_status == ContentStatus.draft)
+                            ElevatedButton.icon(
+                              icon: _isPublishing
+                                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                  : const Icon(Icons.publish_rounded, size: 16),
+                              label: const Text('Publikasikan'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.success,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                              ),
+                              onPressed: _isPublishing ? null : () => _publish(questions),
+                            ),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.add_rounded, size: 18),
+                            label: const Text('Tambah Soal'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primary,
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: () => _openEditor(null),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  if (isLoading)
+                    const Expanded(child: Center(child: CircularProgressIndicator()))
+                  else if (questions.isEmpty)
+                    Expanded(
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.quiz_outlined, size: 48, color: AppTheme.textSecondary.withAlpha(100)),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Draft, belum ada soal aktif.',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Klik tombol "Tambah Soal" untuk membuat soal kuis pertama.',
+                              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    Expanded(
+                      child: ListView.separated(
+                        controller: scrollController,
+                        itemCount: questions.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 10),
+                        itemBuilder: (context, idx) {
+                          final q = questions[idx];
+                          return Card(
+                            elevation: 1,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: const BorderSide(color: AppTheme.border),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 12,
+                                        backgroundColor: AppTheme.primary.withAlpha(30),
+                                        child: Text(
+                                          '${idx + 1}',
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.primary,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          q.text,
+                                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.background,
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: AppTheme.border),
+                                        ),
+                                        child: Text(
+                                          '${q.points} poin',
+                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ...q.options.asMap().entries.map((opt) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(left: 32, top: 2),
+                                      child: Text(
+                                        '${String.fromCharCode(65 + opt.key)}. ${opt.value}',
+                                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                      ),
+                                    );
+                                  }),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton.icon(
+                                        icon: const Icon(Icons.edit_outlined, size: 16),
+                                        label: const Text('Edit'),
+                                        onPressed: () => _openEditor(q),
+                                      ),
+                                      TextButton.icon(
+                                        icon: const Icon(Icons.delete_outline_rounded, size: 16, color: AppTheme.error),
+                                        label: const Text('Hapus', style: TextStyle(color: AppTheme.error)),
+                                        onPressed: () async {
+                                          final messenger = ScaffoldMessenger.of(context);
+                                          final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder: (dCtx) => AlertDialog(
+                                              title: const Text('Konfirmasi Hapus Soal'),
+                                              content: const Text(
+                                                'Apakah Anda yakin ingin menghapus soal ini? Jika kuis sudah pernah dikerjakan siswa, soal akan diarsipkan agar riwayat nilai tetap aman.',
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(dCtx, false),
+                                                  child: const Text('Batal'),
+                                                ),
+                                                ElevatedButton(
+                                                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+                                                  onPressed: () => Navigator.pop(dCtx, true),
+                                                  child: const Text('Hapus'),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          if (confirm == true && mounted) {
+                                            try {
+                                              if (widget.isPretest) {
+                                                await widget.pretestRepository.deleteQuestion(testId: widget.testId, qid: q.id);
+                                              } else {
+                                                await widget.posttestRepository.deleteQuestion(testId: widget.testId, qid: q.id);
+                                              }
+                                              _reloadQuestions();
+                                            } catch (e) {
+                                              messenger.showSnackBar(
+                                                SnackBar(content: Text('Gagal menghapus: $e'), backgroundColor: AppTheme.error),
+                                              );
+                                            }
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _QuestionEditorDialog extends StatefulWidget {
+  final String testId;
+  final Question? existing;
+  final bool isPretest;
+  final PretestRepository pretestRepository;
+  final PosttestRepository posttestRepository;
+  final VoidCallback onSaved;
+
+  const _QuestionEditorDialog({
+    required this.testId,
+    required this.existing,
+    required this.isPretest,
+    required this.pretestRepository,
+    required this.posttestRepository,
+    required this.onSaved,
+  });
+
+  @override
+  State<_QuestionEditorDialog> createState() => _QuestionEditorDialogState();
+}
+
+class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
+  late final TextEditingController _textController;
+  late final TextEditingController _pointsController;
+  late final List<TextEditingController> _optionControllers;
+  int _selectedCorrectIndex = 0;
+  final _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController(text: widget.existing?.text ?? '');
+    _pointsController = TextEditingController(text: '${widget.existing?.points ?? 10}');
+    _optionControllers = (widget.existing != null && widget.existing!.options.isNotEmpty)
+        ? widget.existing!.options.map((o) => TextEditingController(text: o)).toList()
+        : [TextEditingController(), TextEditingController()];
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _pointsController.dispose();
+    for (final c in _optionControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate() || _isSaving) return;
+    setState(() => _isSaving = true);
+
+    final optionsList = _optionControllers.map((c) => c.text.trim()).toList();
+    final points = int.parse(_pointsController.text.trim());
+
+    final question = Question(
+      id: widget.existing?.id ?? '',
+      text: _textController.text.trim(),
+      options: optionsList,
+      points: points,
+      tag: 'general',
+    );
+
+    try {
+      if (widget.isPretest) {
+        await widget.pretestRepository.saveQuestionAndKey(
+          testId: widget.testId,
+          question: question,
+          correctOptionIndex: _selectedCorrectIndex,
+        );
+      } else {
+        await widget.posttestRepository.saveQuestionAndKey(
+          testId: widget.testId,
+          question: question,
+          correctOptionIndex: _selectedCorrectIndex,
+        );
+      }
+      if (mounted) Navigator.pop(context);
+      widget.onSaved();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.existing == null ? 'Tambah Soal Baru' : 'Edit Soal'),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFormField(
+                  controller: _textController,
+                  decoration: const InputDecoration(
+                    labelText: 'Teks Pertanyaan *',
+                    hintText: 'Masukkan pertanyaan...',
+                  ),
+                  maxLines: 3,
+                  validator: (v) => v == null || v.trim().isEmpty ? 'Teks pertanyaan wajib diisi' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _pointsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Poin Soal (1 - 100) *',
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Poin wajib diisi';
+                    final parsed = int.tryParse(v.trim());
+                    if (parsed == null || parsed < 1 || parsed > 100) return 'Poin harus antara 1 - 100';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Pilihan Jawaban & Kunci *',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    if (_optionControllers.length < 6)
+                      TextButton.icon(
+                        icon: const Icon(Icons.add, size: 16),
+                        label: const Text('Tambah Opsi', style: TextStyle(fontSize: 12)),
+                        onPressed: () {
+                          setState(() {
+                            _optionControllers.add(TextEditingController());
+                          });
+                        },
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ..._optionControllers.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final ctrl = entry.value;
+                  final label = String.fromCharCode(65 + idx);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Row(
+                      children: [
+                        // ignore: deprecated_member_use
+                        Radio<int>(
+                          value: idx,
+                          // ignore: deprecated_member_use
+                          groupValue: _selectedCorrectIndex,
+                          // ignore: deprecated_member_use
+                          onChanged: (val) {
+                            setState(() {
+                              _selectedCorrectIndex = val ?? 0;
+                            });
+                          },
+                        ),
+                        Expanded(
+                          child: TextFormField(
+                            controller: ctrl,
+                            decoration: InputDecoration(
+                              labelText: 'Opsi $label ${_selectedCorrectIndex == idx ? "(KUNCI BENAR)" : ""}',
+                              isDense: true,
+                            ),
+                            validator: (v) => v == null || v.trim().isEmpty ? 'Opsi $label tidak boleh kosong' : null,
+                          ),
+                        ),
+                        if (_optionControllers.length > 2)
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded, size: 18, color: AppTheme.textSecondary),
+                            onPressed: () {
+                              setState(() {
+                                final removed = _optionControllers.removeAt(idx);
+                                removed.dispose();
+                                if (_selectedCorrectIndex >= _optionControllers.length) {
+                                  _selectedCorrectIndex = 0;
+                                }
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isSaving ? null : () => Navigator.pop(context),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: _isSaving ? null : _submit,
+          child: _isSaving
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Text('Simpan'),
         ),
       ],
     );

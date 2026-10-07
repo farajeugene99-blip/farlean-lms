@@ -9,6 +9,7 @@
     "test:api": "tsx test/api-endpoints.test.ts",
     "test:cors": "tsx test/cors.test.ts",
     "test:join-class": "tsx test/join-class.test.ts",
+    "test:publish-test": "tsx test/publish-test.test.ts",
     "test:questions": "tsx test/question-endpoints.test.ts",
     "test:testing-accounts": "tsx test/testing-accounts.test.ts",
     "test:list-queries": "tsx test/list-queries-regression.test.ts",

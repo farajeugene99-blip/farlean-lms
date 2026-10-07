@@ -112,8 +112,31 @@ class PretestRepository {
     }
   }
 
-  /// Memperbarui status pretest
+  /// Memperbarui status pretest dengan validasi server-side
   Future<void> updatePretestStatus(String testId, ContentStatus status) async {
+    final token = await _auth?.currentUser?.getIdToken();
+    if (token != null) {
+      try {
+        final response = await _httpClient.post(
+          Uri.parse(ApiConfig.publishTestUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'testId': testId.trim(),
+            'status': status.value,
+          }),
+        );
+        if (response.statusCode == 200) return;
+        final errJson = jsonDecode(response.body);
+        throw StateError(errJson['error'] ?? 'Gagal memperbarui status pretest.');
+      } catch (e) {
+        if (e is StateError) rethrow;
+        debugPrint('Catatan publish-test API: $e');
+      }
+    }
+
     final firestore = _firestore;
     if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
 
