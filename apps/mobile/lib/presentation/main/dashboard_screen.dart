@@ -175,16 +175,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 12,
+                  runSpacing: 12,
                   children: [
                     OutlinedButton(
                       onPressed: () => authProvider.signOut(),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(110, 44),
+                      ),
                       child: const Text('Keluar'),
                     ),
-                    const SizedBox(width: 12),
                     ElevatedButton.icon(
                       onPressed: () => authProvider.retryLoadSession(),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(130, 44),
+                      ),
                       icon: const Icon(Icons.refresh_rounded),
                       label: const Text('Coba Lagi'),
                     ),
