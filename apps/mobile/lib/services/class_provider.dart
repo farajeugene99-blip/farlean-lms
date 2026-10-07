@@ -132,4 +132,16 @@ class ClassProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  /// Membersihkan seluruh state kelas saat logout
+  Future<void> clear() async {
+    _ownedClasses = [];
+    _joinedClasses = [];
+    _selectedClassId = null;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_prefSelectedClassKey);
+    } catch (_) {}
+    notifyListeners();
+  }
 }

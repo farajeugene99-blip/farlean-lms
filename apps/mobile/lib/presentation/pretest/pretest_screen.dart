@@ -90,23 +90,7 @@ class _PretestScreenState extends State<PretestScreen> {
     }
 
     try {
-      // 1. Cek Gate: Materi harus pernah dibuka
-      if (widget.classId.isNotEmpty && widget.meetingId.isNotEmpty) {
-        _hasOpenedMateri = await _materialRepository.hasOpenedMateri(
-          classId: widget.classId,
-          meetingId: widget.meetingId,
-          uid: uid,
-        );
-      } else {
-        _hasOpenedMateri = true;
-      }
-
-      if (!_hasOpenedMateri) {
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      // 2. Ambil metadata Pretest
+      // 1. Ambil metadata Pretest terlebih dahulu
       final pretest = await _pretestRepository.getPretest(widget.pretestId);
       if (pretest == null) {
         setState(() {
@@ -116,6 +100,29 @@ class _PretestScreenState extends State<PretestScreen> {
         return;
       }
       _pretest = pretest;
+
+      final effectiveClassId = widget.classId.isNotEmpty ? widget.classId : pretest.classId;
+      final effectiveMeetingId = widget.meetingId.isNotEmpty ? widget.meetingId : pretest.meetingId;
+
+      if (effectiveClassId.isEmpty || effectiveMeetingId.isEmpty) {
+        setState(() {
+          _errorMessage = 'Kuis tidak terhubung dengan kelas atau pertemuan yang valid.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // 2. Cek Gate: Materi harus pernah dibuka
+      _hasOpenedMateri = await _materialRepository.hasOpenedMateri(
+        classId: effectiveClassId,
+        meetingId: effectiveMeetingId,
+        uid: uid,
+      );
+
+      if (!_hasOpenedMateri) {
+        setState(() => _isLoading = false);
+        return;
+      }
 
       // 3. Ambil daftar soal
       final questionsList = await _pretestRepository.getQuestions(widget.pretestId);

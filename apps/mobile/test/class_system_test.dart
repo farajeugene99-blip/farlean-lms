@@ -160,6 +160,11 @@ void main() {
 
       await provider.reactivateClass('c_1');
       expect(provider.ownedClasses.first.isActive, isTrue);
+
+      await provider.clear();
+      expect(provider.ownedClasses, isEmpty);
+      expect(provider.joinedClasses, isEmpty);
+      expect(provider.selectedClassId, isNull);
     });
   });
 }

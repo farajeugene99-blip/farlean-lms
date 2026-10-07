@@ -6,6 +6,7 @@ import '../../core/auth/role_guard.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/classroom.dart';
+import '../../repositories/meeting_repository.dart';
 import '../../services/auth_provider.dart';
 import '../../services/class_provider.dart';
 import '../common/loading_indicator.dart';
@@ -18,9 +19,12 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  late final MeetingRepository _meetingRepository;
+
   @override
   void initState() {
     super.initState();
+    _meetingRepository = MeetingRepository();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ClassProvider>().loadClasses();
     });
@@ -186,19 +190,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   // Section: Kelas yang Dikelola (Dosen / Pengajar)
                   if (isStaff) ...[
-                    Row(
-                      children: [
-                        Text(
-                          'Kelas yang Anda Kelola',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const Spacer(),
-                        TextButton.icon(
-                          onPressed: _showCreateClassDialog,
-                          icon: const Icon(Icons.add_rounded, size: 18),
-                          label: const Text('Buat Kelas'),
-                        ),
-                      ],
+                    Text(
+                      'Kelas yang Anda Kelola',
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
                     if (classProvider.ownedClasses.isEmpty)
@@ -216,11 +210,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const Spacer(),
-                      TextButton.icon(
-                        onPressed: () => context.push(AppConstants.joinClassRoute),
-                        icon: const Icon(Icons.key_rounded, size: 18),
-                        label: const Text('Gabung Kelas'),
-                      ),
+                      if (classProvider.joinedClasses.isNotEmpty)
+                        TextButton.icon(
+                          onPressed: () => context.push(AppConstants.joinClassRoute),
+                          icon: const Icon(Icons.add_link_rounded, size: 16),
+                          label: const Text('Gabung Kode', style: TextStyle(fontSize: 12)),
+                        ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -357,6 +352,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ],
+                const SizedBox(width: 8),
+                FutureBuilder<int>(
+                  future: _meetingRepository.getMeetingCount(classroom.id, isStaff: isOwner),
+                  builder: (context, snapshot) {
+                    final count = snapshot.data;
+                    if (count == null) return const SizedBox.shrink();
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withAlpha(15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '$count Pertemuan',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    );
+                  },
+                ),
                 const Spacer(),
                 ElevatedButton(
                   onPressed: () {

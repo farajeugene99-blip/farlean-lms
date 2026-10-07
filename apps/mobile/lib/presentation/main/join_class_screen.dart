@@ -105,16 +105,32 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
         ),
         actions: [
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
               if (result.classId.isNotEmpty) {
                 final classProvider = context.read<ClassProvider>();
-                classProvider.loadClasses();
-                if (isActive) {
-                  classProvider.selectClass(result.classId);
-                  context.go('${AppConstants.materiRoute}?classId=${result.classId}');
-                } else {
-                  context.go(AppConstants.dashboardRoute);
+                try {
+                  await classProvider.loadClasses();
+                  if (isActive) {
+                    await classProvider.selectClass(result.classId);
+                    if (mounted) {
+                      context.go('${AppConstants.materiRoute}?classId=${result.classId}');
+                    }
+                  } else {
+                    if (mounted) {
+                      context.go(AppConstants.dashboardRoute);
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Gagal sinkronisasi data kelas: $e'),
+                        backgroundColor: AppTheme.error,
+                      ),
+                    );
+                    context.go(AppConstants.dashboardRoute);
+                  }
                 }
               } else {
                 Navigator.pop(context);

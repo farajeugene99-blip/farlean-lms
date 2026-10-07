@@ -39,13 +39,26 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
     _loadMeetings();
   }
 
-  Future<void> _loadMeetings() async {
-    final classProvider = context.read<ClassProvider>();
-    String effectiveClassId = widget.classId?.trim() ?? '';
-    if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
-      effectiveClassId = classProvider.selectedClassId ??
-          (classProvider.hasSingleClass ? classProvider.singleClassId ?? '' : '');
+  @override
+  void didUpdateWidget(covariant MeetingListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.classId != widget.classId) {
+      _loadMeetings();
     }
+  }
+
+  String _getEffectiveClassId() {
+    final classProvider = context.read<ClassProvider>();
+    final fromWidget = widget.classId?.trim() ?? '';
+    if (fromWidget.isNotEmpty && fromWidget != 'default_class') {
+      return fromWidget;
+    }
+    return classProvider.selectedClassId ??
+        (classProvider.hasSingleClass ? classProvider.singleClassId ?? '' : '');
+  }
+
+  Future<void> _loadMeetings({String? targetClassId}) async {
+    final effectiveClassId = targetClassId ?? _getEffectiveClassId();
 
     if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
       if (mounted) {
@@ -100,7 +113,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
   }
 
   Future<void> _showCreateMeetingDialog() async {
-    final effectiveClassId = widget.classId?.trim() ?? '';
+    final effectiveClassId = _getEffectiveClassId();
     if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -216,7 +229,8 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
   }
 
   Widget _buildBody(bool isStaff) {
-    final effectiveClassId = widget.classId?.trim() ?? '';
+    final classProvider = context.watch<ClassProvider>();
+    final effectiveClassId = _getEffectiveClassId();
     if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
       return Center(
         child: Padding(
@@ -252,39 +266,106 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
       );
     }
 
-    if (_isLoading) {
-      return const LoadingIndicator(message: 'Memuat pertemuan...');
-    }
+    return Column(
+      children: [
+        if (classProvider.allClasses.isNotEmpty)
+          _buildClassSelectorBar(classProvider, effectiveClassId),
+        Expanded(
+          child: _isLoading
+              ? const LoadingIndicator(message: 'Memuat pertemuan...')
+              : _errorMessage != null
+                  ? ErrorView(message: _errorMessage!, onRetry: _loadMeetings)
+                  : _meetings.isEmpty
+                      ? _buildEmptyMeetingsView(isStaff)
+                      : RefreshIndicator(
+                          onRefresh: _loadMeetings,
+                          child: ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                            itemCount: _meetings.length,
+                            separatorBuilder: (_, _) => const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final meeting = _meetings[index];
+                              return _buildMeetingCard(meeting, isStaff);
+                            },
+                          ),
+                        ),
+        ),
+      ],
+    );
+  }
 
-    if (_errorMessage != null) {
-      return ErrorView(message: _errorMessage!, onRetry: _loadMeetings);
-    }
+  Widget _buildClassSelectorBar(ClassProvider classProvider, String effectiveClassId) {
+    if (classProvider.allClasses.isEmpty) return const SizedBox.shrink();
 
-    if (_meetings.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.calendar_month_outlined,
-                size: 56,
-                color: AppTheme.textSecondary.withAlpha(128),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        border: Border(bottom: BorderSide(color: AppTheme.border.withAlpha(100))),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.school_outlined, size: 20, color: AppTheme.primary),
+          const SizedBox(width: 8),
+          const Text('Kelas:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                isExpanded: true,
+                value: classProvider.allClasses.any((c) => c.id == effectiveClassId)
+                    ? effectiveClassId
+                    : classProvider.allClasses.first.id,
+                items: classProvider.allClasses.map((c) {
+                  return DropdownMenuItem<String>(
+                    value: c.id,
+                    child: Text(
+                      c.name,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (newId) {
+                  if (newId != null && newId != effectiveClassId) {
+                    classProvider.selectClass(newId);
+                    context.go('${AppConstants.materiRoute}?classId=$newId');
+                    _loadMeetings(targetClassId: newId);
+                  }
+                },
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Belum Ada Pertemuan',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                isStaff
-                    ? 'Buat pertemuan baru untuk mulai mengunggah materi, kuis pretest, dan video pembelajaran.'
-                    : 'Pengajar belum mempublikasikan pertemuan pembelajaran di kelas ini.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyMeetingsView(bool isStaff) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.calendar_month_outlined,
+              size: 56,
+              color: AppTheme.textSecondary.withAlpha(128),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Belum Ada Pertemuan',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isStaff
+                  ? 'Buat pertemuan baru untuk mulai mengunggah materi, kuis pretest, dan video pembelajaran.'
+                  : 'Pengajar belum mempublikasikan pertemuan pembelajaran di kelas ini.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
               if (isStaff) ...[
                 const SizedBox(height: 20),
                 ElevatedButton.icon(
@@ -298,20 +379,6 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
         ),
       );
     }
-
-    return RefreshIndicator(
-      onRefresh: _loadMeetings,
-      child: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-        itemCount: _meetings.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final meeting = _meetings[index];
-          return _buildMeetingCard(meeting, isStaff);
-        },
-      ),
-    );
-  }
 
   Widget _buildMeetingCard(Meeting meeting, bool isStaff) {
     return Card(

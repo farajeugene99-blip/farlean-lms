@@ -69,6 +69,11 @@ void main() {
       );
     });
 
+    test('getMeetingCount mengembalikan 0 secara aman saat Firestore uninitialized', () async {
+      final count = await repository.getMeetingCount('class_01');
+      expect(count, equals(0));
+    });
+
     test('deleteMeeting melempar StateError saat Firestore uninitialized', () async {
       expect(
         () => repository.deleteMeeting('m1'),

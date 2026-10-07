@@ -37,6 +37,29 @@ class MeetingRepository {
     }
   }
 
+  /// Mengambil jumlah pertemuan aktual via agregasi Firestore count()
+  Future<int> getMeetingCount(String classId, {bool isStaff = false}) async {
+    final firestore = _firestore;
+    if (firestore == null) return 0;
+
+    try {
+      Query<Map<String, dynamic>> query = firestore
+          .collection('meetings')
+          .where('class_id', isEqualTo: classId);
+
+      if (!isStaff) {
+        query = query.where('status', isEqualTo: ContentStatus.published.value);
+      }
+
+      final aggregateQuery = query.count();
+      final snapshot = await aggregateQuery.get();
+      return snapshot.count ?? 0;
+    } catch (e) {
+      debugPrint('Catatan getMeetingCount: $e');
+      return 0;
+    }
+  }
+
   /// Mengambil satu pertemuan berdasarkan ID
   Future<Meeting?> getMeeting(String meetingId) async {
     final firestore = _firestore;

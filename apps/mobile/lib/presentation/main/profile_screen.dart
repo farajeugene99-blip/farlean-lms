@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../repositories/user_repository.dart';
 import '../../services/auth_provider.dart';
+import '../../services/class_provider.dart';
+import 'main_shell.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserRepository? userRepository;
@@ -205,6 +207,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: const Icon(Icons.logout_rounded),
             tooltip: 'Keluar',
             onPressed: () async {
+              try {
+                await context.read<ClassProvider>().clear();
+              } catch (_) {}
+              MainShell.activeClassId = null;
               await authProvider.signOut();
             },
           ),
