@@ -148,6 +148,23 @@ async function runCorsTests() {
     }
   });
 
+  // 6. Flutter Web dengan port acak di dev (misal :52282) diizinkan dan origin di-echo dinamis
+  test('6. Origin localhost port acak di dev diizinkan dan di-echo dinamis', async () => {
+    const req: any = {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'http://localhost:52282',
+      },
+    };
+    const res = createMockRes();
+    await createClassHandler(req, res as any);
+
+    if (res.statusCode !== 204) throw new Error(`Expected 204, got ${res.statusCode}`);
+    if (res.headers['access-control-allow-origin'] !== 'http://localhost:52282') {
+      throw new Error(`Expected allow-origin http://localhost:52282, got ${res.headers['access-control-allow-origin']}`);
+    }
+  });
+
   console.log(`\n========================================`);
   console.log(`CORS TEST SUMMARY: ${passed} PASSED, ${failed} FAILED`);
   console.log(`========================================\n`);

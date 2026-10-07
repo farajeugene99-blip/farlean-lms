@@ -60,6 +60,14 @@ export const STAFF_ACCOUNTS = [
     initialRole: 'GURU',
     claims: { role: 'GURU' },
   },
+  {
+    key: 'mahasiswa (bukan staff)',
+    email: 'mahasiswa@students.farlean.edu',
+    name: 'Mahasiswa Biasa',
+    emailVerified: true,
+    initialRole: 'MAHASISWA',
+    claims: { role: 'MAHASISWA' },
+  }
 ];
 
 function getPassword() {

@@ -39,6 +39,15 @@ export function getAllowedOrigins(): string[] {
  */
 export function isOriginAllowed(origin: string | undefined): boolean {
   if (!origin) return false;
+
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+  if (!isProduction) {
+    // Di lingkungan development, izinkan localhost dan 127.0.0.1 pada sembarang port (Flutter Web dinamis)
+    if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      return true;
+    }
+  }
+
   const allowed = getAllowedOrigins();
   return allowed.includes(origin);
 }

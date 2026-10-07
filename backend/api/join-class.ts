@@ -116,7 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
-      // D. Hitung ulang account_type langsung dari email token saat ini (bukan dari cache dokumen)
+      // D. Hitung ulang account_type langsung dari email token saat ini
       const calculatedAccountType = resolveAccountType(user.email);
       const newStatus = (calculatedAccountType === 'MAHASISWA' || calculatedAccountType === 'DOSEN')
         ? 'active'
