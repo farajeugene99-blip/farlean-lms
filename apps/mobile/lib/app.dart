@@ -1,5 +1,7 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'core/config/app_constants.dart';
@@ -43,6 +45,17 @@ class _FarleanAppState extends State<FarleanApp> {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         routerConfig: _router,
+        // Konfigurasi Localization termasuk delegate FlutterQuill
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          FlutterQuillLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('id'),
+          Locale('en'),
+        ],
         // Konfigurasi frame DevicePreview:
         locale: DevicePreview.locale(context),
         builder: DevicePreview.appBuilder,

@@ -120,4 +120,16 @@ class ClassProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Mengaktifkan kembali kelas yang berstatus Archived
+  Future<void> reactivateClass(String classId) async {
+    await _classRepository.reactivateClass(classId);
+
+    _ownedClasses = _ownedClasses.map((c) {
+      if (c.id == classId) return c.copyWith(status: 'Active');
+      return c;
+    }).toList();
+
+    notifyListeners();
+  }
 }

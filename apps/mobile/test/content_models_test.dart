@@ -56,6 +56,31 @@ void main() {
       expect(fromMap.pretestId, equals('pretest_01'));
       expect(fromMap.posttestId, equals('posttest_01'));
     });
+
+    test('Meeting toUpdateMap does not include null module IDs (prevents null overwrite)', () {
+      const partialMeeting = Meeting(
+        id: 'meeting_02',
+        classId: 'class_01',
+        number: 2,
+        title: 'Pertemuan 2 Judul Revisi',
+        description: 'Deskripsi baru',
+        pretestId: null, // modul belum di-link di objek lokal
+        materiId: null,
+        videoId: null,
+        posttestId: null,
+        status: ContentStatus.draft,
+      );
+
+      final updateMap = partialMeeting.toUpdateMap();
+      expect(updateMap['number'], equals(2));
+      expect(updateMap['title'], equals('Pertemuan 2 Judul Revisi'));
+      expect(updateMap['status'], equals('Draft'));
+      // PASTIKAN: id modul null TIDAK dimasukkan ke dalam updateMap sehingga tautan modul aman dari overwrite
+      expect(updateMap.containsKey('pretest_id'), isFalse);
+      expect(updateMap.containsKey('materi_id'), isFalse);
+      expect(updateMap.containsKey('video_id'), isFalse);
+      expect(updateMap.containsKey('posttest_id'), isFalse);
+    });
   });
 
   group('Posttest Model Tests', () {

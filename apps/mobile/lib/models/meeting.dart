@@ -70,6 +70,23 @@ class Meeting {
     };
   }
 
+  /// Map parsial untuk memperbarui metadata pertemuan tanpa menimpa tautan modul yang ada dengan null
+  Map<String, dynamic> toUpdateMap() {
+    final map = <String, dynamic>{
+      'number': number,
+      'title': title,
+      'status': status.value,
+      'updated_at': FieldValue.serverTimestamp(),
+    };
+    if (description != null) map['description'] = description;
+    if (date != null) map['date'] = Timestamp.fromDate(date!);
+    if (pretestId != null) map['pretest_id'] = pretestId;
+    if (materiId != null) map['materi_id'] = materiId;
+    if (videoId != null) map['video_id'] = videoId;
+    if (posttestId != null) map['posttest_id'] = posttestId;
+    return map;
+  }
+
   Meeting copyWith({
     String? title,
     String? description,

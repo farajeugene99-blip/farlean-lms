@@ -173,9 +173,10 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
         await _materialRepository.updateMaterial(updated);
         savedId = updated.id;
       } else {
-        // Buat materi baru
+        // Buat materi baru (abaikan sentinel rute 'new' agar Firestore membuat auto-id unik)
+        final effectiveNewId = (widget.materiId == null || widget.materiId == 'new') ? '' : widget.materiId!;
         final newMaterial = MaterialContent(
-          id: widget.materiId ?? '',
+          id: effectiveNewId,
           meetingId: widget.meetingId,
           classId: widget.classId,
           title: title,

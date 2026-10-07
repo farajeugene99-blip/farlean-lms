@@ -86,7 +86,7 @@ class MeetingRepository {
     if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
 
     try {
-      await firestore.collection('meetings').doc(meeting.id).update(meeting.toMap());
+      await firestore.collection('meetings').doc(meeting.id).update(meeting.toUpdateMap());
     } catch (e) {
       debugPrint('Gagal memperbarui pertemuan: $e');
       rethrow;

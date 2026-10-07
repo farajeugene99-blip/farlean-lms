@@ -109,14 +109,18 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
               Navigator.pop(ctx);
               if (result.classId.isNotEmpty) {
                 final classProvider = context.read<ClassProvider>();
-                classProvider.selectClass(result.classId);
                 classProvider.loadClasses();
-                context.go('${AppConstants.materiRoute}?classId=${result.classId}');
+                if (isActive) {
+                  classProvider.selectClass(result.classId);
+                  context.go('${AppConstants.materiRoute}?classId=${result.classId}');
+                } else {
+                  context.go(AppConstants.dashboardRoute);
+                }
               } else {
                 Navigator.pop(context);
               }
             },
-            child: const Text('Buka Kelas'),
+            child: Text(isActive ? 'Buka Kelas' : 'Kembali ke Beranda'),
           ),
         ],
       ),

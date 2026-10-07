@@ -170,6 +170,22 @@ class ClassRepository {
     }
   }
 
+  /// Mengaktifkan kembali kelas yang berstatus Archived
+  Future<void> reactivateClass(String classId) async {
+    final firestore = _firestore;
+    if (firestore == null) return;
+
+    try {
+      await firestore.collection('classes').doc(classId).update({
+        'status': 'Active',
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('Catatan reactivateClass: $e');
+      rethrow;
+    }
+  }
+
   /// Mengambil daftar anggota kelas dengan perlindungan privasi
   Future<List<ClassMember>> getClassMembers(String classId) async {
     final token = await _getIdToken();

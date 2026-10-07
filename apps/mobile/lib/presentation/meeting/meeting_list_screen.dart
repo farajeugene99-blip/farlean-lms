@@ -8,6 +8,7 @@ import '../../models/content_status.dart';
 import '../../models/meeting.dart';
 import '../../repositories/meeting_repository.dart';
 import '../../services/auth_provider.dart';
+import '../../services/class_provider.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
 
@@ -39,7 +40,13 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
   }
 
   Future<void> _loadMeetings() async {
-    final effectiveClassId = widget.classId?.trim() ?? '';
+    final classProvider = context.read<ClassProvider>();
+    String effectiveClassId = widget.classId?.trim() ?? '';
+    if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
+      effectiveClassId = classProvider.selectedClassId ??
+          (classProvider.hasSingleClass ? classProvider.singleClassId ?? '' : '');
+    }
+
     if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
       if (mounted) {
         setState(() {
@@ -236,8 +243,8 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: () => context.push(AppConstants.joinClassRoute),
-                icon: const Icon(Icons.qr_code_rounded),
-                label: const Text('Gabung Kelas Baru'),
+                icon: const Icon(Icons.key_rounded),
+                label: const Text('Gabung Kelas'),
               ),
             ],
           ),

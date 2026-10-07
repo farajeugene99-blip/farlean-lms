@@ -166,7 +166,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onPressed: _showCreateClassDialog,
             ),
           IconButton(
-            icon: const Icon(Icons.group_add_rounded),
+            icon: const Icon(Icons.key_rounded),
             tooltip: 'Gabung Kelas',
             onPressed: () => context.push(AppConstants.joinClassRoute),
           ),
@@ -218,8 +218,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const Spacer(),
                       TextButton.icon(
                         onPressed: () => context.push(AppConstants.joinClassRoute),
-                        icon: const Icon(Icons.qr_code_rounded, size: 18),
-                        label: const Text('Gabung Kode'),
+                        icon: const Icon(Icons.key_rounded, size: 18),
+                        label: const Text('Gabung Kelas'),
                       ),
                     ],
                   ),
@@ -270,22 +270,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               'Akses materi terstruktur, kuis pretest berpenilaian server, video pembelajaran, dan forum belajar dalam satu platform.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            if (classProvider.selectedClass != null) ...[
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  const Icon(Icons.bookmark_added_rounded, size: 16, color: AppTheme.primary),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'Kelas Aktif: ${classProvider.selectedClass!.name}',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primary),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ],
         ),
       ),
@@ -439,8 +423,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: () => context.push(AppConstants.joinClassRoute),
-              icon: const Icon(Icons.qr_code_rounded, size: 16),
-              label: const Text('Gabung dengan Kode'),
+              icon: const Icon(Icons.key_rounded, size: 16),
+              label: const Text('Gabung Kelas'),
             ),
           ],
         ),

@@ -215,6 +215,53 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     }
   }
 
+  Future<void> _confirmReactivateClass() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Aktifkan Kembali Kelas?'),
+        content: const Text(
+          'Kelas yang diaktifkan kembali akan dapat menerima anggota baru serta mengizinkan pengelolaan pertemuan dan kuis seperti semula.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.success),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Aktifkan'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      try {
+        final classProvider = context.read<ClassProvider>();
+        await classProvider.reactivateClass(widget.classId);
+        setState(() {
+          _classroom = _classroom?.copyWith(status: 'Active');
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Kelas berhasil diaktifkan kembali.'),
+              backgroundColor: AppTheme.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal mengaktifkan kembali kelas: $e'), backgroundColor: AppTheme.error),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -247,6 +294,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               icon: const Icon(Icons.archive_outlined),
               tooltip: 'Arsipkan Kelas',
               onPressed: _confirmArchiveClass,
+            ),
+          if (isOwner && !classroom.isActive)
+            IconButton(
+              icon: const Icon(Icons.unarchive_outlined),
+              tooltip: 'Aktifkan Kembali Kelas',
+              onPressed: _confirmReactivateClass,
             ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),

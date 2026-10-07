@@ -48,6 +48,9 @@ class FakeClassRepository extends ClassRepository {
   Future<void> archiveClass(String classId) async {}
 
   @override
+  Future<void> reactivateClass(String classId) async {}
+
+  @override
   Future<List<ClassMember>> getClassMembers(String classId) async {
     return mockMembers;
   }
@@ -154,6 +157,9 @@ void main() {
       await provider.archiveClass('c_1');
       expect(provider.ownedClasses.first.isArchived, isTrue);
       expect(provider.selectedClassId, isNull);
+
+      await provider.reactivateClass('c_1');
+      expect(provider.ownedClasses.first.isActive, isTrue);
     });
   });
 }
