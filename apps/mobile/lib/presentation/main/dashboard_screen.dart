@@ -139,6 +139,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+
+    // 1. Jika profil sedang dimuat, tampilkan loading indikator
+    if (authProvider.profileStatus == ProfileStatus.loading) {
+      return const Scaffold(
+        body: LoadingIndicator(message: 'Memuat profil dan hak akses...'),
+      );
+    }
+
+    // 2. Jika profil gagal dimuat, tampilkan pesan error eksplisit tanpa merender role palsu
+    if (authProvider.profileStatus == ProfileStatus.error) {
+      return Scaffold(
+        appBar: AppBar(title: const Text(AppConstants.appName)),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.person_off_outlined,
+                  size: 56,
+                  color: AppTheme.error.withAlpha(180),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Profil Belum Berhasil Dimuat',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  authProvider.profileErrorMessage ??
+                      'Terjadi kendala saat menyinkronkan profil Anda dari server. Silakan coba lagi.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => authProvider.signOut(),
+                      child: const Text('Keluar'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: () => authProvider.retryLoadSession(),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Coba Lagi'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final classProvider = context.watch<ClassProvider>();
     final isStaff = RoleGuard.isStaff(authProvider.appUser);
 

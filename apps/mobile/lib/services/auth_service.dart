@@ -78,6 +78,25 @@ class AuthService {
     }
   }
 
+  /// Masuk dengan email dan kata sandi dan mengembalikan User Firebase
+  Future<User?> signInRaw({
+    required String email,
+    required String password,
+  }) async {
+    final auth = _auth;
+    if (auth == null) {
+      throw FirebaseAuthException(
+        code: 'not-initialized',
+        message: 'Firebase belum diinisialisasi.',
+      );
+    }
+    final credential = await auth.signInWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
+    return credential.user;
+  }
+
   /// Masuk dengan email dan kata sandi
   Future<AppUser?> signIn({
     required String email,
@@ -92,12 +111,7 @@ class AuthService {
     }
 
     try {
-      final credential = await auth.signInWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
-
-      final user = credential.user;
+      final user = await signInRaw(email: email, password: password);
       if (user == null) return null;
 
       // Panggil bootstrap untuk update last_active dan sync account_type
@@ -164,6 +178,7 @@ class AuthService {
   }
 
   /// Mengambil profil lengkap pengguna dari Firestore users/{uid}
+  /// Melempar FirebaseException jika terjadi kesalahan otorisasi (permission-denied) atau jaringan (unavailable)
   Future<AppUser?> getUserProfile(String uid) async {
     final firestore = _firestore;
     if (firestore == null) return null;
@@ -173,13 +188,21 @@ class AuthService {
       if (doc.exists) {
         return AppUser.fromFirestore(doc);
       }
+      return null;
+    } on FirebaseException catch (e) {
+      debugPrint('⚠️ [AuthService] FirebaseException saat baca profil: ${e.code} - ${e.message}');
+      rethrow;
     } catch (e) {
       debugPrint('Catatan baca profil Firestore: $e');
+      rethrow;
     }
-    return null;
   }
 
   /// Memanggil endpoint serverless bootstrap Admin SDK secara aman
+  Future<void> callBootstrap({required String token, String? name}) async {
+    await _callBootstrap(token: token, name: name);
+  }
+
   Future<void> _callBootstrap({required String token, String? name}) async {
     try {
       final uri = Uri.parse(ApiConfig.bootstrapUrl);

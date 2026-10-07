@@ -4,6 +4,21 @@ import 'package:flutter/material.dart';
 import '../models/app_user.dart';
 import 'auth_service.dart';
 
+enum ProfileStatus {
+  initial,
+  loading,
+  loaded,
+  error,
+}
+
+enum ProfileErrorReason {
+  none,
+  notFound,
+  permissionDenied,
+  network,
+  unknown,
+}
+
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService;
   StreamSubscription<User?>? _authSubscription;
@@ -12,6 +27,11 @@ class AuthProvider extends ChangeNotifier {
   AppUser? _appUser;
   bool _isLoading = false;
   String? _errorMessage;
+
+  int _sessionGeneration = 0;
+  ProfileStatus _profileStatus = ProfileStatus.initial;
+  ProfileErrorReason _profileErrorReason = ProfileErrorReason.none;
+  String? _profileErrorMessage;
 
   AuthProvider({AuthService? authService})
       : _authService = authService ?? AuthService() {
@@ -23,53 +43,164 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
+  ProfileStatus get profileStatus => _profileStatus;
+  ProfileErrorReason get profileErrorReason => _profileErrorReason;
+  String? get profileErrorMessage => _profileErrorMessage;
+  int get sessionGeneration => _sessionGeneration;
+
   bool get isAuthenticated => _firebaseUser != null;
   bool get isEmailVerified => _firebaseUser?.emailVerified ?? false;
 
   void _init() {
     _firebaseUser = _authService.currentFirebaseUser;
+    if (_firebaseUser != null) {
+      _loadSession();
+    }
     _authSubscription = _authService.authStateChanges.listen((user) async {
-      _firebaseUser = user;
-      if (user != null) {
-        await _fetchAppUserProfile(user.uid);
-      } else {
+      if (user == null) {
+        _sessionGeneration++;
+        _firebaseUser = null;
         _appUser = null;
+        _profileStatus = ProfileStatus.initial;
+        _profileErrorReason = ProfileErrorReason.none;
+        _profileErrorMessage = null;
+        notifyListeners();
+      } else {
+        if (_firebaseUser?.uid != user.uid || _profileStatus == ProfileStatus.initial) {
+          _firebaseUser = user;
+          await _loadSession();
+        }
       }
-      notifyListeners();
     });
   }
 
-  Future<void> _fetchAppUserProfile(String uid) async {
+  /// Pipeline tunggal pemuatan sesi pengguna
+  Future<void> _loadSession({bool forceRefresh = false}) async {
+    _sessionGeneration++;
+    final currentGen = _sessionGeneration;
+
+    final user = _authService.currentFirebaseUser;
+    if (user == null) {
+      _firebaseUser = null;
+      _appUser = null;
+      _profileStatus = ProfileStatus.initial;
+      _profileErrorReason = ProfileErrorReason.none;
+      _profileErrorMessage = null;
+      notifyListeners();
+      return;
+    }
+
+    _firebaseUser = user;
+    _profileStatus = ProfileStatus.loading;
+    _profileErrorReason = ProfileErrorReason.none;
+    _profileErrorMessage = null;
+    notifyListeners();
+
     try {
-      final profile = await _authService.getUserProfile(uid);
+      // 1. Dapatkan token pengguna
+      final token = await user.getIdToken(forceRefresh);
+      if (currentGen != _sessionGeneration) return;
+
+      // 2. Sinkronisasi via bootstrap Admin SDK
+      if (token != null) {
+        await _authService.callBootstrap(token: token, name: user.displayName);
+        if (currentGen != _sessionGeneration) return;
+      }
+
+      // 3. Ambil profil dari Firestore
+      AppUser? profile;
+      try {
+        profile = await _authService.getUserProfile(user.uid);
+      } on FirebaseException catch (fe) {
+        if (currentGen != _sessionGeneration) return;
+        if (fe.code == 'permission-denied') {
+          debugPrint('⚠️ [AuthProvider] permission-denied saat baca profil. Mencoba user.reload() & getIdToken(true)...');
+          try {
+            await user.reload();
+            final freshToken = await user.getIdToken(true);
+            if (currentGen != _sessionGeneration) return;
+            if (freshToken != null) {
+              await _authService.callBootstrap(token: freshToken, name: user.displayName);
+              if (currentGen != _sessionGeneration) return;
+            }
+            profile = await _authService.getUserProfile(user.uid);
+          } catch (retryErr) {
+            debugPrint('⚠️ [AuthProvider] Retry permission-denied gagal: $retryErr');
+          }
+        } else if (fe.code == 'unavailable') {
+          _appUser = null;
+          _profileStatus = ProfileStatus.error;
+          _profileErrorReason = ProfileErrorReason.network;
+          _profileErrorMessage = 'Koneksi ke database gagal. Periksa jaringan internet atau emulator Anda.';
+          notifyListeners();
+          return;
+        } else {
+          debugPrint('⚠️ [AuthProvider] FirebaseException: ${fe.code} - ${fe.message}');
+        }
+      } catch (err) {
+        if (currentGen != _sessionGeneration) return;
+        debugPrint('⚠️ [AuthProvider] Error membaca profil: $err');
+      }
+
+      if (currentGen != _sessionGeneration) return;
+
+      // 4. Jika profil masih null (dokumen belum dibuat / not-found):
+      if (profile == null) {
+        debugPrint('⚠️ [AuthProvider] Dokumen profil belum ada. Mencoba bootstrap ulang...');
+        try {
+          final retryToken = await user.getIdToken(true);
+          if (currentGen != _sessionGeneration) return;
+          if (retryToken != null) {
+            await _authService.callBootstrap(token: retryToken, name: user.displayName);
+            if (currentGen != _sessionGeneration) return;
+            profile = await _authService.getUserProfile(user.uid);
+          }
+        } catch (retryErr) {
+          debugPrint('⚠️ [AuthProvider] Retry bootstrap gagal: $retryErr');
+        }
+      }
+
+      if (currentGen != _sessionGeneration) return;
+
+      // 5. Evaluasi hasil profil (JANGAN FALLBACK KE UMUM/USER!)
       if (profile != null) {
         _appUser = profile;
+        _profileStatus = ProfileStatus.loaded;
+        _profileErrorReason = ProfileErrorReason.none;
+        _profileErrorMessage = null;
       } else {
-        // Fallback display profile jika Firestore belum sync
-        _appUser = AppUser(
-          uid: uid,
-          name: _firebaseUser?.displayName ?? 'Pengguna',
-          email: _firebaseUser?.email ?? '',
-          accountType: AccountType.umum,
-          role: UserRole.user,
-        );
+        _appUser = null;
+        _profileStatus = ProfileStatus.error;
+        _profileErrorReason = ProfileErrorReason.notFound;
+        _profileErrorMessage = 'Profil pengguna belum berhasil dimuat. Silakan tekan tombol Coba Lagi.';
       }
     } catch (e) {
-      debugPrint('Catatan ambil profil di auth provider: $e');
+      if (currentGen != _sessionGeneration) return;
+      _appUser = null;
+      _profileStatus = ProfileStatus.error;
+      _profileErrorReason = ProfileErrorReason.unknown;
+      _profileErrorMessage = 'Terjadi kesalahan saat memuat profil: $e';
     }
+
+    notifyListeners();
   }
 
-  /// Masuk dengan proteksi anti-duplicate submit
+  /// Masuk dengan proteksi anti-duplicate submit dan pipeline sesi terpusat
   Future<bool> signIn({required String email, required String password}) async {
     if (_isLoading) return false;
     _setLoading(true);
     _clearError();
 
     try {
-      final user = await _authService.signIn(email: email, password: password);
-      _appUser = user;
+      final user = await _authService.signInRaw(email: email, password: password);
+      if (user == null) {
+        _setLoading(false);
+        return false;
+      }
+      _firebaseUser = user;
+      await _loadSession(forceRefresh: true);
       _setLoading(false);
-      return true;
+      return _profileStatus == ProfileStatus.loaded;
     } catch (e) {
       _setError(AuthService.translateError(e));
       _setLoading(false);
@@ -88,12 +219,13 @@ class AuthProvider extends ChangeNotifier {
     _clearError();
 
     try {
-      final user = await _authService.register(
+      await _authService.register(
         name: name,
         email: email,
         password: password,
       );
-      _appUser = user;
+      _firebaseUser = _authService.currentFirebaseUser;
+      await _loadSession(forceRefresh: true);
       _setLoading(false);
       return true;
     } catch (e) {
@@ -111,8 +243,8 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final isVerified = await _authService.reloadAndCheckVerification();
-      if (_firebaseUser != null) {
-        await _fetchAppUserProfile(_firebaseUser!.uid);
+      if (isVerified) {
+        await _loadSession(forceRefresh: true);
       }
       _setLoading(false);
       return isVerified;
@@ -121,6 +253,16 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return false;
     }
+  }
+
+  /// Penyegaran manual sesi pengguna dan token
+  Future<void> refreshSession() async {
+    await _loadSession(forceRefresh: true);
+  }
+
+  /// Mencoba ulang memuat sesi jika sebelumnya terjadi kegagalan
+  Future<void> retryLoadSession() async {
+    await _loadSession(forceRefresh: true);
   }
 
   /// Kirim ulang email verifikasi
@@ -151,13 +293,17 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Keluar dari akun
+  /// Keluar dari akun dengan pembatalan generasi sesi
   Future<void> signOut() async {
+    _sessionGeneration++;
     _setLoading(true);
     try {
       await _authService.signOut();
       _firebaseUser = null;
       _appUser = null;
+      _profileStatus = ProfileStatus.initial;
+      _profileErrorReason = ProfileErrorReason.none;
+      _profileErrorMessage = null;
     } finally {
       _setLoading(false);
     }
