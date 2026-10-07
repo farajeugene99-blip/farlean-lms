@@ -140,15 +140,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       let totalPoints = 0;
       let pointsEarned = 0;
       const userAnswers = attemptData.answers || {};
+      const keySnapshotMap: Record<string, { correct_option: number; points: number; version: number }> = {};
 
       for (const keyDoc of keysSnapshot.docs) {
         const keyData = keyDoc.data();
+        if (keyData.deleted === true) continue; // Abaikan soal yang telah dihapus jika ada
         const qid = keyDoc.id;
         const qPoints = keyData.points || 10;
         totalPoints += qPoints;
 
         const correctAnswer = keyData.correct_option;
         const studentAnswer = userAnswers[qid];
+
+        keySnapshotMap[qid] = {
+          correct_option: correctAnswer,
+          points: qPoints,
+          version: keyData.version || 1,
+        };
 
         if (studentAnswer !== undefined && studentAnswer === correctAnswer) {
           pointsEarned += qPoints;
@@ -159,13 +167,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ? Math.round((pointsEarned / totalPoints) * 100 * 10) / 10
           : 0;
 
-      // H. Kunci Attempt (Lock) dalam Transaksi: status menjadi 'graded'
+      // H. Kunci Attempt (Lock) dalam Transaksi: status menjadi 'graded' + simpan snapshot kunci & penilaian
       transaction.update(attemptRef, {
         status: 'graded',
         score: finalScore,
         points_earned: pointsEarned,
         total_points: totalPoints,
         submitted_at: FieldValue.serverTimestamp(),
+        graded_at: FieldValue.serverTimestamp(),
+        key_snapshot: keySnapshotMap,
       });
 
       // I. Simpan / Perbarui Best Score Pengguna

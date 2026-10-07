@@ -8,6 +8,7 @@
     "test:rules": "tsx test/firestore-rules.test.ts",
     "test:api": "tsx test/api-endpoints.test.ts",
     "test:cors": "tsx test/cors.test.ts",
+    "test:questions": "tsx test/question-endpoints.test.ts",
     "test:testing-accounts": "tsx test/testing-accounts.test.ts",
     "test:list-queries": "tsx test/list-queries-regression.test.ts",
     "seed:testing": "tsx ../emulator/seed-testing-accounts.mjs",
