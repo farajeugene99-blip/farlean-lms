@@ -280,90 +280,12 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     final meeting = _meeting;
     if (meeting == null) return;
 
-    final urlController = TextEditingController();
-    VideoProvider selectedProvider = VideoProvider.youtube;
-    final formKey = GlobalKey<FormState>();
-
     final created = await showDialog<bool>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Tambah Video Pembelajaran'),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<VideoProvider>(
-                  initialValue: selectedProvider,
-                  decoration: const InputDecoration(labelText: 'Penyedia Video'),
-                  items: const [
-                    DropdownMenuItem(
-                      value: VideoProvider.youtube,
-                      child: Text('YouTube Video'),
-                    ),
-                    DropdownMenuItem(
-                      value: VideoProvider.cloudinary,
-                      child: Text('Cloudinary MP4 / Direct URL'),
-                    ),
-                  ],
-                  onChanged: (val) {
-                    if (val != null) {
-                      setDialogState(() => selectedProvider = val);
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: urlController,
-                  decoration: InputDecoration(
-                    labelText: 'URL Video',
-                    hintText: selectedProvider == VideoProvider.youtube
-                        ? 'https://www.youtube.com/watch?v=...'
-                        : 'https://res.cloudinary.com/...',
-                  ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'URL wajib diisi';
-                    if (!v.startsWith('http://') && !v.startsWith('https://')) {
-                      return 'URL harus diawali http:// atau https://';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                try {
-                  final videoItem = VideoItem(
-                    id: '',
-                    meetingId: meeting.id,
-                    classId: meeting.classId,
-                    url: urlController.text.trim(),
-                    provider: selectedProvider,
-                  );
-                  final videoId = await _videoRepository.createVideo(videoItem);
-                  await _meetingRepository.linkModule(meeting.id, videoId: videoId);
-                  if (ctx.mounted) Navigator.pop(ctx, true);
-                } catch (e) {
-                  if (ctx.mounted) {
-                    ScaffoldMessenger.of(ctx).showSnackBar(
-                      SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
-                    );
-                  }
-                }
-              },
-              child: const Text('Simpan Video'),
-            ),
-          ],
-        ),
+      builder: (ctx) => _AddVideoDialog(
+        meeting: meeting,
+        videoRepository: _videoRepository,
+        meetingRepository: _meetingRepository,
       ),
     );
 
@@ -1368,6 +1290,139 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         status.value,
         style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
       ),
+    );
+  }
+}
+
+class _AddVideoDialog extends StatefulWidget {
+  final Meeting meeting;
+  final VideoRepository videoRepository;
+  final MeetingRepository meetingRepository;
+
+  const _AddVideoDialog({
+    required this.meeting,
+    required this.videoRepository,
+    required this.meetingRepository,
+  });
+
+  @override
+  State<_AddVideoDialog> createState() => _AddVideoDialogState();
+}
+
+class _AddVideoDialogState extends State<_AddVideoDialog> {
+  late final TextEditingController _urlController;
+  VideoProvider _selectedProvider = VideoProvider.youtube;
+  final _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _urlController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate() || _isSaving) return;
+    setState(() => _isSaving = true);
+    try {
+      final videoItem = VideoItem(
+        id: '',
+        meetingId: widget.meeting.id,
+        classId: widget.meeting.classId,
+        url: _urlController.text.trim(),
+        provider: _selectedProvider,
+      );
+      final videoId = await widget.videoRepository.createVideo(videoItem);
+      await widget.meetingRepository.linkModule(widget.meeting.id, videoId: videoId);
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Tambah Video Pembelajaran'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<VideoProvider>(
+              isExpanded: true,
+              initialValue: _selectedProvider,
+              decoration: const InputDecoration(
+                labelText: 'Penyedia Video',
+                isDense: true,
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: VideoProvider.youtube,
+                  child: Text(
+                    'YouTube Video',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: VideoProvider.cloudinary,
+                  child: Text(
+                    'Cloudinary (MP4/URL)',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() => _selectedProvider = val);
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _urlController,
+              decoration: InputDecoration(
+                labelText: 'URL Video',
+                hintText: _selectedProvider == VideoProvider.youtube
+                    ? 'https://www.youtube.com/watch?v=...'
+                    : 'https://res.cloudinary.com/...',
+              ),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'URL wajib diisi';
+                if (!v.startsWith('http://') && !v.startsWith('https://')) {
+                  return 'URL harus diawali http:// atau https://';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isSaving ? null : () => Navigator.pop(context, false),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: _isSaving ? null : _submit,
+          child: _isSaving
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Text('Simpan Video'),
+        ),
+      ],
     );
   }
 }
