@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { testId, status } = req.body || {};
 
-  if (!testId || typeof testId !== 'string' || testId.trim().isEmpty) {
+  if (!testId || typeof testId !== 'string' || testId.trim().length === 0) {
     return res.status(400).json({ error: 'testId wajib diisi.' });
   }
 
