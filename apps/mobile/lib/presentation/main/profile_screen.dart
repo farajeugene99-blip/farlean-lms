@@ -299,6 +299,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     size: 20,
                   ),
                 ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: Icon(
+                    authProvider.isRoleOutOfSync ? Icons.sync_problem_rounded : Icons.sync_rounded,
+                    color: authProvider.isRoleOutOfSync ? AppTheme.warning : null,
+                  ),
+                  title: const Text('Sinkronisasi Sesi & Peran'),
+                  subtitle: Text(
+                    authProvider.isRoleOutOfSync
+                        ? 'Peran belum sinkron (Token: ${appUser?.claimsRole?.value ?? "USER"} vs Profil: ${appUser?.role.value}). Tekan perbarui.'
+                        : 'Sesi dan hak akses token mutakhir.',
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.refresh_rounded),
+                    tooltip: 'Perbarui Sesi',
+                    onPressed: () async {
+                      await authProvider.refreshSession();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Sesi dan token hak akses berhasil diperbarui.'),
+                            backgroundColor: AppTheme.success,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ),
               ],
             ),
           ),

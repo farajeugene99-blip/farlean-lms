@@ -244,6 +244,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   // Welcome Banner Card
                   _buildWelcomeCard(context, classProvider),
+                  if (authProvider.isRoleOutOfSync) ...[
+                    const SizedBox(height: 12),
+                    _buildSyncWarningBanner(context, authProvider),
+                  ],
                   const SizedBox(height: 20),
 
                   // Section: Kelas yang Dikelola (Dosen / Pengajar)
@@ -325,6 +329,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSyncWarningBanner(BuildContext context, AuthProvider authProvider) {
+    final appUser = authProvider.appUser!;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.warning.withAlpha(20),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppTheme.warning.withAlpha(80)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.sync_problem_rounded, color: AppTheme.warning, size: 24),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Peran Akun Belum Sinkron',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.warning),
+                ),
+                Text(
+                  'Token: ${appUser.claimsRole?.value ?? "USER"} vs Profil: ${appUser.role.value}. Tekan Perbarui untuk menyelaraskan hak akses.',
+                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: () => authProvider.refreshSession(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.warning,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              minimumSize: const Size(60, 32),
+            ),
+            child: const Text('Perbarui', style: TextStyle(fontSize: 11)),
+          ),
+        ],
       ),
     );
   }

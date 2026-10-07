@@ -15,6 +15,7 @@
     "test:list-queries": "tsx test/list-queries-regression.test.ts",
     "seed:testing": "tsx ../emulator/seed-testing-accounts.mjs",
     "seed:staff": "tsx ../emulator/seed-staff-accounts.mjs",
+    "promote": "tsx scripts/promote-user.ts",
     "migrate": "tsx scripts/migrate-phase1-phase2.ts"
   },
   "keywords": [],

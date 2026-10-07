@@ -2,15 +2,16 @@ import '../../models/app_user.dart';
 
 class RoleGuard {
   /// Memeriksa apakah user berwenang mengelola kelas (GURU atau ADMIN)
+  /// Menggunakan effectiveRole (Source of Truth Custom Claims)
   static bool canManageClass(AppUser? user) {
     if (user == null) return false;
-    return user.role == UserRole.guru || user.role == UserRole.admin;
+    return user.effectiveRole == UserRole.guru || user.effectiveRole == UserRole.admin;
   }
 
   /// Memeriksa apakah user memiliki hak akses sistem tingkat admin
   static bool canAccessAdmin(AppUser? user) {
     if (user == null) return false;
-    return user.role == UserRole.admin;
+    return user.effectiveRole == UserRole.admin;
   }
 
   /// Memeriksa apakah user dapat bergabung kelas secara langsung dengan status ACTIVE
@@ -22,8 +23,9 @@ class RoleGuard {
   }
 
   /// Memeriksa apakah user adalah staff (GURU atau ADMIN)
+  /// Menggunakan effectiveRole (Source of Truth Custom Claims)
   static bool isStaff(AppUser? user) {
     if (user == null) return false;
-    return user.role == UserRole.guru || user.role == UserRole.admin;
+    return user.effectiveRole == UserRole.guru || user.effectiveRole == UserRole.admin;
   }
 }

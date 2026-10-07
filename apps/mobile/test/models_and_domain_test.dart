@@ -108,6 +108,109 @@ void main() {
       expect(userDosenBukanGuru.role, equals(UserRole.user));
       expect(RoleGuard.canManageClass(userDosenBukanGuru), isFalse);
     });
+
+    test('Matriks Otoritas Role: DOSEN+GURU, UMUM+GURU, MAHASISWA+USER, UMUM+USER', () {
+      // 1. DOSEN + GURU
+      const dosenGuru = AppUser(
+        uid: 'u1',
+        name: 'Dosen Guru',
+        email: 'dosen@dosen.farlean.edu',
+        accountType: AccountType.dosen,
+        role: UserRole.guru,
+      );
+      expect(dosenGuru.accountType, equals(AccountType.dosen));
+      expect(dosenGuru.effectiveRole, equals(UserRole.guru));
+      expect(RoleGuard.isStaff(dosenGuru), isTrue);
+      expect(RoleGuard.canManageClass(dosenGuru), isTrue);
+
+      // 2. UMUM + GURU (Akun umum diberikan wewenang mengajar)
+      const umumGuru = AppUser(
+        uid: 'u2',
+        name: 'Instruktur Luar',
+        email: 'instruktur@gmail.com',
+        accountType: AccountType.umum,
+        role: UserRole.guru,
+      );
+      expect(umumGuru.accountType, equals(AccountType.umum));
+      expect(umumGuru.effectiveRole, equals(UserRole.guru));
+      expect(RoleGuard.isStaff(umumGuru), isTrue);
+      expect(RoleGuard.canManageClass(umumGuru), isTrue);
+
+      // 3. MAHASISWA + USER
+      const mhsUser = AppUser(
+        uid: 'u3',
+        name: 'Mahasiswa Biasa',
+        email: 'mhs@students.farlean.edu',
+        accountType: AccountType.mahasiswa,
+        role: UserRole.user,
+      );
+      expect(mhsUser.accountType, equals(AccountType.mahasiswa));
+      expect(mhsUser.effectiveRole, equals(UserRole.user));
+      expect(RoleGuard.isStaff(mhsUser), isFalse);
+      expect(RoleGuard.canManageClass(mhsUser), isFalse);
+
+      // 4. UMUM + USER
+      const umumUser = AppUser(
+        uid: 'u4',
+        name: 'Pengguna Umum',
+        email: 'umum@yahoo.com',
+        accountType: AccountType.umum,
+        role: UserRole.user,
+      );
+      expect(umumUser.accountType, equals(AccountType.umum));
+      expect(umumUser.effectiveRole, equals(UserRole.user));
+      expect(RoleGuard.isStaff(umumUser), isFalse);
+      expect(RoleGuard.canManageClass(umumUser), isFalse);
+
+      // 5. MAHASISWA + ADMIN
+      const mhsAdmin = AppUser(
+        uid: 'u5',
+        name: 'Mahasiswa Lab Admin',
+        email: 'admin.mhs@students.farlean.edu',
+        accountType: AccountType.mahasiswa,
+        role: UserRole.admin,
+      );
+      expect(mhsAdmin.effectiveRole, equals(UserRole.admin));
+      expect(RoleGuard.isStaff(mhsAdmin), isTrue);
+      expect(RoleGuard.canAccessAdmin(mhsAdmin), isTrue);
+
+      // 6. DOSEN + ADMIN
+      const dosenAdmin = AppUser(
+        uid: 'u6',
+        name: 'Dekan Admin',
+        email: 'dekan@dosen.farlean.edu',
+        accountType: AccountType.dosen,
+        role: UserRole.admin,
+      );
+      expect(dosenAdmin.effectiveRole, equals(UserRole.admin));
+      expect(RoleGuard.isStaff(dosenAdmin), isTrue);
+      expect(RoleGuard.canAccessAdmin(dosenAdmin), isTrue);
+    });
+
+    test('Split-brain detection: claimsRole berbeda dengan Firestore role', () {
+      const splitBrainUser = AppUser(
+        uid: 'u_split',
+        name: 'Split User',
+        email: 'split@farlean.edu',
+        accountType: AccountType.dosen,
+        role: UserRole.user, // Firestore masih USER
+        claimsRole: UserRole.guru, // Token claims sudah GURU
+      );
+
+      expect(splitBrainUser.isRoleOutOfSync, isTrue);
+      expect(splitBrainUser.effectiveRole, equals(UserRole.guru));
+      // UI gating menggunakan effectiveRole sehingga fitur terbuka sesuai token
+      expect(RoleGuard.canManageClass(splitBrainUser), isTrue);
+    });
+
+    test('Enum fromString unknown values fallback safely to least privilege without crash', () {
+      expect(UserRole.fromString('HACKER_ROLE'), equals(UserRole.user));
+      expect(UserRole.fromString(null), equals(UserRole.user));
+      expect(UserRole.fromString(''), equals(UserRole.user));
+      expect(AccountType.fromString('SUPER_USER'), equals(AccountType.umum));
+      expect(AccountType.fromString(null), equals(AccountType.umum));
+      expect(AccountType.fromString(''), equals(AccountType.umum));
+    });
   });
 
   group('Classroom & ClassMember Model Tests', () {

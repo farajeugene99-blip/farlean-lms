@@ -47,6 +47,7 @@ class AuthProvider extends ChangeNotifier {
   ProfileErrorReason get profileErrorReason => _profileErrorReason;
   String? get profileErrorMessage => _profileErrorMessage;
   int get sessionGeneration => _sessionGeneration;
+  bool get isRoleOutOfSync => _appUser?.isRoleOutOfSync ?? false;
 
   bool get isAuthenticated => _firebaseUser != null;
   bool get isEmailVerified => _firebaseUser?.emailVerified ?? false;
@@ -97,9 +98,13 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. Dapatkan token pengguna
-      final token = await user.getIdToken(forceRefresh);
+      // 1. Dapatkan token & Custom Claims pengguna
+      final tokenResult = await user.getIdTokenResult(forceRefresh);
       if (currentGen != _sessionGeneration) return;
+
+      final token = tokenResult.token;
+      final rawClaimsRole = tokenResult.claims?['role'] as String?;
+      final claimsRole = rawClaimsRole != null ? UserRole.fromString(rawClaimsRole) : null;
 
       // 2. Sinkronisasi via bootstrap Admin SDK
       if (token != null) {
@@ -164,7 +169,7 @@ class AuthProvider extends ChangeNotifier {
 
       // 5. Evaluasi hasil profil (JANGAN FALLBACK KE UMUM/USER!)
       if (profile != null) {
-        _appUser = profile;
+        _appUser = profile.copyWith(claimsRole: claimsRole);
         _profileStatus = ProfileStatus.loaded;
         _profileErrorReason = ProfileErrorReason.none;
         _profileErrorMessage = null;

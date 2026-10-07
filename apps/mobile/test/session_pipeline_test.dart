@@ -5,6 +5,18 @@ import 'package:mobile/models/app_user.dart';
 import 'package:mobile/services/auth_provider.dart';
 import 'package:mobile/services/auth_service.dart';
 
+class FakeIdTokenResult implements IdTokenResult {
+  @override
+  final String? token;
+  @override
+  final Map<String, dynamic>? claims;
+
+  FakeIdTokenResult({this.token, this.claims});
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class FakeUser implements User {
   @override
   final String uid;
@@ -14,16 +26,23 @@ class FakeUser implements User {
   final String? displayName;
   @override
   final bool emailVerified;
+  final Map<String, dynamic>? mockClaims;
 
   FakeUser({
     required this.uid,
     this.email,
     this.displayName,
     this.emailVerified = true,
+    this.mockClaims,
   });
 
   @override
   Future<String?> getIdToken([bool forceRefresh = false]) async => 'mock_token_$uid';
+
+  @override
+  Future<IdTokenResult> getIdTokenResult([bool forceRefresh = false]) async {
+    return FakeIdTokenResult(token: 'mock_token_$uid', claims: mockClaims);
+  }
 
   @override
   Future<void> reload() async {}
@@ -166,6 +185,37 @@ void main() {
       expect(provider.profileStatus, equals(ProfileStatus.loaded));
       expect(provider.appUser?.accountType, equals(AccountType.umum));
       expect(provider.appUser?.role, equals(UserRole.guru));
+    });
+
+    test('Custom claims GURU attaches claimsRole and resolves effectiveRole as GURU even when Firestore is USER', () async {
+      final fakeUser = FakeUser(
+        uid: 'user_claim_guru',
+        email: 'guru@dosen.farlean.edu',
+        mockClaims: {'role': 'GURU'}, // Claims token membawa GURU
+      );
+
+      // Firestore mirror belum sinkron (masih USER)
+      const firestoreUser = AppUser(
+        uid: 'user_claim_guru',
+        name: 'Dosen Belum Sinkron',
+        email: 'guru@dosen.farlean.edu',
+        accountType: AccountType.dosen,
+        role: UserRole.user,
+      );
+
+      final mockService = MockAuthService(
+        mockCurrentUser: fakeUser,
+        mockProfileToReturn: firestoreUser,
+      );
+
+      final provider = AuthProvider(authService: mockService);
+      await provider.refreshSession();
+
+      expect(provider.profileStatus, equals(ProfileStatus.loaded));
+      expect(provider.appUser?.role, equals(UserRole.user)); // Mirror tetap USER
+      expect(provider.appUser?.claimsRole, equals(UserRole.guru)); // Claims terpasang GURU
+      expect(provider.appUser?.effectiveRole, equals(UserRole.guru)); // Otoritas efektif GURU
+      expect(provider.isRoleOutOfSync, isTrue); // Terdeteksi out-of-sync
     });
   });
 }
