@@ -1,11 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { v2 as cloudinary } from 'cloudinary';
 import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
+import { applyCors } from '../lib/cors';
 
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 menit
 const MAX_SIGN_ATTEMPTS = 10;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }

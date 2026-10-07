@@ -25,20 +25,31 @@ const db = getFirestore();
 interface MockResponse {
   statusCode: number;
   jsonData: any;
+  headers: Record<string, string>;
   status(code: number): MockResponse;
   json(data: any): MockResponse;
+  setHeader(key: string, value: string): MockResponse;
+  end(): MockResponse;
 }
 
 function createMockRes(): MockResponse {
   const res: MockResponse = {
     statusCode: 200,
     jsonData: null,
+    headers: {},
     status(code: number) {
       this.statusCode = code;
       return this;
     },
     json(data: any) {
       this.jsonData = data;
+      return this;
+    },
+    setHeader(key: string, value: string) {
+      this.headers[key.toLowerCase()] = value;
+      return this;
+    },
+    end() {
       return this;
     },
   };

@@ -1,9 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
+import { applyCors } from '../lib/cors';
 
 const GRACE_PERIOD_MS = 60 * 1000; // 60 detik toleransi jaringan (Blueprint Farlean LMS v1.4)
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }

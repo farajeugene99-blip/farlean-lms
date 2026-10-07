@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'crypto';
 import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
+import { applyCors } from '../lib/cors';
 
 function generateRandomCode(): string {
   // Menghasilkan 8 karakter alfanumerik huruf kapital yang mudah dibaca
@@ -14,6 +15,10 @@ function generateRandomCode(): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // --- 0. Penanganan CORS & Preflight Request (OPTIONS) ---
+  if (applyCors(req, res)) return;
+
+  // Cek method POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
