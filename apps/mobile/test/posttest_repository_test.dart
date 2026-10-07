@@ -125,5 +125,10 @@ void main() {
         throwsA(isA<StateError>()),
       );
     });
+
+    test('deleteQuestion melempar ArgumentError jika testId atau qid kosong', () async {
+      expect(() => repository.deleteQuestion(testId: '', qid: 'q1'), throwsA(isA<ArgumentError>()));
+      expect(() => repository.deleteQuestion(testId: 'p1', qid: ''), throwsA(isA<ArgumentError>()));
+    });
   });
 }

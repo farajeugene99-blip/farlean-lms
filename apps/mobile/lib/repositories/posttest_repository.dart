@@ -1,15 +1,26 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import '../core/config/api_config.dart';
 import '../models/content_status.dart';
 import '../models/posttest.dart';
 import '../models/question.dart';
 
 class PosttestRepository {
   final FirebaseFirestore? _firestore;
+  final http.Client _httpClient;
+  final FirebaseAuth? _auth;
 
-  PosttestRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null);
+  PosttestRepository({
+    FirebaseFirestore? firestore,
+    http.Client? httpClient,
+    FirebaseAuth? auth,
+  })  : _firestore = firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null),
+        _httpClient = httpClient ?? http.Client(),
+        _auth = auth ?? (Firebase.apps.isNotEmpty ? FirebaseAuth.instance : null);
 
   /// Mengambil metadata kuis posttest
   Future<Posttest?> getPosttest(String testId) async {
@@ -31,6 +42,7 @@ class PosttestRepository {
   /// Mengambil daftar soal dari sub-koleksi posttests/{testId}/questions/{qid}
   /// ATURAN KEAMANAN (NO-KEY-LEAK):
   /// Soal yang dikembalikan tidak memuat kunci jawaban sama sekali.
+  /// Soal yang bertanda soft-delete difilter keluar.
   Future<List<Question>> getQuestions(String testId) async {
     final firestore = _firestore;
     if (firestore == null) return [];
@@ -42,23 +54,26 @@ class PosttestRepository {
           .collection('questions')
           .get();
 
-      return snapshot.docs.map((doc) => Question.fromFirestore(doc)).toList();
+      return snapshot.docs
+          .where((doc) => doc.data()['deleted'] != true)
+          .map((doc) => Question.fromFirestore(doc))
+          .toList();
     } catch (e) {
       debugPrint('Catatan baca soal posttest: $e');
       rethrow;
     }
   }
 
-  /// Membuat posttest baru (Guru/Admin)
+  /// Membuat posttest baru
   Future<String> createPosttest(Posttest posttest) async {
     if (posttest.title.trim().isEmpty) {
       throw ArgumentError('Judul posttest tidak boleh kosong.');
     }
     if (posttest.duration <= 0) {
-      throw ArgumentError('Durasi posttest harus lebih besar dari 0 menit.');
+      throw ArgumentError('Durasi posttest harus lebih besar dari 0.');
     }
     if (posttest.maxAttempts <= 0) {
-      throw ArgumentError('Batas percobaan (max_attempts) minimal 1.');
+      throw ArgumentError('Maksimal percobaan harus lebih besar dari 0.');
     }
 
     final firestore = _firestore;
@@ -74,10 +89,16 @@ class PosttestRepository {
     }
   }
 
-  /// Memperbarui metadata posttest (Guru/Admin)
+  /// Memperbarui metadata posttest
   Future<void> updatePosttest(Posttest posttest) async {
+    if (posttest.id.isEmpty) {
+      throw ArgumentError('ID posttest tidak boleh kosong.');
+    }
     if (posttest.title.trim().isEmpty) {
       throw ArgumentError('Judul posttest tidak boleh kosong.');
+    }
+    if (posttest.duration <= 0) {
+      throw ArgumentError('Durasi posttest harus lebih besar dari 0.');
     }
 
     final firestore = _firestore;
@@ -91,7 +112,7 @@ class PosttestRepository {
     }
   }
 
-  /// Memperbarui status posttest (Draft -> Published -> Archived)
+  /// Memperbarui status posttest
   Future<void> updatePosttestStatus(String testId, ContentStatus status) async {
     final firestore = _firestore;
     if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
@@ -107,9 +128,10 @@ class PosttestRepository {
     }
   }
 
-  /// Menyimpan soal dan mengisolasi kunci jawaban ke koleksi rahasia `answer_keys`:
-  /// - Soal ditulis ke: posttests/{testId}/questions/{qid}
-  /// - Kunci jawaban ditulis ke: answer_keys/{testId}/items/{qid}
+  /// Menyimpan soal dan kunci jawaban melalui Backend API (/api/save-question)
+  /// - Menghindari error Firestore Rules L280/L291/L344 (karena kunci jawaban server-only)
+  /// - Melakukan penulisan atomik soal dan kunci jawaban di server Admin SDK
+  /// - Menjaga integritas versi soal saat ada kuis yang telah dikerjakan siswa
   Future<void> saveQuestionAndKey({
     required String testId,
     required Question question,
@@ -126,40 +148,75 @@ class PosttestRepository {
       throw ArgumentError('Indeks kunci jawaban tidak valid.');
     }
 
-    final firestore = _firestore;
-    if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
+    final token = await _auth?.currentUser?.getIdToken();
+    if (token == null && Firebase.apps.isNotEmpty) {
+      throw StateError('Pengguna belum terautentikasi.');
+    }
 
-    try {
-      final batch = firestore.batch();
+    final payload = {
+      'testId': testId,
+      if (question.id.isNotEmpty) 'qid': question.id,
+      'text': question.text.trim(),
+      'options': question.options,
+      'correct_option': correctOptionIndex,
+      'points': question.points,
+      if (explanation != null && explanation.isNotEmpty) 'explanation': explanation.trim(),
+    };
 
-      // 1. Tulis soal publik (tanpa kunci)
-      final qDocRef = firestore
-          .collection('posttests')
-          .doc(testId)
-          .collection('questions')
-          .doc(question.id.isEmpty ? null : question.id);
+    final response = await _httpClient.post(
+      Uri.parse(ApiConfig.saveQuestionUrl),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(payload),
+    );
 
-      batch.set(qDocRef, question.toMap());
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      try {
+        final errJson = jsonDecode(response.body);
+        throw Exception(errJson['error'] ?? 'Gagal menyimpan soal dan kunci jawaban posttest.');
+      } catch (e) {
+        if (e is Exception && !e.toString().contains('FormatException')) rethrow;
+        throw Exception('Gagal menyimpan soal posttest: HTTP ${response.statusCode}');
+      }
+    }
+  }
 
-      // 2. Tulis kunci jawaban rahasia terisolasi di server
-      final keyDocRef = firestore
-          .collection('answer_keys')
-          .doc(testId)
-          .collection('items')
-          .doc(qDocRef.id);
+  /// Menghapus soal melalui Backend API (/api/delete-question)
+  Future<void> deleteQuestion({
+    required String testId,
+    required String qid,
+  }) async {
+    if (testId.trim().isEmpty || qid.trim().isEmpty) {
+      throw ArgumentError('testId dan qid tidak boleh kosong.');
+    }
 
-      batch.set(keyDocRef, {
-        'qid': qDocRef.id,
-        'correct_option': correctOptionIndex,
-        'explanation': explanation,
-        'points': question.points,
-        'updated_at': FieldValue.serverTimestamp(),
-      });
+    final token = await _auth?.currentUser?.getIdToken();
+    if (token == null && Firebase.apps.isNotEmpty) {
+      throw StateError('Pengguna belum terautentikasi.');
+    }
 
-      await batch.commit();
-    } catch (e) {
-      debugPrint('Gagal menyimpan soal dan kunci posttest: $e');
-      rethrow;
+    final response = await _httpClient.post(
+      Uri.parse(ApiConfig.deleteQuestionUrl),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'testId': testId.trim(),
+        'qid': qid.trim(),
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      try {
+        final errJson = jsonDecode(response.body);
+        throw Exception(errJson['error'] ?? 'Gagal menghapus soal posttest.');
+      } catch (e) {
+        if (e is Exception && !e.toString().contains('FormatException')) rethrow;
+        throw Exception('Gagal menghapus soal: HTTP ${response.statusCode}');
+      }
     }
   }
 }

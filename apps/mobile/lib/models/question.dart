@@ -26,6 +26,8 @@ class Question {
   final List<String> options;
   final int points;
   final String tag;
+  final int version;
+  final bool deleted;
 
   const Question({
     required this.id,
@@ -34,6 +36,8 @@ class Question {
     this.options = const [],
     this.points = 10,
     this.tag = 'general',
+    this.version = 1,
+    this.deleted = false,
   });
 
   factory Question.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -56,6 +60,8 @@ class Question {
       options: parsedOptions,
       points: (map['points'] as num?)?.toInt() ?? 10,
       tag: map['tag'] as String? ?? 'general',
+      version: (map['version'] as num?)?.toInt() ?? 1,
+      deleted: map['deleted'] == true,
     );
   }
 
@@ -66,6 +72,8 @@ class Question {
       'options': options,
       'points': points,
       'tag': tag,
+      'version': version,
+      'deleted': deleted,
     };
   }
 }

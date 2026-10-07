@@ -750,6 +750,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
             accentColor: AppTheme.secondary,
             isAvailable: meeting.pretestId != null || isStaff,
             actionLabel: meeting.pretestId != null ? 'Mulai Pretest' : 'Buat Pretest',
+            secondaryActionLabel: (isStaff && meeting.pretestId != null) ? 'Kelola Soal' : null,
             badgeNotice: meeting.pretestId != null ? 'Wajib pernah buka materi' : null,
             onTap: () {
               if (meeting.pretestId != null) {
@@ -758,6 +759,9 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                 _showCreatePretestDialog();
               }
             },
+            onSecondaryTap: (isStaff && meeting.pretestId != null)
+                ? () => _showManageQuestionsDialog(meeting.pretestId!, 'Pretest', true)
+                : null,
           ),
           const SizedBox(height: 12),
 
@@ -791,6 +795,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
             accentColor: Colors.deepPurple,
             isAvailable: meeting.posttestId != null || isStaff,
             actionLabel: meeting.posttestId != null ? 'Mulai Post Test' : 'Buat Post Test',
+            secondaryActionLabel: (isStaff && meeting.posttestId != null) ? 'Kelola Soal' : null,
             onTap: () {
               if (meeting.posttestId != null) {
                 context.push('/posttests/${meeting.posttestId}?classId=${meeting.classId}&meetingId=${meeting.id}');
@@ -798,6 +803,9 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                 _showCreatePosttestDialog();
               }
             },
+            onSecondaryTap: (isStaff && meeting.posttestId != null)
+                ? () => _showManageQuestionsDialog(meeting.posttestId!, 'Post Test', false)
+                : null,
           ),
         ],
       ),
@@ -811,8 +819,10 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     required Color accentColor,
     required bool isAvailable,
     required String actionLabel,
+    String? secondaryActionLabel,
     String? badgeNotice,
     required VoidCallback onTap,
+    VoidCallback? onSecondaryTap,
   }) {
     return Card(
       child: Padding(
@@ -867,20 +877,38 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                     style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                   ),
                   const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: isAvailable ? onTap : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isAvailable ? accentColor : AppTheme.border,
-                      minimumSize: const Size(120, 38),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                    ),
-                    child: Text(
-                      isAvailable ? actionLabel : 'Belum Tersedia',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isAvailable ? Colors.white : AppTheme.textSecondary,
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ElevatedButton(
+                        onPressed: isAvailable ? onTap : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isAvailable ? accentColor : AppTheme.border,
+                          minimumSize: const Size(120, 38),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                        ),
+                        child: Text(
+                          isAvailable ? actionLabel : 'Belum Tersedia',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isAvailable ? Colors.white : AppTheme.textSecondary,
+                          ),
+                        ),
                       ),
-                    ),
+                      if (secondaryActionLabel != null && onSecondaryTap != null)
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.edit_note_rounded, size: 16),
+                          label: Text(secondaryActionLabel),
+                          onPressed: onSecondaryTap,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: accentColor,
+                            side: BorderSide(color: accentColor.withAlpha(120)),
+                            minimumSize: const Size(110, 38),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -888,6 +916,430 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Menampilkan dialog daftar soal dan manajemen soal untuk Staff / Guru
+  Future<void> _showManageQuestionsDialog(String testId, String testTitle, bool isPretest) async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.8,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              expand: false,
+              builder: (_, scrollController) {
+                return FutureBuilder<List<Question>>(
+                  future: isPretest
+                      ? _pretestRepository.getQuestions(testId)
+                      : _posttestRepository.getQuestions(testId),
+                  builder: (context, snapshot) {
+                    final questions = snapshot.data ?? [];
+                    final isLoading = snapshot.connectionState == ConnectionState.waiting;
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 40,
+                              height: 4,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.border,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Kelola Soal $testTitle',
+                                      style: Theme.of(context).textTheme.titleLarge,
+                                    ),
+                                    Text(
+                                      'Total: ${questions.length} soal aktif',
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.add_rounded, size: 18),
+                                label: const Text('Tambah Soal'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primary,
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: () {
+                                  _showQuestionEditorDialog(
+                                    testId: testId,
+                                    existing: null,
+                                    isPretest: isPretest,
+                                    onSaved: () => setModalState(() {}),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 24),
+                          if (isLoading)
+                            const Expanded(child: Center(child: CircularProgressIndicator()))
+                          else if (questions.isEmpty)
+                            Expanded(
+                              child: Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.quiz_outlined, size: 48, color: AppTheme.textSecondary.withAlpha(100)),
+                                    const SizedBox(height: 12),
+                                    const Text('Belum ada soal pada kuis ini.'),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                      'Klik tombol "Tambah Soal" untuk membuat soal baru.',
+                                      style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          else
+                            Expanded(
+                              child: ListView.separated(
+                                controller: scrollController,
+                                itemCount: questions.length,
+                                separatorBuilder: (context, index) => const SizedBox(height: 10),
+                                itemBuilder: (context, idx) {
+                                  final q = questions[idx];
+                                  return Card(
+                                    elevation: 1,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      side: const BorderSide(color: AppTheme.border),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 12,
+                                                backgroundColor: AppTheme.primary.withAlpha(30),
+                                                child: Text(
+                                                  '${idx + 1}',
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppTheme.primary,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  q.text,
+                                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.background,
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  border: Border.all(color: AppTheme.border),
+                                                ),
+                                                child: Text(
+                                                  '${q.points} poin',
+                                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          ...q.options.asMap().entries.map((opt) {
+                                            return Padding(
+                                              padding: const EdgeInsets.only(left: 32, top: 2),
+                                              child: Text(
+                                                '${String.fromCharCode(65 + opt.key)}. ${opt.value}',
+                                                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                              ),
+                                            );
+                                          }),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.end,
+                                            children: [
+                                              TextButton.icon(
+                                                icon: const Icon(Icons.edit_outlined, size: 16),
+                                                label: const Text('Edit'),
+                                                onPressed: () {
+                                                  _showQuestionEditorDialog(
+                                                    testId: testId,
+                                                    existing: q,
+                                                    isPretest: isPretest,
+                                                    onSaved: () => setModalState(() {}),
+                                                  );
+                                                },
+                                              ),
+                                              TextButton.icon(
+                                                icon: const Icon(Icons.delete_outline_rounded, size: 16, color: AppTheme.error),
+                                                label: const Text('Hapus', style: TextStyle(color: AppTheme.error)),
+                                                onPressed: () async {
+                                                  final confirm = await showDialog<bool>(
+                                                    context: context,
+                                                    builder: (dCtx) => AlertDialog(
+                                                      title: const Text('Konfirmasi Hapus Soal'),
+                                                      content: const Text(
+                                                        'Apakah Anda yakin ingin menghapus soal ini? Jika kuis sudah pernah dikerjakan siswa, soal akan diarsipkan agar riwayat nilai tetap aman.',
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () => Navigator.pop(dCtx, false),
+                                                          child: const Text('Batal'),
+                                                        ),
+                                                        ElevatedButton(
+                                                          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+                                                          onPressed: () => Navigator.pop(dCtx, true),
+                                                          child: const Text('Hapus'),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                  if (confirm == true) {
+                                                    try {
+                                                      if (isPretest) {
+                                                        await _pretestRepository.deleteQuestion(testId: testId, qid: q.id);
+                                                      } else {
+                                                        await _posttestRepository.deleteQuestion(testId: testId, qid: q.id);
+                                                      }
+                                                      setModalState(() {});
+                                                    } catch (e) {
+                                                      if (ctx.mounted) {
+                                                        ScaffoldMessenger.of(ctx).showSnackBar(
+                                                          SnackBar(content: Text('Gagal menghapus: $e'), backgroundColor: AppTheme.error),
+                                                        );
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Menampilkan dialog form Tambah / Edit Soal secara interaktif
+  Future<void> _showQuestionEditorDialog({
+    required String testId,
+    required Question? existing,
+    required bool isPretest,
+    required VoidCallback onSaved,
+  }) async {
+    final textController = TextEditingController(text: existing?.text ?? '');
+    final pointsController = TextEditingController(text: '${existing?.points ?? 10}');
+    final optionControllers = (existing != null && existing.options.isNotEmpty)
+        ? existing.options.map((o) => TextEditingController(text: o)).toList()
+        : [TextEditingController(), TextEditingController()];
+
+    int selectedCorrectIndex = 0;
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dlgCtx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(existing == null ? 'Tambah Soal Baru' : 'Edit Soal'),
+              content: SizedBox(
+                width: 520,
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextFormField(
+                          controller: textController,
+                          decoration: const InputDecoration(
+                            labelText: 'Teks Pertanyaan *',
+                            hintText: 'Masukkan pertanyaan...',
+                          ),
+                          maxLines: 3,
+                          validator: (v) => v == null || v.trim().isEmpty ? 'Teks pertanyaan wajib diisi' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: pointsController,
+                          decoration: const InputDecoration(
+                            labelText: 'Poin Soal (1 - 100) *',
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return 'Poin wajib diisi';
+                            final parsed = int.tryParse(v.trim());
+                            if (parsed == null || parsed < 1 || parsed > 100) return 'Poin harus antara 1 - 100';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Pilihan Jawaban & Kunci *',
+                              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                            if (optionControllers.length < 6)
+                              TextButton.icon(
+                                icon: const Icon(Icons.add, size: 16),
+                                label: const Text('Tambah Opsi', style: TextStyle(fontSize: 12)),
+                                onPressed: () {
+                                  setDialogState(() {
+                                    optionControllers.add(TextEditingController());
+                                  });
+                                },
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ...optionControllers.asMap().entries.map((entry) {
+                          final idx = entry.key;
+                          final ctrl = entry.value;
+                          final label = String.fromCharCode(65 + idx);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Row(
+                              children: [
+                                // ignore: deprecated_member_use
+                                Radio<int>(
+                                  value: idx,
+                                  // ignore: deprecated_member_use
+                                  groupValue: selectedCorrectIndex,
+                                  // ignore: deprecated_member_use
+                                  onChanged: (val) {
+                                    setDialogState(() {
+                                      selectedCorrectIndex = val ?? 0;
+                                    });
+                                  },
+                                ),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: ctrl,
+                                    decoration: InputDecoration(
+                                      labelText: 'Opsi $label ${selectedCorrectIndex == idx ? "(KUNCI BENAR)" : ""}',
+                                      isDense: true,
+                                    ),
+                                    validator: (v) => v == null || v.trim().isEmpty ? 'Opsi $label tidak boleh kosong' : null,
+                                  ),
+                                ),
+                                if (optionControllers.length > 2)
+                                  IconButton(
+                                    icon: const Icon(Icons.close_rounded, size: 18, color: AppTheme.textSecondary),
+                                    onPressed: () {
+                                      setDialogState(() {
+                                        optionControllers.removeAt(idx);
+                                        if (selectedCorrectIndex >= optionControllers.length) {
+                                          selectedCorrectIndex = 0;
+                                        }
+                                      });
+                                    },
+                                  ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dlgCtx),
+                  child: const Text('Batal'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (!formKey.currentState!.validate()) return;
+                    final optionsList = optionControllers.map((c) => c.text.trim()).toList();
+                    final points = int.parse(pointsController.text.trim());
+
+                    final question = Question(
+                      id: existing?.id ?? '',
+                      text: textController.text.trim(),
+                      options: optionsList,
+                      points: points,
+                      tag: 'general',
+                    );
+
+                    try {
+                      if (isPretest) {
+                        await _pretestRepository.saveQuestionAndKey(
+                          testId: testId,
+                          question: question,
+                          correctOptionIndex: selectedCorrectIndex,
+                        );
+                      } else {
+                        await _posttestRepository.saveQuestionAndKey(
+                          testId: testId,
+                          question: question,
+                          correctOptionIndex: selectedCorrectIndex,
+                        );
+                      }
+                      if (dlgCtx.mounted) Navigator.pop(dlgCtx);
+                      onSaved();
+                    } catch (e) {
+                      if (dlgCtx.mounted) {
+                        ScaffoldMessenger.of(dlgCtx).showSnackBar(
+                          SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Simpan'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
