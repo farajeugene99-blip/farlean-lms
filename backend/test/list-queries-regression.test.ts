@@ -5,6 +5,7 @@ import {
   RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
 import { setLogLevel } from '@firebase/firestore';
+import { getCountFromServer } from 'firebase/firestore';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -293,6 +294,40 @@ async function runListRegressionTests() {
         status: 'Draft',
       })
     );
+  });
+
+  // 16. Agregasi Count Meetings Siswa Aktif (wajib status == Published)
+  await test('16. Siswa AKTIF dapat melakukan count() agregasi pada meetings Published di kelasnya', async () => {
+    const q = activeStudentDb
+      .collection('meetings')
+      .where('class_id', '==', realClassId)
+      .where('status', '==', 'Published');
+    await assertSucceeds(getCountFromServer((q as any)._delegate));
+  });
+
+  // 17. Agregasi Count Meetings Siswa Aktif DITOLAK jika tanpa filter status == Published
+  await test('17. Siswa AKTIF DIBLOKIR melakukan count() agregasi meetings tanpa filter Published', async () => {
+    const q = activeStudentDb
+      .collection('meetings')
+      .where('class_id', '==', realClassId);
+    await assertFails(getCountFromServer((q as any)._delegate));
+  });
+
+  // 18. Agregasi Count Meetings Guru Owner (dapat menghitung semua pertemuan termasuk Draft)
+  await test('18. GURU Owner dapat melakukan count() agregasi pada semua meetings di kelasnya', async () => {
+    const q = teacherDb
+      .collection('meetings')
+      .where('class_id', '==', realClassId);
+    await assertSucceeds(getCountFromServer((q as any)._delegate));
+  });
+
+  // 19. Agregasi Count Member PENDING DIBLOKIR
+  await test('19. Member PENDING DIBLOKIR saat count() agregasi meetings', async () => {
+    const q = pendingStudentDb
+      .collection('meetings')
+      .where('class_id', '==', realClassId)
+      .where('status', '==', 'Published');
+    await assertFails(getCountFromServer((q as any)._delegate));
   });
 
   await testEnv.cleanup();
