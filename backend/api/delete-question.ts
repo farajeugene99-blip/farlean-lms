@@ -88,7 +88,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // 7. Cek apakah ada attempt pengerjaan untuk testId ini
+    const questionsSubcol = db.collection(parentCollection).doc(cleanTestId).collection('questions');
+    const answerKeyItemsSubcol = db.collection('answer_keys').doc(cleanTestId).collection('items');
+
+    // 7. Proteksi Kuis Published: Dilarang menghapus soal aktif terakhir pada kuis Published
+    if (parentData.status === 'Published') {
+      const activeQuestionsSnap = await questionsSubcol.get();
+      const activeCount = activeQuestionsSnap.docs.filter((d) => d.data().deleted !== true).length;
+      if (activeCount <= 1) {
+        return res.status(400).json({
+          error: 'Tidak dapat menghapus soal aktif terakhir pada kuis yang berstatus Published. Silakan arsipkan kuis terlebih dahulu jika ingin menonaktifkannya.',
+        });
+      }
+    }
+
+    // 8. Cek apakah ada attempt pengerjaan untuk testId ini
     const attemptsSnap = await db
       .collection('attempts')
       .where('test_id', '==', cleanTestId)
@@ -96,9 +110,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .get();
 
     const hasAttempts = !attemptsSnap.empty;
-
-    const questionsSubcol = db.collection(parentCollection).doc(cleanTestId).collection('questions');
-    const answerKeyItemsSubcol = db.collection('answer_keys').doc(cleanTestId).collection('items');
 
     const batch = db.batch();
 

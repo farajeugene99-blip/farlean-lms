@@ -70,9 +70,9 @@ async function runQuestionTests() {
   const teacherUid = 'guru_owner_question_test';
   const otherTeacherUid = 'guru_other_question_test';
   const studentUid = 'student_question_test';
-  const testClassId = 'class_question_test_1';
-  const archivedClassId = 'class_question_archived_test';
-  const pretestId = 'pretest_question_test_1';
+  const testClassId = 'class_question_test_' + Date.now();
+  const archivedClassId = 'class_question_archived_test_' + Date.now();
+  const pretestId = 'pretest_question_test_' + Date.now();
 
   // Setup data kelas, pretest, dan member
   await db.collection('classes').doc(testClassId).set({
@@ -319,6 +319,10 @@ async function runQuestionTests() {
   // 7. /api/grade menyimpan key_snapshot dan penilaian ke attempt
   const attemptId = 'attempt_question_test_1';
   await test('7. /api/grade menyimpan key_snapshot dan graded_at saat attempt dinilai', async () => {
+    // Pastikan tidak ada soal residu dari run sebelumnya
+    await db.collection('pretests').doc(pretestId).collection('questions').doc('q_extra_for_soft_del').delete();
+    await db.collection('answer_keys').doc(pretestId).collection('items').doc('q_extra_for_soft_del').delete();
+
     // Siapkan attempt in_progress
     await db.collection('attempts').doc(attemptId).set({
       user_id: studentUid,
@@ -367,6 +371,55 @@ async function runQuestionTests() {
 
   // 8. Soft-delete question jika sudah ada attempt
   await test('8. /api/delete-question melakukan soft-delete jika kuis sudah memiliki attempt', async () => {
+    // Bersihkan residu di pretestId jika ada
+    await db.collection('pretests').doc(pretestId).collection('questions').doc('q_extra_for_soft_del').delete();
+
+    const softDelTestId = 'pretest_soft_del_' + Date.now();
+    await db.collection('pretests').doc(softDelTestId).set({
+      title: 'Pretest Soft Delete Test',
+      class_id: testClassId,
+      status: 'Published',
+      created_at: FieldValue.serverTimestamp(),
+    });
+
+    const qidToSoftDel = 'q_soft_del_1';
+    const qidSecond = 'q_soft_del_2';
+
+    await db.collection('pretests').doc(softDelTestId).collection('questions').doc(qidToSoftDel).set({
+      text: 'Soal 1 untuk soft delete',
+      options: ['A', 'B', 'C', 'D', 'E'],
+      points: 10,
+      deleted: false,
+    });
+    await db.collection('answer_keys').doc(softDelTestId).collection('items').doc(qidToSoftDel).set({
+      qid: qidToSoftDel,
+      correct_option: 0,
+      points: 10,
+      deleted: false,
+    });
+
+    await db.collection('pretests').doc(softDelTestId).collection('questions').doc(qidSecond).set({
+      text: 'Soal 2 agar kuis tidak kosong',
+      options: ['A', 'B', 'C', 'D', 'E'],
+      points: 10,
+      deleted: false,
+    });
+    await db.collection('answer_keys').doc(softDelTestId).collection('items').doc(qidSecond).set({
+      qid: qidSecond,
+      correct_option: 1,
+      points: 10,
+      deleted: false,
+    });
+
+    // Buat attempt agar terdeteksi hasAttempts = true
+    await db.collection('attempts').doc('attempt_soft_del_' + Date.now()).set({
+      test_id: softDelTestId,
+      user_id: studentUid,
+      class_id: testClassId,
+      status: 'in_progress',
+      started_at: FieldValue.serverTimestamp(),
+    });
+
     setTokenVerifier(async () => ({
       uid: teacherUid,
       email: 'guru@farlean.edu',
@@ -378,34 +431,34 @@ async function runQuestionTests() {
       method: 'POST',
       headers: { authorization: 'Bearer mock-guru-token' },
       body: {
-        testId: pretestId,
-        qid: createdQid,
+        testId: softDelTestId,
+        qid: qidToSoftDel,
       },
     };
     const res = createMockRes();
     await deleteQuestionHandler(req, res as any);
 
-    if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+    if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}: ${JSON.stringify(res.jsonData)}`);
     if (res.jsonData?.softDeleted !== true) throw new Error('Expected softDeleted: true');
 
     // Dokumen soal tetap ada tetapi bertanda deleted: true
-    const qDoc = await db.collection('pretests').doc(pretestId).collection('questions').doc(createdQid).get();
+    const qDoc = await db.collection('pretests').doc(softDelTestId).collection('questions').doc(qidToSoftDel).get();
     if (!qDoc.exists) throw new Error('Question doc should still exist on soft-delete');
     if (qDoc.data()?.deleted !== true) throw new Error('Question deleted field must be true');
 
     // Kunci jawaban tetap ada tetapi bertanda deleted: true
-    const keyDoc = await db.collection('answer_keys').doc(pretestId).collection('items').doc(createdQid).get();
+    const keyDoc = await db.collection('answer_keys').doc(softDelTestId).collection('items').doc(qidToSoftDel).get();
     if (!keyDoc.exists) throw new Error('Key doc should still exist on soft-delete');
     if (keyDoc.data()?.deleted !== true) throw new Error('Key deleted field must be true');
   });
 
-  // 9. Hard-delete question jika BELUM ada attempt
+  // 9. Hard-delete question jika BELUM ada attempt pada kuis Draft
   await test('9. /api/delete-question melakukan hard-delete jika kuis belum memiliki attempt', async () => {
     const unattemptedTestId = 'pretest_unattempted_1';
     await db.collection('pretests').doc(unattemptedTestId).set({
       title: 'Pretest Tanpa Attempt',
       class_id: testClassId,
-      status: 'Published',
+      status: 'Draft',
       created_at: FieldValue.serverTimestamp(),
     });
 
@@ -472,6 +525,54 @@ async function runQuestionTests() {
     await deleteQuestionHandler(req, res as any);
 
     if (res.statusCode !== 400) throw new Error(`Expected 400, got ${res.statusCode}`);
+  });
+
+  // 11. Tolak delete soal terakhir pada kuis berstatus Published
+  await test('11. /api/delete-question menolak penghapusan soal aktif terakhir pada kuis Published (400)', async () => {
+    const publishedSingleTestId = 'pretest_pub_single_q_' + Date.now();
+    await db.collection('pretests').doc(publishedSingleTestId).set({
+      title: 'Pretest Published Single',
+      class_id: testClassId,
+      status: 'Published',
+      created_at: FieldValue.serverTimestamp(),
+    });
+
+    const singleQid = 'single_q_published';
+    await db.collection('pretests').doc(publishedSingleTestId).collection('questions').doc(singleQid).set({
+      text: 'Satu-satunya soal',
+      options: ['A', 'B', 'C', 'D', 'E'],
+      points: 20,
+      deleted: false,
+    });
+    await db.collection('answer_keys').doc(publishedSingleTestId).collection('items').doc(singleQid).set({
+      qid: singleQid,
+      correct_option: 0,
+      points: 20,
+      deleted: false,
+    });
+
+    setTokenVerifier(async () => ({
+      uid: teacherUid,
+      email: 'guru@farlean.edu',
+      email_verified: true,
+      role: 'GURU',
+    } as any));
+
+    const req: any = {
+      method: 'POST',
+      headers: { authorization: 'Bearer mock-guru-token' },
+      body: {
+        testId: publishedSingleTestId,
+        qid: singleQid,
+      },
+    };
+    const res = createMockRes();
+    await deleteQuestionHandler(req, res as any);
+
+    if (res.statusCode !== 400) throw new Error(`Expected 400, got ${res.statusCode}`);
+    if (!res.jsonData?.error?.includes('soal aktif terakhir pada kuis yang berstatus Published')) {
+      throw new Error(`Expected error message about last published question, got: ${res.jsonData?.error}`);
+    }
   });
 
   resetTokenVerifier();

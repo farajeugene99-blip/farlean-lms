@@ -179,7 +179,7 @@ void main() {
       expect(find.text('Publikasikan Kuis'), findsOneWidget);
     });
 
-    testWidgets('Question options header with Wrap does NOT overflow on exact 262px constraint and textScale 1.5', (tester) async {
+    testWidgets('Question options header with Column does NOT overflow on exact 262px constraint and textScale 1.5', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -193,26 +193,18 @@ void main() {
                       data: MediaQuery.of(context).copyWith(
                         textScaler: const TextScaler.linear(1.5), // Text scale 1.5
                       ),
-                      child: Column(
+                      child: const Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Wrap(
-                            alignment: WrapAlignment.spaceBetween,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: 8,
-                            runSpacing: 4,
-                            children: [
-                              const Text(
-                                'Pilihan Jawaban & Kunci *',
-                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                              ),
-                              TextButton.icon(
-                                icon: const Icon(Icons.add, size: 16),
-                                label: const Text('Tambah Opsi', style: TextStyle(fontSize: 12)),
-                                onPressed: () {},
-                              ),
-                            ],
+                          Text(
+                            'Pilihan Jawaban & Kunci (A - E) *',
+                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Tentukan 5 pilihan jawaban (A sampai E) dan pilih satu radio sebagai kunci jawaban benar.',
+                            style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                           ),
                         ],
                       ),
@@ -229,8 +221,7 @@ void main() {
 
       // PASTIKAN: Tidak ada RenderFlex overflow exception
       expect(tester.takeException(), isNull);
-      expect(find.text('Pilihan Jawaban & Kunci *'), findsOneWidget);
-      expect(find.text('Tambah Opsi'), findsOneWidget);
+      expect(find.text('Pilihan Jawaban & Kunci (A - E) *'), findsOneWidget);
     });
   });
 }

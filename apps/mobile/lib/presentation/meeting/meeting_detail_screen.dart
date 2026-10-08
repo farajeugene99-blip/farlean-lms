@@ -1155,9 +1155,10 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${questions.length} soal aktif terdaftar',
+                              'Jumlah Soal: ${questions.length} soal aktif',
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppTheme.textSecondary,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -1231,13 +1232,18 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                     )
                   else
                     Expanded(
-                      child: ListView.separated(
-                        controller: scrollController,
-                        itemCount: questions.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 10),
-                        itemBuilder: (context, idx) {
-                          final q = questions[idx];
-                          return Card(
+                      child: Builder(
+                        builder: (context) {
+                          final sortedQuestions = List<Question>.from(questions);
+                          sortedQuestions.sort((a, b) => a.id.compareTo(b.id));
+
+                          return ListView.separated(
+                            controller: scrollController,
+                            itemCount: sortedQuestions.length,
+                            separatorBuilder: (context, index) => const SizedBox(height: 10),
+                            itemBuilder: (context, idx) {
+                              final q = sortedQuestions[idx];
+                              return Card(
                             elevation: 1,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -1344,12 +1350,22 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                                         label: const Text('Hapus', style: TextStyle(color: AppTheme.error)),
                                         onPressed: () async {
                                           final messenger = ScaffoldMessenger.of(context);
+                                          if (_status == ContentStatus.published && sortedQuestions.length <= 1) {
+                                            messenger.showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Tidak dapat menghapus soal aktif terakhir pada kuis yang berstatus Published. Silakan arsipkan kuis terlebih dahulu jika ingin menonaktifkannya.'),
+                                                backgroundColor: AppTheme.error,
+                                              ),
+                                            );
+                                            return;
+                                          }
+
                                           final confirm = await showDialog<bool>(
                                             context: context,
                                             builder: (dCtx) => AlertDialog(
                                               title: const Text('Konfirmasi Hapus Soal'),
-                                              content: const Text(
-                                                'Apakah Anda yakin ingin menghapus soal ini? Jika kuis sudah pernah dikerjakan siswa, soal akan diarsipkan agar riwayat nilai tetap aman.',
+                                              content: Text(
+                                                'Apakah Anda yakin ingin menghapus Soal ${idx + 1}? Jika kuis sudah pernah dikerjakan siswa, soal akan diarsipkan (soft-delete) dan riwayat nilai siswa terdahulu tetap aman.',
                                               ),
                                               actions: [
                                                 TextButton(
@@ -1359,7 +1375,7 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                                                 ElevatedButton(
                                                   style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
                                                   onPressed: () => Navigator.pop(dCtx, true),
-                                                  child: const Text('Hapus'),
+                                                  child: const Text('Hapus Soal'),
                                                 ),
                                               ],
                                             ),
@@ -1387,8 +1403,10 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                             ),
                           );
                         },
-                      ),
-                    ),
+                      );
+                    },
+                  ),
+                ),
                 ],
               ),
             );
@@ -1424,6 +1442,7 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
   late final TextEditingController _textController;
   late final TextEditingController _pointsController;
   late final List<TextEditingController> _optionControllers;
+  List<String> _legacyExtraOptions = const [];
   int _selectedCorrectIndex = 0;
   final _formKey = GlobalKey<FormState>();
   bool _isSaving = false;
@@ -1433,9 +1452,17 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
     super.initState();
     _textController = TextEditingController(text: widget.existing?.text ?? '');
     _pointsController = TextEditingController(text: '${widget.existing?.points ?? 10}');
-    _optionControllers = (widget.existing != null && widget.existing!.options.isNotEmpty)
-        ? widget.existing!.options.map((o) => TextEditingController(text: o)).toList()
-        : [TextEditingController(), TextEditingController()];
+
+    final existingOpts = widget.existing?.options ?? [];
+    // Selalu tepat 5 controller untuk pilihan A, B, C, D, E
+    _optionControllers = List.generate(5, (index) {
+      final initialText = index < existingOpts.length ? existingOpts[index] : '';
+      return TextEditingController(text: initialText);
+    });
+
+    if (existingOpts.length > 5) {
+      _legacyExtraOptions = existingOpts.sublist(5);
+    }
   }
 
   @override
@@ -1452,7 +1479,10 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
     if (!_formKey.currentState!.validate() || _isSaving) return;
     setState(() => _isSaving = true);
 
-    final optionsList = _optionControllers.map((c) => c.text.trim()).toList();
+    final optionsList = [
+      ..._optionControllers.map((c) => c.text.trim()),
+      ..._legacyExtraOptions,
+    ];
     final points = int.parse(_pointsController.text.trim());
 
     final question = Question(
@@ -1526,26 +1556,18 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                   },
                 ),
                 const SizedBox(height: 20),
-                Wrap(
-                  alignment: WrapAlignment.spaceBetween,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 8,
-                  runSpacing: 4,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Pilihan Jawaban & Kunci *',
+                      'Pilihan Jawaban & Kunci (A - E) *',
                       style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                     ),
-                    if (_optionControllers.length < 6)
-                      TextButton.icon(
-                        icon: const Icon(Icons.add, size: 16),
-                        label: const Text('Tambah Opsi', style: TextStyle(fontSize: 12)),
-                        onPressed: () {
-                          setState(() {
-                            _optionControllers.add(TextEditingController());
-                          });
-                        },
-                      ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Tentukan 5 pilihan jawaban (A sampai E) dan pilih satu radio sebagai kunci jawaban benar.',
+                      style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -1597,24 +1619,43 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                               validator: (v) => v == null || v.trim().isEmpty ? 'Pilihan $label tidak boleh kosong' : null,
                             ),
                           ),
-                          if (_optionControllers.length > 2)
-                            IconButton(
-                              icon: const Icon(Icons.close_rounded, size: 18, color: AppTheme.textSecondary),
-                              onPressed: () {
-                                setState(() {
-                                  final removed = _optionControllers.removeAt(idx);
-                                  removed.dispose();
-                                  if (_selectedCorrectIndex >= _optionControllers.length) {
-                                    _selectedCorrectIndex = 0;
-                                  }
-                                });
-                              },
-                            ),
                         ],
                       ),
                     ),
                   );
                 }),
+                if (_legacyExtraOptions.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.background,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Pilihan Tambahan Terarsip (Legacy - Read Only):',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.textSecondary),
+                        ),
+                        const SizedBox(height: 4),
+                        ..._legacyExtraOptions.asMap().entries.map((e) {
+                          final label = String.fromCharCode(70 + e.key); // F, G, ...
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              '$label. ${e.value}',
+                              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
