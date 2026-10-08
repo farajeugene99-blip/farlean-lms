@@ -1113,34 +1113,37 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                       ),
                     ),
                   ),
+                  // Top Title Bar
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Kelola Soal ${widget.testTitle}',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              runSpacing: 4,
                               children: [
                                 Text(
-                                  'Total: ${questions.length} soal aktif',
-                                  style: Theme.of(context).textTheme.bodySmall,
+                                  'Kelola Soal ${widget.testTitle}',
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                if (_status != null) ...[
-                                  const SizedBox(width: 8),
+                                if (_status != null)
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
-                                      color: (_status == ContentStatus.published ? AppTheme.success : AppTheme.warning).withAlpha(30),
-                                      borderRadius: BorderRadius.circular(4),
+                                      color: (_status == ContentStatus.published ? AppTheme.success : AppTheme.warning).withAlpha(25),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: (_status == ContentStatus.published ? AppTheme.success : AppTheme.warning).withAlpha(80),
+                                      ),
                                     ),
                                     child: Text(
-                                      _status == ContentStatus.draft ? 'Draft' : _status!.value,
+                                      _status == ContentStatus.draft ? 'DRAFT' : _status!.value.toUpperCase(),
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
@@ -1148,39 +1151,58 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                                       ),
                                     ),
                                   ),
-                                ],
                               ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${questions.length} soal aktif terdaftar',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      Row(
-                        children: [
-                          if (_status == ContentStatus.draft)
-                            ElevatedButton.icon(
-                              icon: _isPublishing
-                                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                  : const Icon(Icons.publish_rounded, size: 16),
-                              label: const Text('Publikasikan'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.success,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 10),
-                              ),
-                              onPressed: _isPublishing ? null : () => _publish(questions),
-                            ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.add_rounded, size: 18),
-                            label: const Text('Tambah Soal'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primary,
-                              foregroundColor: Colors.white,
-                            ),
-                            onPressed: () => _openEditor(null),
-                          ),
-                        ],
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        tooltip: 'Tutup',
+                        onPressed: () => Navigator.pop(context),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Action Buttons Row (Responsive Wrap)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: const Text('Tambah Soal'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        ),
+                        onPressed: () => _openEditor(null),
+                      ),
+                      if (_status == ContentStatus.draft)
+                        ElevatedButton.icon(
+                          icon: _isPublishing
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Icon(Icons.publish_rounded, size: 16),
+                          label: const Text('Publikasikan Kuis'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.success,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          ),
+                          onPressed: _isPublishing ? null : () => _publish(questions),
+                        ),
                     ],
                   ),
                   const Divider(height: 24),
@@ -1262,16 +1284,52 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 8),
-                                  ...q.options.asMap().entries.map((opt) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(left: 32, top: 2),
-                                      child: Text(
-                                        '${String.fromCharCode(65 + opt.key)}. ${opt.value}',
-                                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                                      ),
-                                    );
-                                  }),
+                                  const SizedBox(height: 10),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 32),
+                                    child: Wrap(
+                                      spacing: 8,
+                                      runSpacing: 6,
+                                      children: q.options.asMap().entries.map((opt) {
+                                        final label = String.fromCharCode(65 + opt.key);
+                                        return Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.background,
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(color: AppTheme.border),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.primary.withAlpha(20),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  label,
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppTheme.primary,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Flexible(
+                                                child: Text(
+                                                  opt.value,
+                                                  style: const TextStyle(fontSize: 12, color: AppTheme.textPrimary),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
                                   const SizedBox(height: 8),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
@@ -1492,46 +1550,65 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                   final idx = entry.key;
                   final ctrl = entry.value;
                   final label = String.fromCharCode(65 + idx);
+                  final isKey = _selectedCorrectIndex == idx;
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Row(
-                      children: [
-                        // ignore: deprecated_member_use
-                        Radio<int>(
-                          value: idx,
-                          // ignore: deprecated_member_use
-                          groupValue: _selectedCorrectIndex,
-                          // ignore: deprecated_member_use
-                          onChanged: (val) {
-                            setState(() {
-                              _selectedCorrectIndex = val ?? 0;
-                            });
-                          },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isKey ? AppTheme.success.withAlpha(15) : AppTheme.background,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isKey ? AppTheme.success.withAlpha(120) : AppTheme.border,
+                          width: isKey ? 1.5 : 1.0,
                         ),
-                        Expanded(
-                          child: TextFormField(
-                            controller: ctrl,
-                            decoration: InputDecoration(
-                              labelText: 'Opsi $label ${_selectedCorrectIndex == idx ? "(KUNCI BENAR)" : ""}',
-                              isDense: true,
-                            ),
-                            validator: (v) => v == null || v.trim().isEmpty ? 'Opsi $label tidak boleh kosong' : null,
-                          ),
-                        ),
-                        if (_optionControllers.length > 2)
-                          IconButton(
-                            icon: const Icon(Icons.close_rounded, size: 18, color: AppTheme.textSecondary),
-                            onPressed: () {
+                      ),
+                      child: Row(
+                        children: [
+                          // ignore: deprecated_member_use
+                          Radio<int>(
+                            value: idx,
+                            // ignore: deprecated_member_use
+                            groupValue: _selectedCorrectIndex,
+                            // ignore: deprecated_member_use
+                            onChanged: (val) {
                               setState(() {
-                                final removed = _optionControllers.removeAt(idx);
-                                removed.dispose();
-                                if (_selectedCorrectIndex >= _optionControllers.length) {
-                                  _selectedCorrectIndex = 0;
-                                }
+                                _selectedCorrectIndex = val ?? 0;
                               });
                             },
                           ),
-                      ],
+                          Expanded(
+                            child: TextFormField(
+                              controller: ctrl,
+                              decoration: InputDecoration(
+                                labelText: isKey ? 'Pilihan $label (★ KUNCI BENAR)' : 'Pilihan $label',
+                                labelStyle: TextStyle(
+                                  color: isKey ? AppTheme.success : AppTheme.textSecondary,
+                                  fontWeight: isKey ? FontWeight.bold : FontWeight.normal,
+                                ),
+                                isDense: true,
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                              ),
+                              validator: (v) => v == null || v.trim().isEmpty ? 'Pilihan $label tidak boleh kosong' : null,
+                            ),
+                          ),
+                          if (_optionControllers.length > 2)
+                            IconButton(
+                              icon: const Icon(Icons.close_rounded, size: 18, color: AppTheme.textSecondary),
+                              onPressed: () {
+                                setState(() {
+                                  final removed = _optionControllers.removeAt(idx);
+                                  removed.dispose();
+                                  if (_selectedCorrectIndex >= _optionControllers.length) {
+                                    _selectedCorrectIndex = 0;
+                                  }
+                                });
+                              },
+                            ),
+                        ],
+                      ),
                     ),
                   );
                 }),
