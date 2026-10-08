@@ -13,9 +13,14 @@ class MainShell extends StatelessWidget {
   static String? activeClassId;
 
   int _calculateSelectedIndex(BuildContext context) {
-    final uri = GoRouterState.of(context).uri;
-    final String location = uri.path;
-    final queryClassId = uri.queryParameters['classId'];
+    String location = '';
+    String? queryClassId;
+    try {
+      final uri = GoRouterState.of(context).uri;
+      location = uri.path;
+      queryClassId = uri.queryParameters['classId'];
+    } catch (_) {}
+
     if (queryClassId != null && queryClassId.trim().isNotEmpty && queryClassId.trim() != 'default_class') {
       activeClassId = queryClassId.trim();
     }
@@ -56,7 +61,17 @@ class MainShell extends StatelessWidget {
         context.go(AppConstants.aiRoute);
         break;
       case 3:
-        context.go(AppConstants.diskusiRoute);
+        // Smart Tab: jika user punya 1 kelas atau ada kelas yang terpilih, teruskan classId
+        final classProvider = context.read<ClassProvider>();
+        final targetClassId = classProvider.selectedClassId ??
+            (classProvider.hasSingleClass ? classProvider.singleClassId : null) ??
+            activeClassId;
+
+        if (targetClassId != null && targetClassId.isNotEmpty && targetClassId != 'default_class') {
+          context.go('${AppConstants.diskusiRoute}?classId=$targetClassId');
+        } else {
+          context.go(AppConstants.diskusiRoute);
+        }
         break;
       case 4:
         context.go(AppConstants.profileRoute);
@@ -102,7 +117,6 @@ class MainShell extends StatelessWidget {
                 selectedIndex: selectedIndex,
                 icon: Icons.menu_book_rounded,
                 label: 'Materi',
-                isFuture: true,
               ),
               _buildNavItem(
                 context,
@@ -110,7 +124,6 @@ class MainShell extends StatelessWidget {
                 selectedIndex: selectedIndex,
                 icon: Icons.auto_awesome_rounded,
                 label: 'AI Tutor',
-                isFuture: true,
                 isHighlight: true,
               ),
               _buildNavItem(
@@ -119,7 +132,6 @@ class MainShell extends StatelessWidget {
                 selectedIndex: selectedIndex,
                 icon: Icons.forum_rounded,
                 label: 'Diskusi',
-                isFuture: true,
               ),
               _buildNavItem(
                 context,
@@ -141,7 +153,6 @@ class MainShell extends StatelessWidget {
     required int selectedIndex,
     required IconData icon,
     required String label,
-    bool isFuture = false,
     bool isHighlight = false,
   }) {
     final isSelected = index == selectedIndex;
@@ -155,28 +166,10 @@ class MainShell extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(
-                  icon,
-                  size: 22,
-                  color: isSelected ? primaryColor : AppTheme.textSecondary,
-                ),
-                if (isFuture)
-                  Positioned(
-                    top: -4,
-                    right: -6,
-                    child: Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.warning,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
+            Icon(
+              icon,
+              size: 22,
+              color: isSelected ? primaryColor : AppTheme.textSecondary,
             ),
             const SizedBox(height: 4),
             Text(

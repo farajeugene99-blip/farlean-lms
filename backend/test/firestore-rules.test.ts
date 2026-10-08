@@ -667,6 +667,96 @@ async function runTests() {
     );
   });
 
+  // ============================================================================
+  // SKENARIO 38 - 45: DISCUSSIONS & REPLIES SECURITY RULES
+  // ============================================================================
+  const discActiveId = 'disc_active_01';
+  const discArchivedId = 'disc_archived_02';
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const adminDb = context.firestore();
+    await adminDb.collection('discussions').doc(discActiveId).set({
+      class_id: classId,
+      title: 'Diskusi Algoritma',
+      body: 'Bagaimana membuktikan kompleksitas O(n)?',
+      author_id: userVerifiedUid,
+      author_display_name: 'Budi Mahasiswa',
+      status: 'ACTIVE',
+      reply_count: 0,
+    });
+
+    await adminDb.collection('discussions').doc(discArchivedId).set({
+      class_id: classId,
+      title: 'Diskusi Lama',
+      body: 'Diskusi materi pertemuan lalu.',
+      author_id: userVerifiedUid,
+      author_display_name: 'Budi Mahasiswa',
+      status: 'ARCHIVED',
+      reply_count: 0,
+    });
+  });
+
+  await test('Skenario 38: Client DIBLOKIR membuat dokumen discussions langsung (wajib via backend)', async () => {
+    await assertFails(
+      verifiedUserDb.collection('discussions').doc('disc_illegal_direct').set({
+        class_id: classId,
+        title: 'Diskusi Direct',
+        body: 'Isi direct',
+        author_id: userVerifiedUid,
+        status: 'ACTIVE',
+      })
+    );
+  });
+
+  await test('Skenario 39: Anggota kelas aktif DAPAT membaca discussion ACTIVE di kelasnya', async () => {
+    await assertSucceeds(verifiedUserDb.collection('discussions').doc(discActiveId).get());
+  });
+
+  await test('Skenario 40: Siswa kelas lain DIBLOKIR membaca discussion (Isolasi antar-kelas)', async () => {
+    await assertFails(otherGuruDb.collection('discussions').doc(discActiveId).get());
+  });
+
+  await test('Skenario 41: Siswa aktif DIBLOKIR membaca discussion berstatus ARCHIVED', async () => {
+    await assertFails(verifiedUserDb.collection('discussions').doc(discArchivedId).get());
+  });
+
+  await test('Skenario 42: Guru pemilik kelas DAPAT membaca discussion berstatus ARCHIVED', async () => {
+    await assertSucceeds(guruDb.collection('discussions').doc(discArchivedId).get());
+  });
+
+  await test('Skenario 43: Guru pemilik kelas DAPAT mengarsipkan discussion (status -> ARCHIVED)', async () => {
+    await assertSucceeds(
+      guruDb.collection('discussions').doc(discActiveId).update({
+        status: 'ARCHIVED',
+        updated_at: new Date(),
+      })
+    );
+  });
+
+  await test('Skenario 44: Siswa author DAPAT mengupdate title dan body pada discussion miliknya (status ACTIVE)', async () => {
+    // Kembalikan ke ACTIVE via admin
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await context.firestore().collection('discussions').doc(discActiveId).update({ status: 'ACTIVE' });
+    });
+
+    await assertSucceeds(
+      verifiedUserDb.collection('discussions').doc(discActiveId).update({
+        title: 'Judul Revisi Siswa',
+        body: 'Isi revisi pertanyaan siswa.',
+        updated_at: new Date(),
+      })
+    );
+  });
+
+  await test('Skenario 45: Siswa author DIBLOKIR memodifikasi class_id atau author_id pada discussion miliknya', async () => {
+    await assertFails(
+      verifiedUserDb.collection('discussions').doc(discActiveId).update({
+        author_id: 'hacker_uid',
+        updated_at: new Date(),
+      })
+    );
+  });
+
   // Cleanup
   await testEnv.cleanup();
 

@@ -29,4 +29,6 @@ class ApiConfig {
   static String get saveQuestionUrl => '$baseUrl/api/save-question';
   static String get deleteQuestionUrl => '$baseUrl/api/delete-question';
   static String get publishTestUrl => '$baseUrl/api/publish-test';
+  static String get discussionThreadUrl => '$baseUrl/api/discussion-thread';
+  static String get discussionReplyUrl => '$baseUrl/api/discussion-reply';
 }

@@ -9,6 +9,8 @@ import '../presentation/auth/login_screen.dart';
 import '../presentation/auth/register_screen.dart';
 import '../presentation/auth/verify_email_screen.dart';
 import '../presentation/class/class_detail_screen.dart';
+import '../presentation/discussion/discussion_list_screen.dart';
+import '../presentation/discussion/thread_detail_screen.dart';
 import '../presentation/main/dashboard_screen.dart';
 import '../presentation/main/join_class_screen.dart';
 import '../presentation/main/main_shell.dart';
@@ -186,6 +188,18 @@ class AppRouter {
             );
           },
         ),
+        GoRoute(
+          path: '/diskusi/:discussionId',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final discussionId = state.pathParameters['discussionId'] ?? '';
+            final classId = state.uri.queryParameters['classId'] ?? '';
+            return ThreadDetailScreen(
+              discussionId: discussionId,
+              classId: classId,
+            );
+          },
+        ),
 
         // Main Navigation Shell (5 floating menu items)
         ShellRoute(
@@ -221,15 +235,12 @@ class AppRouter {
             ),
             GoRoute(
               path: AppConstants.diskusiRoute,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: PlaceholderScreen(
-                  title: 'Forum Diskusi',
-                  description:
-                      'Ruang kolaborasi dan tanya jawab antar peserta kelas dan pengajar akan hadir pada Phase 2.',
-                  icon: Icons.forum_rounded,
-                  targetPhase: 'Segera Hadir di Phase 2',
-                ),
-              ),
+              pageBuilder: (context, state) {
+                final classId = state.uri.queryParameters['classId'];
+                return NoTransitionPage(
+                  child: DiscussionListScreen(classId: classId),
+                );
+              },
             ),
             GoRoute(
               path: AppConstants.profileRoute,
