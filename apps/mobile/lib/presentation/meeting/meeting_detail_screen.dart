@@ -149,38 +149,41 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Edit Informasi Pertemuan'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: numberController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Nomor Pertemuan'),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Nomor wajib diisi';
-                  final num = int.tryParse(v.trim());
-                  if (num == null || num <= 0) return 'Nomor harus angka > 0';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: 'Judul Pertemuan'),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Judul wajib diisi';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: descController,
-                decoration: const InputDecoration(labelText: 'Deskripsi / Ringkasan'),
-                maxLines: 2,
-              ),
-            ],
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: numberController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Nomor Pertemuan'),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Nomor wajib diisi';
+                    final num = int.tryParse(v.trim());
+                    if (num == null || num <= 0) return 'Nomor harus angka > 0';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: 'Judul Pertemuan'),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Judul wajib diisi';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: descController,
+                  decoration: const InputDecoration(labelText: 'Deskripsi / Ringkasan'),
+                  maxLines: 2,
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -211,7 +214,11 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
           ),
         ],
       ),
-    );
+    ).whenComplete(() {
+      titleController.dispose();
+      numberController.dispose();
+      descController.dispose();
+    });
 
     if (updated == true) {
       _loadMeetingDetail();
@@ -307,28 +314,31 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Buat Kuis Pretest'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: 'Judul Pretest'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: durationController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
-                validator: (v) {
-                  final num = int.tryParse(v?.trim() ?? '');
-                  if (num == null || num <= 0) return 'Durasi harus > 0 menit';
-                  return null;
-                },
-              ),
-            ],
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: 'Judul Pretest'),
+                  validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: durationController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
+                  validator: (v) {
+                    final num = int.tryParse(v?.trim() ?? '');
+                    if (num == null || num <= 0) return 'Durasi harus > 0 menit';
+                    return null;
+                  },
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -390,28 +400,31 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Buat Kuis Post Test'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: 'Judul Post Test'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: durationController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
-                validator: (v) {
-                  final num = int.tryParse(v?.trim() ?? '');
-                  if (num == null || num <= 0) return 'Durasi harus > 0 menit';
-                  return null;
-                },
-              ),
-            ],
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: 'Judul Post Test'),
+                  validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: durationController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
+                  validator: (v) {
+                    final num = int.tryParse(v?.trim() ?? '');
+                    if (num == null || num <= 0) return 'Durasi harus > 0 menit';
+                    return null;
+                  },
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -886,12 +899,14 @@ class _AddVideoDialogState extends State<_AddVideoDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Tambah Video Pembelajaran'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DropdownButtonFormField<VideoProvider>(
+      content: SizedBox(
+        width: 440,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<VideoProvider>(
               isExpanded: true,
               initialValue: _selectedProvider,
               decoration: const InputDecoration(
@@ -942,11 +957,12 @@ class _AddVideoDialogState extends State<_AddVideoDialog> {
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSaving ? null : () => Navigator.pop(context, false),
-          child: const Text('Batal'),
-        ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: _isSaving ? null : () => Navigator.pop(context, false),
+        child: const Text('Batal'),
+      ),
         ElevatedButton(
           onPressed: _isSaving ? null : _submit,
           child: _isSaving
@@ -1419,8 +1435,8 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget.existing == null ? 'Tambah Soal Baru' : 'Edit Soal'),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
+      content: SizedBox(
+        width: 520,
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(

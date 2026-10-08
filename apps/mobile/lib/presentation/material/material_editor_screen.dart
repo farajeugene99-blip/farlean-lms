@@ -76,37 +76,40 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Sisipkan Gambar (URL Cloudinary)'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Sesuai aturan keamanan Farlean LMS, gambar harus bersumber dari URL eksternal (Cloudinary). Gambar base64 dilarang.',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: urlController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'URL Gambar (https://...)',
-                  prefixIcon: Icon(Icons.image_outlined, size: 20),
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Sesuai aturan keamanan Farlean LMS, gambar harus bersumber dari URL eksternal (Cloudinary). Gambar base64 dilarang.',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'URL gambar wajib diisi';
-                  final trimmed = v.trim().toLowerCase();
-                  if (trimmed.startsWith('data:image')) {
-                    return 'Gambar base64 inline dilarang.';
-                  }
-                  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-                    return 'URL harus diawali dengan http:// atau https://';
-                  }
-                  return null;
-                },
-              ),
-            ],
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: urlController,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    labelText: 'URL Gambar (https://...)',
+                    prefixIcon: Icon(Icons.image_outlined, size: 20),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'URL gambar wajib diisi';
+                    final trimmed = v.trim().toLowerCase();
+                    if (trimmed.startsWith('data:image')) {
+                      return 'Gambar base64 inline dilarang.';
+                    }
+                    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+                      return 'URL harus diawali dengan http:// atau https://';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -124,7 +127,9 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
           ),
         ],
       ),
-    );
+    ).whenComplete(() {
+      urlController.dispose();
+    });
 
     if (inserted == true) {
       final index = _quillController.selection.baseOffset;

@@ -40,12 +40,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Buat Kelas Baru'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                 TextFormField(
                   controller: nameController,
                   decoration: const InputDecoration(
@@ -96,35 +98,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              try {
-                final classProvider = context.read<ClassProvider>();
-                await classProvider.createClass(
-                  name: nameController.text.trim(),
-                  description: descController.text.trim(),
-                  customCode: codeController.text.trim().isEmpty ? null : codeController.text.trim(),
-                );
-                if (ctx.mounted) Navigator.pop(ctx, true);
-              } catch (e) {
-                if (ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
-                  );
-                }
-              }
-            },
-            child: const Text('Buat Kelas'),
-          ),
-        ],
       ),
-    );
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            if (!formKey.currentState!.validate()) return;
+            try {
+              final classProvider = context.read<ClassProvider>();
+              await classProvider.createClass(
+                name: nameController.text.trim(),
+                description: descController.text.trim(),
+                customCode: codeController.text.trim().isEmpty ? null : codeController.text.trim(),
+              );
+              if (ctx.mounted) Navigator.pop(ctx, true);
+            } catch (e) {
+              if (ctx.mounted) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+                );
+              }
+            }
+          },
+          child: const Text('Buat Kelas'),
+        ),
+      ],
+    ),
+  ).whenComplete(() {
+    nameController.dispose();
+    descController.dispose();
+    codeController.dispose();
+  });
 
     if (created == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

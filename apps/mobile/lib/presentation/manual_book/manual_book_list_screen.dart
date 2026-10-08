@@ -135,44 +135,47 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Tambah Manual Book'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Judul Panduan'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
-                ),
-                const SizedBox(height: 10),
-                TextFormField(
-                  controller: descController,
-                  decoration: const InputDecoration(labelText: 'Deskripsi Singkat'),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 10),
-                TextFormField(
-                  controller: urlController,
-                  decoration: const InputDecoration(
-                    labelText: 'URL Berkas Cloudinary (PDF)',
-                    prefixIcon: Icon(Icons.link_rounded, size: 20),
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: titleController,
+                    decoration: const InputDecoration(labelText: 'Judul Panduan'),
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
                   ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'URL berkas wajib diisi';
-                    if (!v.startsWith('http://') && !v.startsWith('https://')) {
-                      return 'URL harus diawali http:// atau https://';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 10),
-                TextFormField(
-                  controller: fileNameController,
-                  decoration: const InputDecoration(labelText: 'Nama Berkas (.pdf)'),
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: descController,
+                    decoration: const InputDecoration(labelText: 'Deskripsi Singkat'),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: urlController,
+                    decoration: const InputDecoration(
+                      labelText: 'URL Berkas Cloudinary (PDF)',
+                      prefixIcon: Icon(Icons.link_rounded, size: 20),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'URL berkas wajib diisi';
+                      if (!v.startsWith('http://') && !v.startsWith('https://')) {
+                        return 'URL harus diawali http:// atau https://';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: fileNameController,
+                    decoration: const InputDecoration(labelText: 'Nama Berkas (.pdf)'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -209,7 +212,12 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
           ),
         ],
       ),
-    );
+    ).whenComplete(() {
+      titleController.dispose();
+      descController.dispose();
+      urlController.dispose();
+      fileNameController.dispose();
+    });
 
     if (created == true) {
       _loadBooks();

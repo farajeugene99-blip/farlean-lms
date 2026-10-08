@@ -132,32 +132,35 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Buat Pertemuan Baru'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: numberController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Nomor Pertemuan'),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Nomor wajib diisi';
-                  final num = int.tryParse(v.trim());
-                  if (num == null || num <= 0) return 'Nomor harus angka > 0';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: 'Judul Pertemuan'),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Judul wajib diisi';
-                  return null;
-                },
-              ),
-            ],
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: numberController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Nomor Pertemuan'),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Nomor wajib diisi';
+                    final num = int.tryParse(v.trim());
+                    if (num == null || num <= 0) return 'Nomor harus angka > 0';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: 'Judul Pertemuan'),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Judul wajib diisi';
+                    return null;
+                  },
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -191,7 +194,10 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
           ),
         ],
       ),
-    );
+    ).whenComplete(() {
+      titleController.dispose();
+      numberController.dispose();
+    });
 
     if (created == true) {
       _loadMeetings();

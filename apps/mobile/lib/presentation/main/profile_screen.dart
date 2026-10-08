@@ -54,17 +54,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Ubah Nama Lengkap'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(labelText: 'Nama Lengkap'),
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Nama wajib diisi';
-              if (v.trim().length > 100) return 'Maksimal 100 karakter';
-              return null;
-            },
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: controller,
+              autofocus: true,
+              decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Nama wajib diisi';
+                if (v.trim().length > 100) return 'Maksimal 100 karakter';
+                return null;
+              },
+            ),
           ),
         ),
         actions: [
@@ -97,7 +100,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-    );
+    ).whenComplete(() {
+      controller.dispose();
+    });
 
     if (updated == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,31 +122,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Nomor Induk (NIM / NIP)'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Data ini disimpan di sub-koleksi private/identity yang terisolasi dan hanya dapat diakses oleh Anda, Dosen/Guru, dan Admin.',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: controller,
-                autofocus: true,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'NIM / NIP',
-                  prefixIcon: Icon(Icons.badge_outlined, size: 20),
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Data ini disimpan di sub-koleksi private/identity yang terisolasi dan hanya dapat diakses oleh Anda, Dosen/Guru, dan Admin.',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'NIM/NIP wajib diisi';
-                  return null;
-                },
-              ),
-            ],
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: controller,
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'NIM / NIP',
+                    prefixIcon: Icon(Icons.badge_outlined, size: 20),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'NIM/NIP wajib diisi';
+                    return null;
+                  },
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -174,7 +182,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-    );
+    ).whenComplete(() {
+      controller.dispose();
+    });
 
     if (updated == true && mounted) {
       setState(() => _nimNip = controller.text.trim());
