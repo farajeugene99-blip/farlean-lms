@@ -1526,8 +1526,11 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                   },
                 ),
                 const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 4,
                   children: [
                     const Text(
                       'Pilihan Jawaban & Kunci *',

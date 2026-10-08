@@ -178,5 +178,59 @@ void main() {
       expect(find.text('Tambah Soal'), findsOneWidget);
       expect(find.text('Publikasikan Kuis'), findsOneWidget);
     });
+
+    testWidgets('Question options header with Wrap does NOT overflow on exact 262px constraint and textScale 1.5', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 262.0, // Batas persis sesuai pesan error log
+                child: Builder(
+                  builder: (context) {
+                    return MediaQuery(
+                      data: MediaQuery.of(context).copyWith(
+                        textScaler: const TextScaler.linear(1.5), // Text scale 1.5
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              const Text(
+                                'Pilihan Jawaban & Kunci *',
+                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                              ),
+                              TextButton.icon(
+                                icon: const Icon(Icons.add, size: 16),
+                                label: const Text('Tambah Opsi', style: TextStyle(fontSize: 12)),
+                                onPressed: () {},
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // PASTIKAN: Tidak ada RenderFlex overflow exception
+      expect(tester.takeException(), isNull);
+      expect(find.text('Pilihan Jawaban & Kunci *'), findsOneWidget);
+      expect(find.text('Tambah Opsi'), findsOneWidget);
+    });
   });
 }
