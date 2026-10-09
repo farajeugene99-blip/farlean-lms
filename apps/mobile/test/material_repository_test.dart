@@ -64,6 +64,22 @@ void main() {
       );
     });
 
+    test('updateMaterial melempar ArgumentError jika ID materi kosong', () async {
+      final invalidMaterial = MaterialContent(
+        id: '  ',
+        meetingId: 'meet_01',
+        classId: 'class_01',
+        title: 'Judul Sah',
+        content: [{'insert': 'Teks\n'}],
+        updatedBy: 'teacher_01',
+      );
+
+      expect(
+        () => repository.updateMaterial(invalidMaterial),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
     test('getMaterial mengembalikan null secara aman saat Firestore uninitialized', () async {
       final material = await repository.getMaterial('non_existent');
       expect(material, isNull);

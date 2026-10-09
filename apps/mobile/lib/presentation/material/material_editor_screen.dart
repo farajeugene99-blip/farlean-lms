@@ -7,6 +7,8 @@ import '../../models/delta_sanitizer.dart';
 import '../../models/material_content.dart';
 import '../../repositories/material_repository.dart';
 import '../../services/auth_provider.dart';
+import '../common/error_view.dart';
+import '../common/loading_indicator.dart';
 
 class MaterialEditorScreen extends StatefulWidget {
   final String? materiId;
@@ -31,15 +33,19 @@ class MaterialEditorScreen extends StatefulWidget {
 class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
   late final MaterialRepository _materialRepository;
   late final TextEditingController _titleController;
-  late final QuillController _quillController;
+  late QuillController _quillController;
   final FocusNode _focusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
   bool _isSaving = false;
+  bool _isLoadingInitial = false;
+  String? _initError;
+  MaterialContent? _existingMaterial;
 
   @override
   void initState() {
     super.initState();
     _materialRepository = widget.materialRepository ?? MaterialRepository();
+    _existingMaterial = widget.initialMaterial;
     _titleController = TextEditingController(text: widget.initialMaterial?.title ?? '');
 
     Document doc;
@@ -57,6 +63,65 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
       document: doc,
       selection: const TextSelection.collapsed(offset: 0),
     );
+
+    // Deep-link / Reload recovery guard: Ambil data lama agar tidak tertimpa kosong
+    final isExisting = widget.materiId != null &&
+        widget.materiId!.isNotEmpty &&
+        widget.materiId != 'new';
+
+    if (isExisting && widget.initialMaterial == null) {
+      _fetchExistingMaterial(widget.materiId!);
+    }
+  }
+
+  Future<void> _fetchExistingMaterial(String id) async {
+    setState(() {
+      _isLoadingInitial = true;
+      _initError = null;
+    });
+
+    try {
+      final fetched = await _materialRepository.getMaterial(id);
+      if (!mounted) return;
+
+      if (fetched == null) {
+        setState(() {
+          _isLoadingInitial = false;
+          _initError = 'Materi tidak ditemukan atau telah dihapus.';
+        });
+        return;
+      }
+
+      Document doc;
+      try {
+        if (fetched.content is List) {
+          doc = Document.fromJson(fetched.content as List);
+        } else {
+          doc = Document()..insert(0, '\n');
+        }
+      } catch (_) {
+        doc = Document()..insert(0, '\n');
+      }
+
+      _titleController.text = fetched.title;
+      _quillController.dispose();
+      _quillController = QuillController(
+        document: doc,
+        selection: const TextSelection.collapsed(offset: 0),
+      );
+
+      setState(() {
+        _existingMaterial = fetched;
+        _isLoadingInitial = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingInitial = false;
+          _initError = 'Gagal memuat materi: $e';
+        });
+      }
+    }
   }
 
   @override
@@ -167,9 +232,9 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
 
     try {
       String? savedId;
-      if (widget.initialMaterial != null) {
-        // Update materi
-        final updated = widget.initialMaterial!.copyWith(
+      if (_existingMaterial != null) {
+        // Update materi yang sudah ada (Anti-Overwrite data lama)
+        final updated = _existingMaterial!.copyWith(
           title: title,
           content: deltaJson,
           status: status,
@@ -178,7 +243,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
         await _materialRepository.updateMaterial(updated);
         savedId = updated.id;
       } else {
-        // Buat materi baru (abaikan sentinel rute 'new' agar Firestore membuat auto-id unik)
+        // Buat materi baru (abaikan sentinel rute 'new' agar Firestore membuat auto-id unik aman)
         final effectiveNewId = (widget.materiId == null || widget.materiId == 'new') ? '' : widget.materiId!;
         final newMaterial = MaterialContent(
           id: effectiveNewId,
@@ -213,9 +278,29 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoadingInitial) {
+      return const Scaffold(
+        body: LoadingIndicator(message: 'Memuat materi pembelajaran...'),
+      );
+    }
+
+    if (_initError != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Edit Materi')),
+        body: ErrorView(
+          message: _initError!,
+          onRetry: () {
+            if (widget.materiId != null && widget.materiId!.isNotEmpty) {
+              _fetchExistingMaterial(widget.materiId!);
+            }
+          },
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.initialMaterial == null ? 'Buat Materi Baru' : 'Edit Materi'),
+        title: Text(_existingMaterial == null ? 'Buat Materi Baru' : 'Edit Materi'),
         actions: [
           TextButton(
             onPressed: _isSaving ? null : () => _saveMaterial(ContentStatus.draft),
