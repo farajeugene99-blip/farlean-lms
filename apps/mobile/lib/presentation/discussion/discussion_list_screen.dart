@@ -31,6 +31,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   int _selectedFilterIndex = 0; // 0: Semua, 1: Belum Dibalas
+  int _discussionsGen = 0;
 
   @override
   void initState() {
@@ -58,10 +59,12 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
   }
 
   Future<void> _loadDiscussions({String? targetClassId}) async {
+    _discussionsGen++;
+    final currentGen = _discussionsGen;
     final effectiveClassId = targetClassId ?? _getEffectiveClassId();
 
     if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
-      if (mounted) {
+      if (mounted && currentGen == _discussionsGen) {
         setState(() {
           _discussions = [];
           _isLoading = false;
@@ -71,10 +74,12 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
 
     final authProvider = context.read<AuthProvider>();
     final isStaff = RoleGuard.isStaff(authProvider.appUser);
@@ -85,14 +90,14 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
         isStaff: isStaff,
         filterUnanswered: _selectedFilterIndex == 1,
       );
-      if (mounted) {
+      if (mounted && currentGen == _discussionsGen) {
         setState(() {
           _discussions = list;
           _isLoading = false;
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && currentGen == _discussionsGen) {
         String friendlyMessage;
         final errorString = e.toString().toLowerCase();
         if (errorString.contains('permission-denied') || errorString.contains('evaluation error')) {
@@ -128,84 +133,109 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
     final titleController = TextEditingController();
     final bodyController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    final clientRequestId = 'req_${DateTime.now().millisecondsSinceEpoch}_${identityHashCode(formKey)}';
+    bool isSubmitting = false;
 
     final created = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Buat Diskusi Baru'),
-        content: SizedBox(
-          width: 460,
-          child: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextFormField(
-                    controller: titleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Judul Diskusi *',
-                      hintText: 'Misal: Tanya materi Bab 2...',
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return PopScope(
+            canPop: !isSubmitting,
+            child: AlertDialog(
+              title: const Text('Buat Diskusi Baru'),
+              content: SizedBox(
+                width: 460,
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextFormField(
+                          controller: titleController,
+                          enabled: !isSubmitting,
+                          decoration: const InputDecoration(
+                            labelText: 'Judul Diskusi *',
+                            hintText: 'Misal: Tanya materi Bab 2...',
+                          ),
+                          validator: (v) {
+                            if (v == null || v.trim().length < 3) return 'Judul minimal 3 karakter';
+                            if (v.trim().length > 200) return 'Judul maksimal 200 karakter';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: bodyController,
+                          enabled: !isSubmitting,
+                          decoration: const InputDecoration(
+                            labelText: 'Isi Pertanyaan / Topik Diskusi *',
+                            hintText: 'Tuliskan pertanyaan atau topik dengan jelas...',
+                          ),
+                          maxLines: 4,
+                          validator: (v) {
+                            if (v == null || v.trim().length < 3) return 'Isi diskusi minimal 3 karakter';
+                            if (v.trim().length > 5000) return 'Isi diskusi maksimal 5000 karakter';
+                            return null;
+                          },
+                        ),
+                      ],
                     ),
-                    validator: (v) {
-                      if (v == null || v.trim().length < 3) return 'Judul minimal 3 karakter';
-                      if (v.trim().length > 200) return 'Judul maksimal 200 karakter';
-                      return null;
-                    },
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: bodyController,
-                    decoration: const InputDecoration(
-                      labelText: 'Isi Pertanyaan / Topik Diskusi *',
-                      hintText: 'Tuliskan pertanyaan atau topik dengan jelas...',
-                    ),
-                    maxLines: 4,
-                    validator: (v) {
-                      if (v == null || v.trim().length < 3) return 'Isi diskusi minimal 3 karakter';
-                      if (v.trim().length > 5000) return 'Isi diskusi maksimal 5000 karakter';
-                      return null;
-                    },
-                  ),
-                ],
+                ),
               ),
+              actions: [
+                TextButton(
+                  onPressed: isSubmitting ? null : () => Navigator.pop(ctx, false),
+                  child: const Text('Batal'),
+                ),
+                ElevatedButton(
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          if (!formKey.currentState!.validate()) return;
+                          setDialogState(() => isSubmitting = true);
+                          try {
+                            await _discussionRepository
+                                .createThread(
+                                  classId: effectiveClassId,
+                                  title: titleController.text.trim(),
+                                  body: bodyController.text.trim(),
+                                  clientRequestId: clientRequestId,
+                                )
+                                .timeout(const Duration(seconds: 15));
+                            if (ctx.mounted) Navigator.pop(ctx, true);
+                          } catch (e) {
+                            if (ctx.mounted) {
+                              setDialogState(() => isSubmitting = false);
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+                              );
+                            }
+                          }
+                        },
+                  child: isSubmitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Kirim Diskusi'),
+                ),
+              ],
             ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              try {
-                await _discussionRepository.createThread(
-                  classId: effectiveClassId,
-                  title: titleController.text.trim(),
-                  body: bodyController.text.trim(),
-                );
-                if (ctx.mounted) Navigator.pop(ctx, true);
-              } catch (e) {
-                if (ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
-                  );
-                }
-              }
-            },
-            child: const Text('Kirim Diskusi'),
-          ),
-        ],
+          );
+        },
       ),
     ).whenComplete(() {
       titleController.dispose();
       bodyController.dispose();
     });
 
-    if (created == true) {
+    if (created == true && mounted) {
       _loadDiscussions();
     }
   }
@@ -422,7 +452,9 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
       child: InkWell(
         onTap: () async {
           await context.push('/diskusi/${thread.id}?classId=$classId');
-          _loadDiscussions();
+          if (mounted) {
+            _loadDiscussions();
+          }
         },
         borderRadius: BorderRadius.circular(14),
         child: Padding(

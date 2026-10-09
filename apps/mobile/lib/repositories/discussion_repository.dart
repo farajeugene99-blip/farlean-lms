@@ -79,11 +79,12 @@ class DiscussionRepository {
     return null;
   }
 
-  /// Membuat thread diskusi baru melalui Backend API (Anti-Impersonasi & Rate Limit)
+  /// Membuat thread diskusi baru melalui Backend API (Anti-Impersonasi & Rate Limit & Idempotent)
   Future<String> createThread({
     required String classId,
     required String title,
     required String body,
+    String? clientRequestId,
   }) async {
     if (classId.trim().isEmpty) throw ArgumentError('classId tidak boleh kosong.');
     if (title.trim().length < 3) throw ArgumentError('Judul minimal 3 karakter.');
@@ -104,21 +105,24 @@ class DiscussionRepository {
         'classId': classId.trim(),
         'title': title.trim(),
         'body': body.trim(),
+        if (clientRequestId != null && clientRequestId.trim().isNotEmpty)
+          'client_request_id': clientRequestId.trim(),
       }),
     );
 
     final data = jsonDecode(response.body);
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return data['discussionId'] as String;
     } else {
       throw StateError(data['error'] ?? 'Gagal membuat diskusi.');
     }
   }
 
-  /// Mengirim balasan melalui Backend API (Transaksi atomik increment & anti-impersonasi)
+  /// Mengirim balasan melalui Backend API (Transaksi atomik increment & anti-impersonasi & Idempotent)
   Future<String> postReply({
     required String discussionId,
     required String body,
+    String? clientReplyId,
   }) async {
     if (discussionId.trim().isEmpty) throw ArgumentError('discussionId tidak boleh kosong.');
     if (body.trim().isEmpty) throw ArgumentError('Isi balasan tidak boleh kosong.');
@@ -137,11 +141,13 @@ class DiscussionRepository {
       body: jsonEncode({
         'discussionId': discussionId.trim(),
         'body': body.trim(),
+        if (clientReplyId != null && clientReplyId.trim().isNotEmpty)
+          'client_reply_id': clientReplyId.trim(),
       }),
     );
 
     final data = jsonDecode(response.body);
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return data['replyId'] as String;
     } else {
       throw StateError(data['error'] ?? 'Gagal mengirim balasan.');

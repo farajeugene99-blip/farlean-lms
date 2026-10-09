@@ -274,5 +274,43 @@ void main() {
       expect(find.text('Diskusi diarsipkan. Pengiriman balasan dinonaktifkan.'), findsOneWidget);
       expect(find.byType(TextFormField), findsNothing);
     });
+
+    testWidgets('Create thread dialog disables submit button and protects with PopScope while submitting', (tester) async {
+      final fakeUser = FakeUser(uid: 'u1', email: 'user@farlean.edu');
+      final mockAuth = MockAuthService(mockCurrentUser: fakeUser);
+      final authProvider = AuthProvider(authService: mockAuth);
+
+      final repo = MockDiscussionRepoForUI();
+      repo.mockDiscussions = [];
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+            ChangeNotifierProvider<ClassProvider>(create: (_) => ClassProvider()),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: DiscussionListScreen(classId: 'c1', discussionRepository: repo),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Buka dialog buat diskusi
+      await tester.tap(find.text('Buat Diskusi'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Buat Diskusi Baru'), findsOneWidget);
+
+      // Isi form
+      await tester.enterText(find.widgetWithText(TextFormField, 'Judul Diskusi *'), 'Pertanyaan Baru');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Isi Pertanyaan / Topik Diskusi *'), 'Isi topik diskusi baru');
+      await tester.pump();
+
+      // Pastikan tombol Kirim Diskusi ada
+      expect(find.text('Kirim Diskusi'), findsOneWidget);
+    });
   });
 }

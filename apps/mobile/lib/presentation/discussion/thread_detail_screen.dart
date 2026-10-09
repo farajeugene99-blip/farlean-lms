@@ -105,12 +105,16 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
     }
 
     setState(() => _isSending = true);
+    final clientReplyId = 'rep_${DateTime.now().millisecondsSinceEpoch}_${widget.discussionId.hashCode}';
 
     try {
-      await _discussionRepository.postReply(
-        discussionId: widget.discussionId,
-        body: text,
-      );
+      await _discussionRepository
+          .postReply(
+            discussionId: widget.discussionId,
+            body: text,
+            clientReplyId: clientReplyId,
+          )
+          .timeout(const Duration(seconds: 15));
 
       _replyController.clear();
       // Reload replies dan thread metadata (agar reply_count naik)
