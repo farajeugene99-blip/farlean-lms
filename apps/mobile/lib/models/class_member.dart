@@ -24,6 +24,7 @@ class ClassMember {
   final AccountType accountType;
   final MemberStatus status;
   final DateTime? joinedAt;
+  final String? nim;
 
   const ClassMember({
     required this.uid,
@@ -31,6 +32,7 @@ class ClassMember {
     required this.accountType,
     required this.status,
     this.joinedAt,
+    this.nim,
   });
 
   factory ClassMember.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -46,12 +48,14 @@ class ClassMember {
       return null;
     }
 
+    final nimRaw = map['nim'] as String?;
     return ClassMember(
       uid: uid,
       displayName: map['display_name'] as String? ?? 'Anggota',
       accountType: AccountType.fromString(map['account_type'] as String?),
       status: MemberStatus.fromString(map['status'] as String?),
       joinedAt: parseDate(map['joined_at']),
+      nim: nimRaw != null && nimRaw.trim().isNotEmpty ? nimRaw.trim() : null,
     );
   }
 
@@ -61,6 +65,7 @@ class ClassMember {
       'account_type': accountType.value,
       'status': status.value,
       'joined_at': joinedAt != null ? Timestamp.fromDate(joinedAt!) : FieldValue.serverTimestamp(),
+      if (nim != null && nim!.trim().isNotEmpty) 'nim': nim,
     };
   }
 }

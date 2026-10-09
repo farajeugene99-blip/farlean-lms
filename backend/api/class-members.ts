@@ -54,18 +54,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .get();
 
     // 4. Pembatasan Privasi Data Anggota:
-    // - Owner / Admin: display_name, account_type, status, joined_at
-    // - Sesama Mahasiswa: HANYA display_name (tanpa account_type, email, atau identitas privat)
+    // - Owner kelas / Admin: display_name, account_type, status, joined_at + NIM kondisional.
+    //   NIM diambil server-side (Admin SDK, bypass rules) dari users/{uid}/private/identity
+    //   HANYA untuk anggota MAHASISWA (NIP dosen tidak pernah diekspos sebagai NIM).
+    // - Sesama Mahasiswa: HANYA display_name (tanpa account_type, email, NIM, atau identitas privat).
+    let identityMap: Record<string, string> = {};
+    if (isOwnerOrAdmin) {
+      const identitySnaps = await Promise.all(
+        membersSnap.docs.map((doc) =>
+          db.collection('users').doc(doc.id).collection('private').doc('identity').get()
+        )
+      );
+      identitySnaps.forEach((identityDoc, index) => {
+        const memberData = membersSnap.docs[index].data() || {};
+        if (memberData.account_type !== 'MAHASISWA') return;
+        const nim = identityDoc.data()?.nim_nip;
+        if (typeof nim === 'string' && nim.trim().length > 0) {
+          identityMap[membersSnap.docs[index].id] = nim.trim();
+        }
+      });
+      console.info(
+        `[class-members] NIM disclosure: caller=${user.uid} class=${cleanClassId} members=${membersSnap.size} withNim=${Object.keys(identityMap).length}`
+      );
+    }
+
     const membersList = membersSnap.docs.map((doc) => {
       const data = doc.data() || {};
       if (isOwnerOrAdmin) {
-        return {
+        const entry: Record<string, any> = {
           uid: doc.id,
           display_name: data.display_name || 'Anggota',
           account_type: data.account_type || 'UMUM',
           status: data.status || 'pending',
           joined_at: data.joined_at?.toDate ? data.joined_at.toDate() : data.joined_at,
         };
+        if (identityMap[doc.id]) {
+          entry.nim = identityMap[doc.id];
+        }
+        return entry;
       } else {
         return {
           uid: doc.id,

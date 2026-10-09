@@ -942,6 +942,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       separatorBuilder: (_, _) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final member = _members[index];
+        final showNim = isStaff && member.nim != null && member.nim!.trim().isNotEmpty;
         return ListTile(
           leading: CircleAvatar(
             backgroundColor: AppTheme.primary.withAlpha(20),
@@ -952,7 +953,24 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           ),
           title: Text(member.displayName, style: const TextStyle(fontWeight: FontWeight.w500)),
           subtitle: isStaff
-              ? Text('Tipe: ${member.accountType} • Status: ${member.status.value}')
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Tipe: ${member.accountType} • Status: ${member.status.value}'),
+                    if (showNim)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          'NIM: ${member.nim}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                      ),
+                  ],
+                )
               : null,
           trailing: isStaff ? _buildMemberStatusBadge(member.status) : null,
         );

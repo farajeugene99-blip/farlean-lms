@@ -530,6 +530,78 @@ async function runApiTests() {
     }
   });
 
+  // Skenario 16b: /api/class-members NIM kondisional untuk owner; peer tidak menerima NIM
+  await test('16b. /api/class-members menampilkan NIM mahasiswa kepada owner, menyembunyikan dari peer', async () => {
+    // Seed identitas privat mahasiswa (NIM) + dosen (NIP, tidak boleh bocor sebagai NIM)
+    await db.collection('users').doc(studentUid).collection('private').doc('identity').set({
+      nim_nip: '230000001',
+      updated_at: new Date(),
+    });
+    await db.collection('users').doc(guruUid).collection('private').doc('identity').set({
+      nim_nip: '198501012010011001',
+      updated_at: new Date(),
+    });
+    await db.collection('classes').doc(testClassId).collection('members').doc(guruUid).set({
+      display_name: 'Dosen Pengampu',
+      status: 'active',
+      account_type: 'DOSEN',
+    });
+
+    // Owner melihat NIM mahasiswa, tetapi bukan NIP dosen
+    setTokenVerifier(async () => ({
+      uid: guruUid,
+      email_verified: true,
+      role: 'GURU',
+    }));
+    try {
+      const req = {
+        method: 'GET',
+        headers: { authorization: 'Bearer valid_token' },
+        query: { classId: testClassId },
+      } as any;
+      const res = createMockRes();
+      await classMembersHandler(req, res as any);
+      if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}: ${JSON.stringify(res.jsonData)}`);
+
+      const byUid: Record<string, any> = {};
+      for (const m of res.jsonData?.members ?? []) {
+        byUid[m.uid] = m;
+      }
+      if (byUid[studentUid]?.nim !== '230000001') {
+        throw new Error(`Owner must see student NIM 230000001, got ${JSON.stringify(byUid[studentUid])}`);
+      }
+      if (byUid[guruUid]?.nim) {
+        throw new Error('NIP dosen TIDAK boleh diekspos sebagai NIM');
+      }
+    } finally {
+      resetTokenVerifier();
+    }
+
+    // Peer mahasiswa TIDAK menerima field nim sama sekali
+    setTokenVerifier(async () => ({
+      uid: studentUid,
+      email_verified: true,
+      role: 'USER',
+    }));
+    try {
+      const req = {
+        method: 'GET',
+        headers: { authorization: 'Bearer valid_token' },
+        query: { classId: testClassId },
+      } as any;
+      const res = createMockRes();
+      await classMembersHandler(req, res as any);
+      if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+      for (const m of res.jsonData?.members ?? []) {
+        if ('nim' in m) {
+          throw new Error(`Peer must NOT receive nim field, got ${JSON.stringify(m)}`);
+        }
+      }
+    } finally {
+      resetTokenVerifier();
+    }
+  });
+
   // Skenario 17: /api/class-purge Proteksi Role & Validasi Anggota
   await test('17. /api/class-purge menolak non-admin (403) dan menolak kelas beranggota (400)', async () => {
     // Non-admin test
