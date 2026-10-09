@@ -36,6 +36,9 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isLoading = true;
   String? _errorMessage;
+  bool _isRecordingView = false;
+  bool _recordSuccess = false;
+  String? _recordError;
 
   @override
   void initState() {
@@ -50,6 +53,42 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     _focusNode.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _recordViewOnly() async {
+    final authProvider = context.read<AuthProvider>();
+    final uid = authProvider.firebaseUser?.uid;
+    if (uid == null || widget.classId.isEmpty || widget.meetingId.isEmpty) return;
+
+    if (mounted) {
+      setState(() {
+        _isRecordingView = true;
+        _recordError = null;
+      });
+    }
+
+    try {
+      await _materialRepository.recordMateriOpened(
+        classId: widget.classId,
+        meetingId: widget.meetingId,
+        materiId: widget.materiId,
+        uid: uid,
+      );
+      if (mounted) {
+        setState(() {
+          _isRecordingView = false;
+          _recordSuccess = true;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isRecordingView = false;
+          _recordSuccess = false;
+          _recordError = e.toString();
+        });
+      }
+    }
   }
 
   Future<void> _loadMaterial() async {
@@ -94,17 +133,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         _isLoading = false;
       });
 
-      // Catat materi_opened_at untuk validasi pretest
-      final authProvider = context.read<AuthProvider>();
-      final uid = authProvider.firebaseUser?.uid;
-      if (uid != null && widget.classId.isNotEmpty && widget.meetingId.isNotEmpty) {
-        _materialRepository.recordMateriOpened(
-          classId: widget.classId,
-          meetingId: widget.meetingId,
-          materiId: widget.materiId,
-          uid: uid,
-        );
-      }
+      // Catat materi_opened_at untuk validasi pretest secara asynchronous terpantau
+      await _recordViewOnly();
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -189,12 +219,40 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
                   style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                 ),
                 const Spacer(),
-                const Icon(Icons.check_circle_outline_rounded, size: 14, color: AppTheme.success),
-                const SizedBox(width: 4),
-                const Text(
-                  'Tercatat Dibuka',
-                  style: TextStyle(fontSize: 11, color: AppTheme.success, fontWeight: FontWeight.w500),
-                ),
+                if (_isRecordingView) ...[
+                  const SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.textSecondary),
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Mencatat Progres...',
+                    style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                  ),
+                ] else if (_recordSuccess) ...[
+                  const Icon(Icons.check_circle_outline_rounded, size: 14, color: AppTheme.success),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Tercatat Dibuka',
+                    style: TextStyle(fontSize: 11, color: AppTheme.success, fontWeight: FontWeight.w500),
+                  ),
+                ] else if (_recordError != null) ...[
+                  InkWell(
+                    onTap: _recordViewOnly,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.warning_amber_rounded, size: 14, color: AppTheme.warning),
+                        SizedBox(width: 4),
+                        Text(
+                          'Belum Tersinkron (Ketuk untuk coba lagi)',
+                          style: TextStyle(fontSize: 11, color: AppTheme.warning, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

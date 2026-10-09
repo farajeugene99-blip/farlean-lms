@@ -41,6 +41,12 @@ class MaterialRepository {
 
     try {
       final docRef = firestore.collection('materials').doc(material.id.isEmpty ? null : material.id);
+      if (material.id.isNotEmpty) {
+        final existing = await docRef.get();
+        if (existing.exists) {
+          throw StateError('Materi dengan ID ${material.id} sudah ada. Gunakan updateMaterial untuk mencegah penimpaan data.');
+        }
+      }
       await docRef.set(material.toMap());
       return docRef.id;
     } catch (e) {
@@ -51,6 +57,9 @@ class MaterialRepository {
 
   /// Memperbarui isi materi dengan auto-increment versi
   Future<void> updateMaterial(MaterialContent material) async {
+    if (material.id.trim().isEmpty) {
+      throw ArgumentError('ID materi tidak boleh kosong untuk pembaruan.');
+    }
     if (material.title.trim().isEmpty) {
       throw ArgumentError('Judul materi tidak boleh kosong.');
     }
@@ -61,11 +70,18 @@ class MaterialRepository {
     if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
 
     try {
+      final docRef = firestore.collection('materials').doc(material.id);
+      final existing = await docRef.get();
+      if (!existing.exists) {
+        throw StateError('Materi dengan ID ${material.id} tidak ditemukan untuk diperbarui.');
+      }
+      final currentVersion = (existing.data()?['version'] as num?)?.toInt() ?? material.version;
+
       final updates = material.toMap();
-      updates['version'] = material.version + 1;
+      updates['version'] = currentVersion + 1;
       updates['updated_at'] = FieldValue.serverTimestamp();
 
-      await firestore.collection('materials').doc(material.id).update(updates);
+      await docRef.update(updates);
     } catch (e) {
       debugPrint('Gagal memperbarui materi: $e');
       rethrow;
@@ -113,6 +129,7 @@ class MaterialRepository {
       }, SetOptions(merge: true));
     } catch (e) {
       debugPrint('Catatan pencatatan pembukaan materi: $e');
+      rethrow;
     }
   }
 
@@ -136,7 +153,7 @@ class MaterialRepository {
       return doc.exists;
     } catch (e) {
       debugPrint('Catatan cek pembukaan materi: $e');
-      return false;
+      rethrow;
     }
   }
 }

@@ -376,17 +376,19 @@ async function runTests() {
     );
   });
 
-  await test('Skenario 11: GURU & ADMIN DAPAT membaca NIM/NIP user lain', async () => {
+  await test('Skenario 11: ADMIN DAPAT membaca NIM user lain, sedangkan GURU dari SDK client DIBLOKIR membaca identitas privat langsung', async () => {
+    // Admin dapat membaca
     await assertSucceeds(
-      guruDb
+      adminDb
         .collection('users')
         .doc(userVerifiedUid)
         .collection('private')
         .doc('identity')
         .get()
     );
-    await assertSucceeds(
-      adminDb
+    // Guru dari client SDK dilarang membaca langsung (wajib via backend api/class-members yang memeriksa teacher_id kelas)
+    await assertFails(
+      guruDb
         .collection('users')
         .doc(userVerifiedUid)
         .collection('private')
@@ -809,6 +811,168 @@ async function runTests() {
   await test('Skenario 50: Guru / Staf DIBLOKIR membaca status baca milik siswa (Privasi Riwayat Baca)', async () => {
     await assertFails(
       guruDb.collection('discussion_reads').doc(validReadDocId).get()
+    );
+  });
+
+  // ============================================================================
+  // SKENARIO 51 - 56: REPLIES, MATERI_VIEWS, AND PRIVACY HARDENING
+  // ============================================================================
+  const meetingId = 'meeting_test_01';
+  const replyActiveId = 'reply_active_01';
+  const replyLegacyId = 'reply_legacy_02';
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const adminDb = context.firestore();
+    // Seed meeting
+    await adminDb.collection('meetings').doc(meetingId).set({
+      class_id: classId,
+      title: 'Pertemuan 1: Flutter Fundamentals',
+      status: 'Published',
+    });
+
+    // Seed active reply with status: 'ACTIVE'
+    await adminDb
+      .collection('discussions')
+      .doc(discActiveId)
+      .collection('replies')
+      .doc(replyActiveId)
+      .set({
+        discussion_id: discActiveId,
+        author_id: userVerifiedUid,
+        body: 'Balasan aktif baru',
+        status: 'ACTIVE',
+        created_at: new Date(),
+      });
+
+    // Seed legacy reply WITHOUT status field
+    await adminDb
+      .collection('discussions')
+      .doc(discActiveId)
+      .collection('replies')
+      .doc(replyLegacyId)
+      .set({
+        discussion_id: discActiveId,
+        author_id: userVerifiedUid,
+        body: 'Balasan legacy lama tanpa field status',
+        created_at: new Date(),
+      });
+
+    // Seed score doc in pretest_scores
+    await adminDb
+      .collection('classes')
+      .doc(classId)
+      .collection('pretest_scores')
+      .doc(`pretest_published_${userVerifiedUid}`)
+      .set({
+        user_id: userVerifiedUid,
+        test_id: 'pretest_published',
+        best_score: 95,
+      });
+  });
+
+  await test('Skenario 51: Siswa aktif DAPAT membaca balasan berstatus ACTIVE pada diskusi ACTIVE', async () => {
+    await assertSucceeds(
+      verifiedUserDb
+        .collection('discussions')
+        .doc(discActiveId)
+        .collection('replies')
+        .doc(replyActiveId)
+        .get()
+    );
+  });
+
+  await test('Skenario 52: Siswa aktif DAPAT membaca balasan legacy tanpa field status (Anti-Breakage Legacy Replies)', async () => {
+    await assertSucceeds(
+      verifiedUserDb
+        .collection('discussions')
+        .doc(discActiveId)
+        .collection('replies')
+        .doc(replyLegacyId)
+        .get()
+    );
+  });
+
+  await test('Skenario 53: Siswa aktif DAPAT membaca list/seluruh replies (termasuk legacy) di thread aktif', async () => {
+    await assertSucceeds(
+      verifiedUserDb
+        .collection('discussions')
+        .doc(discActiveId)
+        .collection('replies')
+        .get()
+    );
+  });
+
+  await test('Skenario 54: Siswa aktif DAPAT mencatat pembukaan materi di materi_views miliknya', async () => {
+    await assertSucceeds(
+      verifiedUserDb
+        .collection('meetings')
+        .doc(meetingId)
+        .collection('materi_views')
+        .doc(userVerifiedUid)
+        .set({
+          materi_id: 'mat_published',
+          user_id: userVerifiedUid,
+          opened_at: serverTimestamp(),
+        })
+    );
+  });
+
+  await test('Skenario 55: Siswa DIBLOKIR menulis materi_views atas nama siswa lain (Anti-Impersonasi)', async () => {
+    await assertFails(
+      verifiedUserDb
+        .collection('meetings')
+        .doc(meetingId)
+        .collection('materi_views')
+        .doc(otherUserUid)
+        .set({
+          materi_id: 'mat_published',
+          user_id: otherUserUid,
+          opened_at: serverTimestamp(),
+        })
+    );
+  });
+
+  await test('Skenario 56: Siswa DIBLOKIR membaca pretest_scores siswa lain di kelas yang sama (Privasi Nilai)', async () => {
+    // Seed second active student in classId
+    const activeStudent2Uid = 'user_mhs_active_02';
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await context.firestore().collection('classes').doc(classId).collection('members').doc(activeStudent2Uid).set({
+        display_name: 'Dewi Mahasiswa',
+        status: 'active',
+      });
+    });
+
+    const dewiDb = testEnv
+      .authenticatedContext(activeStudent2Uid, { email_verified: true, role: 'USER' })
+      .firestore();
+
+    await assertFails(
+      dewiDb
+        .collection('classes')
+        .doc(classId)
+        .collection('pretest_scores')
+        .doc(`pretest_published_${userVerifiedUid}`)
+        .get()
+    );
+  });
+
+  await test('Skenario 57: Siswa yang BUKAN anggota kelas DIBLOKIR menulis materi_views', async () => {
+    const outsiderUid = 'user_outsider_99';
+    const outsiderDb = testEnv
+      .authenticatedContext(outsiderUid, { email_verified: true, role: 'USER' })
+      .firestore();
+
+    await assertFails(
+      outsiderDb
+        .collection('meetings')
+        .doc(meetingId)
+        .collection('materi_views')
+        .doc(outsiderUid)
+        .set({
+          materi_id: 'mat_published',
+          user_id: outsiderUid,
+          opened_at: serverTimestamp(),
+        })
     );
   });
 

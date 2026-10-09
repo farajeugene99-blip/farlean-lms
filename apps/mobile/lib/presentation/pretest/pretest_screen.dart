@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/pretest.dart';
@@ -7,6 +8,7 @@ import '../../models/question.dart';
 import '../../models/test_attempt.dart';
 import '../../repositories/attempt_repository.dart';
 import '../../repositories/material_repository.dart';
+import '../../repositories/meeting_repository.dart';
 import '../../repositories/pretest_repository.dart';
 import '../../services/auth_provider.dart';
 import '../../services/grade_service.dart';
@@ -174,7 +176,7 @@ class _PretestScreenState extends State<PretestScreen> {
         final newAttempt = await _attemptRepository.startAttempt(
           userId: uid,
           testId: widget.pretestId,
-          classId: widget.classId,
+          classId: effectiveClassId,
           attemptNo: count + 1,
           questionOrder: questionOrder,
         );
@@ -367,10 +369,6 @@ class _PretestScreenState extends State<PretestScreen> {
       return const Scaffold(body: LoadingIndicator(message: 'Mempersiapkan kuis pretest...'));
     }
 
-    if (!_hasOpenedMateri) {
-      return _buildMateriGateScreen();
-    }
-
     if (_errorMessage != null || _pretest == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Pretest')),
@@ -379,6 +377,10 @@ class _PretestScreenState extends State<PretestScreen> {
           onRetry: _initializePretestSession,
         ),
       );
+    }
+
+    if (!_hasOpenedMateri) {
+      return _buildMateriGateScreen();
     }
 
     final question = _questions[_currentQuestionIndex];
@@ -576,13 +578,38 @@ class _PretestScreenState extends State<PretestScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Sesuai ketentuan alur pembelajaran Farlean LMS, Anda harus membuka dan membaca materi pembelajaran pertemuan ini terlebih dahulu sebelum diperkenankan mengerjakan pretest.',
+                'Sesuai ketentuan alur pembelajaran Farlean LMS, Anda harus membuka dan membaca materi pembelajaran pertemuan ini terlebih dahulu sebelum diperkenankan mengerjakan pretest.\n\nJika sebelumnya Anda sudah pernah membuka materi, ketuk tombol di bawah untuk membuka kembali materi agar progres kehadiran tersinkronisasi secara resmi ke server.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppTheme.textSecondary, height: 1.4),
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () async {
+                  final effectiveMeetingId = widget.meetingId.isNotEmpty
+                      ? widget.meetingId
+                      : (_pretest?.meetingId ?? '');
+                  final effectiveClassId = widget.classId.isNotEmpty
+                      ? widget.classId
+                      : (_pretest?.classId ?? '');
+
+                  if (effectiveMeetingId.isNotEmpty) {
+                    try {
+                      final meeting = await MeetingRepository().getMeeting(effectiveMeetingId);
+                      if (meeting != null && meeting.materiId != null && meeting.materiId!.isNotEmpty) {
+                        if (!mounted) return;
+                        await context.push(
+                          '/materials/${meeting.materiId}?classId=$effectiveClassId&meetingId=$effectiveMeetingId',
+                        );
+                        if (mounted) {
+                          _initializePretestSession();
+                        }
+                        return;
+                      }
+                    } catch (_) {}
+                  }
+                  if (!mounted) return;
+                  Navigator.pop(context);
+                },
                 icon: const Icon(Icons.menu_book_rounded, size: 20),
                 label: const Text('Buka Materi Pembelajaran'),
               ),

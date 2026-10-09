@@ -601,9 +601,10 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
             accentColor: AppTheme.primary,
             isAvailable: meeting.materiId != null || isStaff,
             actionLabel: meeting.materiId != null ? 'Buka Materi' : 'Buat Materi',
-            onTap: () {
+            onTap: () async {
               if (meeting.materiId != null) {
-                context.push('/materials/${meeting.materiId}?classId=${meeting.classId}&meetingId=${meeting.id}');
+                await context.push('/materials/${meeting.materiId}?classId=${meeting.classId}&meetingId=${meeting.id}');
+                if (mounted) _loadMeetingDetail();
               } else if (isStaff) {
                 _createMateriForMeeting();
               }
@@ -623,9 +624,10 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
             actionLabel: meeting.pretestId != null ? 'Mulai Pretest' : 'Buat Pretest',
             secondaryActionLabel: (isStaff && meeting.pretestId != null) ? 'Kelola Soal' : null,
             badgeNotice: meeting.pretestId != null ? 'Wajib pernah buka materi' : null,
-            onTap: () {
+            onTap: () async {
               if (meeting.pretestId != null) {
-                context.push('/pretests/${meeting.pretestId}?classId=${meeting.classId}&meetingId=${meeting.id}');
+                await context.push('/pretests/${meeting.pretestId}?classId=${meeting.classId}&meetingId=${meeting.id}');
+                if (mounted) _loadMeetingDetail();
               } else if (isStaff) {
                 _showCreatePretestDialog();
               }
@@ -646,9 +648,10 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
             accentColor: AppTheme.warning,
             isAvailable: meeting.videoId != null || isStaff,
             actionLabel: meeting.videoId != null ? 'Tonton Video' : 'Tambah Video',
-            onTap: () {
+            onTap: () async {
               if (meeting.videoId != null) {
-                context.push('/videos/${meeting.videoId}?classId=${meeting.classId}&meetingId=${meeting.id}');
+                await context.push('/videos/${meeting.videoId}?classId=${meeting.classId}&meetingId=${meeting.id}');
+                if (mounted) _loadMeetingDetail();
               } else if (isStaff) {
                 _showAddVideoDialog();
               }
@@ -667,9 +670,10 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
             isAvailable: meeting.posttestId != null || isStaff,
             actionLabel: meeting.posttestId != null ? 'Mulai Post Test' : 'Buat Post Test',
             secondaryActionLabel: (isStaff && meeting.posttestId != null) ? 'Kelola Soal' : null,
-            onTap: () {
+            onTap: () async {
               if (meeting.posttestId != null) {
-                context.push('/posttests/${meeting.posttestId}?classId=${meeting.classId}&meetingId=${meeting.id}');
+                await context.push('/posttests/${meeting.posttestId}?classId=${meeting.classId}&meetingId=${meeting.id}');
+                if (mounted) _loadMeetingDetail();
               } else if (isStaff) {
                 _showCreatePosttestDialog();
               }

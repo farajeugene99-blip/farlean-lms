@@ -141,7 +141,7 @@ service cloud.firestore {
       allow delete: if false;
 
       match /private/identity {
-        allow read: if isOwner(uid) || isStaff();
+        allow read: if isOwner(uid) || isAdmin();
         allow write: if isOwner(uid) || isAdmin();
       }
     }
@@ -168,12 +168,12 @@ service cloud.firestore {
       }
 
       match /pretest_scores/{scoreDoc} {
-        allow read: if isClassMemberActive(classId) || isStaff();
+        allow read: if (isVerified() && request.auth.uid == resource.data.user_id) || isClassOwner(classId);
         allow write: if false;
       }
 
       match /posttest_scores/{scoreDoc} {
-        allow read: if isClassMemberActive(classId) || isStaff();
+        allow read: if (isVerified() && request.auth.uid == resource.data.user_id) || isClassOwner(classId);
         allow write: if false;
       }
     }
@@ -192,8 +192,16 @@ service cloud.firestore {
       allow delete: if isClassOwner(resource.data.class_id);
 
       match /materi_views/{uid} {
-        allow read: if isOwner(uid) || isStaff();
-        allow write: if isOwner(uid) || isStaff();
+        allow read: if (isOwner(uid) && isClassMemberActive(get(/databases/$(database)/documents/meetings/$(meetingId)).data.class_id))
+                    || isClassOwner(get(/databases/$(database)/documents/meetings/$(meetingId)).data.class_id);
+        allow write: if isOwner(uid)
+          && isClassMemberActive(get(/databases/$(database)/documents/meetings/$(meetingId)).data.class_id)
+          && request.resource.data.keys().hasAll(['materi_id', 'user_id', 'opened_at'])
+          && (!request.resource.data.keys().hasAny(['role', 'score', 'status']))
+          && request.resource.data.user_id == request.auth.uid
+          && request.resource.data.materi_id is string
+          && request.resource.data.materi_id.size() > 0
+          && (request.resource.data.opened_at == request.time || request.resource.data.opened_at is timestamp);
       }
     }
 
@@ -342,7 +350,8 @@ service cloud.firestore {
     // ============================================================================
     match /discussions/{discussionId} {
       // Baca: Anggota aktif kelas jika thread ACTIVE, atau Pengelola Kelas (Teacher Owner / Admin)
-      allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status == 'ACTIVE')
+      allow read: if (isClassMemberActive(resource.data.class_id)
+                      && (!('status' in resource.data) || resource.data.status == 'ACTIVE'))
                   || isClassOwner(resource.data.class_id);
 
       // Pembuatan thread WAJIB melalui backend (/api/discussion-thread) untuk anti-impersonasi display_name & rate limit
@@ -353,7 +362,7 @@ service cloud.firestore {
       // b) Owner kelas / Admin boleh mengubah status menjadi ARCHIVED (Moderasi)
       allow update: if isVerified() && (
         (request.auth.uid == resource.data.author_id
-          && resource.data.status == 'ACTIVE'
+          && (!('status' in resource.data) || resource.data.status == 'ACTIVE')
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'body', 'updated_at'])
           && request.resource.data.title is string
           && request.resource.data.title.size() > 0
@@ -373,8 +382,8 @@ service cloud.firestore {
       match /replies/{replyId} {
         // Baca balasan: anggota aktif jika parent & reply ACTIVE, atau Owner kelas / Admin
         allow read: if (isClassMemberActive(get(/databases/$(database)/documents/discussions/$(discussionId)).data.class_id)
-                        && get(/databases/$(database)/documents/discussions/$(discussionId)).data.status == 'ACTIVE'
-                        && resource.data.status == 'ACTIVE')
+                        && (!('status' in get(/databases/$(database)/documents/discussions/$(discussionId)).data) || get(/databases/$(database)/documents/discussions/$(discussionId)).data.status == 'ACTIVE')
+                        && (!('status' in resource.data) || resource.data.status == 'ACTIVE'))
                     || isClassOwner(get(/databases/$(database)/documents/discussions/$(discussionId)).data.class_id);
 
         // Pembuatan balasan WAJIB melalui backend (/api/discussion-reply) untuk transaksi atomik increment reply_count & anti-impersonasi
@@ -385,8 +394,8 @@ service cloud.firestore {
         // b) Owner kelas / Admin boleh memoderasi (status -> ARCHIVED)
         allow update: if isVerified() && (
           (request.auth.uid == resource.data.author_id
-            && resource.data.status == 'ACTIVE'
-            && get(/databases/$(database)/documents/discussions/$(discussionId)).data.status == 'ACTIVE'
+            && (!('status' in resource.data) || resource.data.status == 'ACTIVE')
+            && (!('status' in get(/databases/$(database)/documents/discussions/$(discussionId)).data) || get(/databases/$(database)/documents/discussions/$(discussionId)).data.status == 'ACTIVE')
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['body', 'updated_at'])
             && request.resource.data.body is string
             && request.resource.data.body.size() > 0

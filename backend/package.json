@@ -17,7 +17,8 @@
     "seed:testing": "tsx ../emulator/seed-testing-accounts.mjs",
     "seed:staff": "tsx ../emulator/seed-staff-accounts.mjs",
     "promote": "tsx scripts/promote-user.ts",
-    "migrate": "tsx scripts/migrate-phase1-phase2.ts"
+    "migrate": "tsx scripts/migrate-phase1-phase2.ts",
+    "backfill:replies": "tsx scripts/backfill-reply-status.ts"
   },
   "keywords": [],
   "author": "",
