@@ -229,4 +229,98 @@ class ClassRepository {
       return [];
     }
   }
+
+  /// Mengambil rekap nilai pretest seluruh kelas (khusus dosen/owner kelas)
+  Future<Map<String, double>> getClassPretestScores(String classId) async {
+    final firestore = _firestore;
+    if (firestore == null) return {};
+    try {
+      final snap = await firestore
+          .collection('classes')
+          .doc(classId)
+          .collection('pretest_scores')
+          .get();
+      final Map<String, double> scores = {};
+      for (final doc in snap.docs) {
+        final data = doc.data();
+        final userId = data['user_id'] as String?;
+        final testId = data['test_id'] as String?;
+        final score = (data['best_score'] as num?)?.toDouble() ?? 0.0;
+        if (userId != null && testId != null) {
+          scores['${testId}_$userId'] = score;
+        }
+      }
+      return scores;
+    } catch (e) {
+      debugPrint('Catatan baca pretest scores: $e');
+      return {};
+    }
+  }
+
+  /// Mengambil rekap nilai posttest seluruh kelas (khusus dosen/owner kelas)
+  Future<Map<String, double>> getClassPosttestScores(String classId) async {
+    final firestore = _firestore;
+    if (firestore == null) return {};
+    try {
+      final snap = await firestore
+          .collection('classes')
+          .doc(classId)
+          .collection('posttest_scores')
+          .get();
+      final Map<String, double> scores = {};
+      for (final doc in snap.docs) {
+        final data = doc.data();
+        final userId = data['user_id'] as String?;
+        final testId = data['test_id'] as String?;
+        final score = (data['best_score'] as num?)?.toDouble() ?? 0.0;
+        if (userId != null && testId != null) {
+          scores['${testId}_$userId'] = score;
+        }
+      }
+      return scores;
+    } catch (e) {
+      debugPrint('Catatan baca posttest scores: $e');
+      return {};
+    }
+  }
+
+  /// Mengambil nilai pretest & posttest pribadi siswa
+  Future<Map<String, double>> getStudentScores({
+    required String classId,
+    required String uid,
+  }) async {
+    final firestore = _firestore;
+    if (firestore == null) return {};
+    final Map<String, double> scores = {};
+    try {
+      final preSnap = await firestore
+          .collection('classes')
+          .doc(classId)
+          .collection('pretest_scores')
+          .where('user_id', isEqualTo: uid)
+          .get();
+      for (final doc in preSnap.docs) {
+        final data = doc.data();
+        final testId = data['test_id'] as String?;
+        final score = (data['best_score'] as num?)?.toDouble() ?? 0.0;
+        if (testId != null) scores['pre_$testId'] = score;
+      }
+
+      final postSnap = await firestore
+          .collection('classes')
+          .doc(classId)
+          .collection('posttest_scores')
+          .where('user_id', isEqualTo: uid)
+          .get();
+      for (final doc in postSnap.docs) {
+        final data = doc.data();
+        final testId = data['test_id'] as String?;
+        final score = (data['best_score'] as num?)?.toDouble() ?? 0.0;
+        if (testId != null) scores['post_$testId'] = score;
+      }
+    } catch (e) {
+      debugPrint('Catatan baca nilai siswa: $e');
+    }
+    return scores;
+  }
 }

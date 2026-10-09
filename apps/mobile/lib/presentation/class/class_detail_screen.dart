@@ -40,6 +40,13 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   Classroom? _classroom;
   List<Meeting> _meetings = [];
   List<ClassMember> _members = [];
+  Map<String, double> _classPretestScores = {};
+  Map<String, double> _classPosttestScores = {};
+  Map<String, double> _studentPersonalScores = {};
+  String? _selectedMeetingId;
+  int _gradebookPage = 0;
+  static const int _pageSize = 50;
+
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -48,7 +55,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     super.initState();
     _classRepository = widget.classRepository ?? ClassRepository();
     _meetingRepository = widget.meetingRepository ?? MeetingRepository();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _loadAllData();
   }
 
@@ -66,6 +73,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
     final authProvider = context.read<AuthProvider>();
     final isStaff = RoleGuard.isStaff(authProvider.appUser);
+    final uid = authProvider.firebaseUser?.uid ?? '';
 
     try {
       final classroom = await _classRepository.getClass(widget.classId);
@@ -75,11 +83,25 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       );
       final members = await _classRepository.getClassMembers(widget.classId);
 
+      Map<String, double> preScores = {};
+      Map<String, double> postScores = {};
+      Map<String, double> personalScores = {};
+
+      if (isStaff) {
+        preScores = await _classRepository.getClassPretestScores(widget.classId);
+        postScores = await _classRepository.getClassPosttestScores(widget.classId);
+      } else if (uid.isNotEmpty) {
+        personalScores = await _classRepository.getStudentScores(classId: widget.classId, uid: uid);
+      }
+
       if (mounted) {
         setState(() {
           _classroom = classroom;
           _meetings = meetings;
           _members = members;
+          _classPretestScores = preScores;
+          _classPosttestScores = postScores;
+          _studentPersonalScores = personalScores;
           _isLoading = false;
         });
       }
@@ -413,6 +435,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             controller: _tabController,
             tabs: const [
               Tab(icon: Icon(Icons.calendar_month_rounded), text: 'Pertemuan'),
+              Tab(icon: Icon(Icons.analytics_outlined), text: 'Rekap Nilai'),
               Tab(icon: Icon(Icons.people_alt_rounded), text: 'Anggota Kelas'),
             ],
           ),
@@ -423,6 +446,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               controller: _tabController,
               children: [
                 _buildMeetingsTab(isOwner),
+                _buildGradebookTab(isOwner, isStaff),
                 _buildMembersTab(isStaff),
               ],
             ),
@@ -498,6 +522,404 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildGradebookTab(bool isOwner, bool isStaff) {
+    if (!isOwner && !isStaff) {
+      return _buildStudentPersonalGradebook();
+    }
+    return _buildTeacherGradebook();
+  }
+
+  Widget _buildTeacherGradebook() {
+    if (_members.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.analytics_outlined, size: 48, color: AppTheme.textSecondary.withAlpha(128)),
+              const SizedBox(height: 12),
+              const Text('Belum ada mahasiswa di kelas ini.', style: TextStyle(color: AppTheme.textSecondary)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    Meeting? selectedMeeting;
+    if (_selectedMeetingId != null) {
+      for (final m in _meetings) {
+        if (m.id == _selectedMeetingId) {
+          selectedMeeting = m;
+          break;
+        }
+      }
+    }
+
+    int preSubmittedCount = 0;
+    double preTotalScore = 0;
+    int postSubmittedCount = 0;
+    double postTotalScore = 0;
+
+    for (final member in _members) {
+      if (selectedMeeting != null) {
+        if (selectedMeeting.pretestId != null) {
+          final s = _classPretestScores['${selectedMeeting.pretestId}_${member.uid}'];
+          if (s != null) {
+            preSubmittedCount++;
+            preTotalScore += s;
+          }
+        }
+        if (selectedMeeting.posttestId != null) {
+          final s = _classPosttestScores['${selectedMeeting.posttestId}_${member.uid}'];
+          if (s != null) {
+            postSubmittedCount++;
+            postTotalScore += s;
+          }
+        }
+      }
+    }
+
+    final preAvg = preSubmittedCount > 0 ? (preTotalScore / preSubmittedCount).toStringAsFixed(1) : '-';
+    final postAvg = postSubmittedCount > 0 ? (postTotalScore / postSubmittedCount).toStringAsFixed(1) : '-';
+
+    final totalStudents = _members.length;
+    final totalPages = (totalStudents / _pageSize).ceil();
+    final safePage = _gradebookPage.clamp(0, totalPages > 0 ? totalPages - 1 : 0);
+    final startIndex = safePage * _pageSize;
+    final pagedMembers = _members.skip(startIndex).take(_pageSize).toList();
+    final endIndex = (startIndex + pagedMembers.length);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppTheme.border),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String?>(
+              value: _selectedMeetingId,
+              isExpanded: true,
+              hint: const Text('Semua Pertemuan (Ringkasan)', style: TextStyle(fontSize: 13)),
+              items: [
+                const DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text('Semua Pertemuan (Ringkasan)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                ),
+                ..._meetings.map((m) => DropdownMenuItem<String?>(
+                      value: m.id,
+                      child: Text('Pertemuan ${m.number}: ${m.title}', style: const TextStyle(fontSize: 13)),
+                    )),
+              ],
+              onChanged: (val) {
+                setState(() {
+                  _selectedMeetingId = val;
+                  _gradebookPage = 0;
+                });
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        if (selectedMeeting != null) ...[
+          Row(
+            children: [
+              Expanded(
+                child: _buildKpiCard(
+                  title: 'Rata-rata Pretest',
+                  value: preAvg,
+                  subtitle: '$preSubmittedCount dari $totalStudents mahasiswa',
+                  color: AppTheme.secondary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildKpiCard(
+                  title: 'Rata-rata Post Test',
+                  value: postAvg,
+                  subtitle: '$postSubmittedCount dari $totalStudents mahasiswa',
+                  color: Colors.deepPurple,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+        ],
+
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppTheme.border.withAlpha(100)),
+          ),
+          child: Row(
+            children: [
+              Text(
+                'Menampilkan ${totalStudents > 0 ? startIndex + 1 : 0}-$endIndex dari $totalStudents mahasiswa',
+                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.chevron_left_rounded, size: 20),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: safePage > 0 ? () => setState(() => _gradebookPage = safePage - 1) : null,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${safePage + 1}/$totalPages',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.chevron_right_rounded, size: 20),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: safePage < totalPages - 1 ? () => setState(() => _gradebookPage = safePage + 1) : null,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        ...pagedMembers.map((member) {
+          double? preScore;
+          double? postScore;
+          if (selectedMeeting != null) {
+            if (selectedMeeting.pretestId != null) {
+              preScore = _classPretestScores['${selectedMeeting.pretestId}_${member.uid}'];
+            }
+            if (selectedMeeting.posttestId != null) {
+              postScore = _classPosttestScores['${selectedMeeting.posttestId}_${member.uid}'];
+            }
+          }
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            elevation: 0.5,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(color: AppTheme.border.withAlpha(100)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 14,
+                        backgroundColor: AppTheme.primary.withAlpha(20),
+                        child: Text(
+                          member.displayName.isNotEmpty ? member.displayName[0].toUpperCase() : '?',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.primary),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          member.displayName,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surface,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: AppTheme.border),
+                        ),
+                        child: Text(
+                          member.accountType.name,
+                          style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  if (selectedMeeting != null)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildScoreChip(
+                            label: 'Pretest',
+                            hasModule: selectedMeeting.pretestId != null,
+                            score: preScore,
+                            accentColor: AppTheme.secondary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildScoreChip(
+                            label: 'Post Test',
+                            hasModule: selectedMeeting.posttestId != null,
+                            score: postScore,
+                            accentColor: Colors.deepPurple,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    const Text(
+                      'Pilih pertemuan spesifik di atas untuk melihat rincian skor mahasiswa.',
+                      style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                    ),
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildKpiCard({required String title, required String value, required String subtitle, required Color color}) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withAlpha(15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withAlpha(40)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: color)),
+          const SizedBox(height: 4),
+          Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 2),
+          Text(subtitle, style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreChip({required String label, required bool hasModule, required double? score, required Color accentColor}) {
+    if (!hasModule) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text('$label: -', style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+      );
+    }
+    final isDone = score != null;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: isDone ? accentColor.withAlpha(20) : AppTheme.warning.withAlpha(20),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: isDone ? accentColor.withAlpha(50) : AppTheme.warning.withAlpha(50)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(isDone ? Icons.check_circle_outline_rounded : Icons.pending_outlined, size: 12, color: isDone ? accentColor : AppTheme.warning),
+          const SizedBox(width: 4),
+          Text(
+            isDone ? '$label: ${score.toStringAsFixed(1)}' : '$label: Belum Ada',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isDone ? accentColor : AppTheme.warning,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStudentPersonalGradebook() {
+    if (_meetings.isEmpty) {
+      return const Center(
+        child: Text('Belum ada pertemuan di kelas ini.', style: TextStyle(color: AppTheme.textSecondary)),
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withAlpha(15),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppTheme.primary.withAlpha(30)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.school_outlined, size: 24, color: AppTheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Hasil Capaian Belajar Anda', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.primary)),
+                    Text('Menampilkan nilai resmi pretest & post test Anda pada kelas ${_classroom?.name ?? ""}.', style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        ..._meetings.map((meeting) {
+          final preScore = meeting.pretestId != null ? _studentPersonalScores['pre_${meeting.pretestId}'] : null;
+          final postScore = meeting.posttestId != null ? _studentPersonalScores['post_${meeting.posttestId}'] : null;
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            elevation: 0.5,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(color: AppTheme.border.withAlpha(100)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Pertemuan ${meeting.number}: ${meeting.title}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildScoreChip(
+                          label: 'Pretest',
+                          hasModule: meeting.pretestId != null,
+                          score: preScore,
+                          accentColor: AppTheme.secondary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildScoreChip(
+                          label: 'Post Test',
+                          hasModule: meeting.posttestId != null,
+                          score: postScore,
+                          accentColor: Colors.deepPurple,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 
