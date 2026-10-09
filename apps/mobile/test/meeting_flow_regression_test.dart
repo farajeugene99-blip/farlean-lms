@@ -14,7 +14,9 @@ class FakeMeetingRepository extends MeetingRepository {
   Future<List<Meeting>> getMeetingsByClass(String classId, {bool isStaff = false}) async {
     final list = meetingsByClass[classId] ?? [];
     if (!isStaff) {
-      return list.where((m) => m.status == ContentStatus.published).toList();
+      return list
+          .where((m) => m.status == ContentStatus.published || m.status == ContentStatus.scheduled)
+          .toList();
     }
     return list;
   }

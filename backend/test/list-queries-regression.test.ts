@@ -76,6 +76,13 @@ async function runListRegressionTests() {
       title: 'Pertemuan 2 Draft',
       status: 'Draft',
     });
+    await adminDb.collection('meetings').doc('meet_reg_sched_1').set({
+      class_id: realClassId,
+      number: 3,
+      title: 'Pertemuan 3 Scheduled',
+      status: 'Scheduled',
+      publish_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    });
 
     await adminDb.collection('manual_books').doc('book_reg_1').set({
       class_id: realClassId,
@@ -150,6 +157,24 @@ async function runListRegressionTests() {
         .collection('meetings')
         .where('class_id', '==', realClassId)
         .get()
+    );
+  });
+
+  // 2b. Siswa dapat query list dengan whereIn Published + Scheduled (pola klien C3)
+  await test('2b. Siswa AKTIF dapat query list meetings dengan filter Published & Scheduled', async () => {
+    await assertSucceeds(
+      activeStudentDb
+        .collection('meetings')
+        .where('class_id', '==', realClassId)
+        .where('status', 'in', ['Published', 'Scheduled'])
+        .get()
+    );
+  });
+
+  // 2c. Siswa tetap DITOLAK membaca dokumen Draft via get langsung
+  await test('2c. Siswa AKTIF DIBLOKIR membaca dokumen meeting Draft via get langsung', async () => {
+    await assertFails(
+      activeStudentDb.collection('meetings').doc('meet_reg_draft_1').get()
     );
   });
 

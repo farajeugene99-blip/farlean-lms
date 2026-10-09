@@ -976,6 +976,36 @@ async function runTests() {
     );
   });
 
+  await test('Skenario 58: Guru Owner DAPAT membuat & menjadwalkan meeting dengan status Scheduled dan publish_at', async () => {
+    const scheduledMeetingId = 'meet_scheduled_01';
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await assertSucceeds(
+      guruDb.collection('meetings').doc(scheduledMeetingId).set({
+        class_id: classId,
+        number: 2,
+        title: 'Pertemuan 2: Advanced State Management',
+        status: 'Scheduled',
+        publish_at: tomorrow,
+      })
+    );
+  });
+
+  await test('Skenario 59: Siswa aktif DAPAT membaca dokumen meeting Scheduled, sedangkan non-anggota DIBLOKIR', async () => {
+    const scheduledMeetingId = 'meet_scheduled_01';
+
+    // Siswa aktif kelas ini DAPAT membaca judul/jadwal meeting
+    await assertSucceeds(
+      verifiedUserDb.collection('meetings').doc(scheduledMeetingId).get()
+    );
+
+    // Pengguna non-anggota kelas (pending) DIBLOKIR
+    // Catatan: GURU mana pun adalah isStaff() global sehingga tetap boleh membaca (by design)
+    await assertFails(
+      pendingUserDb.collection('meetings').doc(scheduledMeetingId).get()
+    );
+  });
+
   // Cleanup
   await testEnv.cleanup();
 

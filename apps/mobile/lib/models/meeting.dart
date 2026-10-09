@@ -13,6 +13,7 @@ class Meeting {
   final String? videoId;
   final String? posttestId;
   final ContentStatus status;
+  final DateTime? publishAt;
 
   const Meeting({
     required this.id,
@@ -26,6 +27,7 @@ class Meeting {
     this.videoId,
     this.posttestId,
     this.status = ContentStatus.draft,
+    this.publishAt,
   });
 
   factory Meeting.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -52,6 +54,7 @@ class Meeting {
       videoId: map['video_id'] as String?,
       posttestId: map['posttest_id'] as String?,
       status: ContentStatus.fromString(map['status'] as String?),
+      publishAt: parseDate(map['publish_at']),
     );
   }
 
@@ -67,6 +70,7 @@ class Meeting {
       'video_id': videoId,
       'posttest_id': posttestId,
       'status': status.value,
+      'publish_at': publishAt != null ? Timestamp.fromDate(publishAt!) : null,
     };
   }
 
@@ -84,6 +88,11 @@ class Meeting {
     if (materiId != null) map['materi_id'] = materiId;
     if (videoId != null) map['video_id'] = videoId;
     if (posttestId != null) map['posttest_id'] = posttestId;
+    if (status == ContentStatus.scheduled && publishAt != null) {
+      map['publish_at'] = Timestamp.fromDate(publishAt!);
+    } else if (status == ContentStatus.published || status == ContentStatus.draft) {
+      map['publish_at'] = null;
+    }
     return map;
   }
 
@@ -97,6 +106,8 @@ class Meeting {
     String? videoId,
     String? posttestId,
     ContentStatus? status,
+    DateTime? publishAt,
+    bool clearPublishAt = false,
   }) {
     return Meeting(
       id: id,
@@ -110,6 +121,7 @@ class Meeting {
       videoId: videoId ?? this.videoId,
       posttestId: posttestId ?? this.posttestId,
       status: status ?? this.status,
+      publishAt: clearPublishAt ? null : (publishAt ?? this.publishAt),
     );
   }
 }

@@ -81,7 +81,8 @@ service cloud.firestore {
         && request.resource.data.class_id.size() > 0
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0
-        && request.resource.data.status in ['Draft', 'Published', 'Archived'];
+        && request.resource.data.status in ['Draft', 'Scheduled', 'Published', 'Archived']
+        && (!('publish_at' in request.resource.data) || request.resource.data.publish_at == null || request.resource.data.publish_at is timestamp);
     }
 
     function isValidMaterialWrite() {
@@ -182,7 +183,7 @@ service cloud.firestore {
     // 3. MEETINGS (HUB PEMBELAJARAN)
     // ============================================================================
     match /meetings/{meetingId} {
-      allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status == 'Published')
+      allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status in ['Published', 'Scheduled'])
                   || isStaff();
       allow create: if isValidMeetingWrite()
                     && isClassOwner(request.resource.data.class_id);

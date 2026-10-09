@@ -1,5 +1,6 @@
 enum ContentStatus {
   draft('Draft'),
+  scheduled('Scheduled'),
   published('Published'),
   archived('Archived');
 
@@ -15,6 +16,7 @@ enum ContentStatus {
   }
 
   bool get isDraft => this == ContentStatus.draft;
+  bool get isScheduled => this == ContentStatus.scheduled;
   bool get isPublished => this == ContentStatus.published;
   bool get isArchived => this == ContentStatus.archived;
 }

@@ -5,5 +5,11 @@
     "api/ai.ts": {
       "maxDuration": 30
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/publish-meetings",
+      "schedule": "15 1 * * *"
+    }
+  ]
 }

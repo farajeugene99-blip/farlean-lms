@@ -204,6 +204,39 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
     }
   }
 
+  bool _isSyncingSchedule = false;
+
+  Future<void> _syncScheduledMeetings() async {
+    if (_isSyncingSchedule) return;
+    setState(() => _isSyncingSchedule = true);
+    try {
+      final promoted = await _meetingRepository.syncScheduledMeetings(
+        classId: _getEffectiveClassId().isEmpty ? null : _getEffectiveClassId(),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              promoted > 0
+                  ? '$promoted pertemuan terjadwal yang jatuh tempo berhasil dipublikasikan.'
+                  : 'Tidak ada pertemuan terjadwal yang jatuh tempo saat ini.',
+            ),
+            backgroundColor: AppTheme.success,
+          ),
+        );
+        _loadMeetings();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyinkronkan jadwal: $e'), backgroundColor: AppTheme.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSyncingSchedule = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
@@ -213,6 +246,18 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
       appBar: AppBar(
         title: const Text('Materi & Pertemuan'),
         actions: [
+          if (isStaff)
+            IconButton(
+              icon: _isSyncingSchedule
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.sync_rounded),
+              tooltip: 'Sinkronkan Jadwal Publikasi',
+              onPressed: _isSyncingSchedule ? null : _syncScheduledMeetings,
+            ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Segarkan',
@@ -417,7 +462,8 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
                     ),
                   ),
                   const Spacer(),
-                  if (isStaff) _buildStatusBadge(meeting.status),
+                  if (isStaff || meeting.status == ContentStatus.scheduled)
+                    _buildStatusBadge(meeting.status),
                 ],
               ),
               const SizedBox(height: 10),
@@ -425,6 +471,19 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
                 meeting.title,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
+              if (meeting.status == ContentStatus.scheduled && meeting.publishAt != null) ...[
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.schedule_rounded, size: 14, color: Colors.blue),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Terbit: ${meeting.publishAt!.day.toString().padLeft(2, '0')}/${meeting.publishAt!.month.toString().padLeft(2, '0')}/${meeting.publishAt!.year} ${meeting.publishAt!.hour.toString().padLeft(2, '0')}:${meeting.publishAt!.minute.toString().padLeft(2, '0')} WIB',
+                      style: const TextStyle(fontSize: 11, color: Colors.blue, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -459,6 +518,9 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
     switch (status) {
       case ContentStatus.published:
         color = AppTheme.success;
+        break;
+      case ContentStatus.scheduled:
+        color = Colors.blue;
         break;
       case ContentStatus.archived:
         color = AppTheme.textSecondary;

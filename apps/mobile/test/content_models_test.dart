@@ -81,6 +81,38 @@ void main() {
       expect(updateMap.containsKey('video_id'), isFalse);
       expect(updateMap.containsKey('posttest_id'), isFalse);
     });
+
+    test('Meeting Scheduled roundtrip preserves publish_at timestamp', () {
+      final publishAt = DateTime(2026, 11, 15, 8, 0);
+      final meeting = Meeting(
+        id: 'meeting_sched',
+        classId: 'class_01',
+        number: 3,
+        title: 'Pertemuan Terjadwal',
+        status: ContentStatus.scheduled,
+        publishAt: publishAt,
+      );
+
+      final map = meeting.toMap();
+      expect(map['status'], equals('Scheduled'));
+      expect(map['publish_at'], isNotNull);
+
+      final fromMap = Meeting.fromMap(map, id: 'meeting_sched');
+      expect(fromMap.status, equals(ContentStatus.scheduled));
+      expect(fromMap.publishAt, equals(publishAt));
+    });
+
+    test('Meeting toUpdateMap clears publish_at on manual publish (cancels schedule)', () {
+      final published = Meeting(
+        id: 'meeting_pub',
+        classId: 'class_01',
+        number: 3,
+        title: 'Pertemuan Rilis',
+        status: ContentStatus.published,
+        publishAt: DateTime(2026, 11, 15, 8, 0),
+      );
+      expect(published.toUpdateMap()['publish_at'], isNull);
+    });
   });
 
   group('Posttest Model Tests', () {

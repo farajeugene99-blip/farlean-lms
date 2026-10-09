@@ -48,6 +48,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
   Meeting? _meeting;
   bool _isLoading = true;
   String? _errorMessage;
+  bool _isSyncingSchedule = false;
 
   @override
   void initState() {
@@ -89,6 +90,134 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     }
   }
 
+  bool get _isScheduledLockedForStudent {
+    if (_meeting == null) return false;
+    final authProvider = context.read<AuthProvider>();
+    final isStaff = RoleGuard.isStaff(authProvider.appUser);
+    if (isStaff) return false;
+    if (_meeting!.status == ContentStatus.scheduled) {
+      if (_meeting!.publishAt != null && DateTime.now().isBefore(_meeting!.publishAt!)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void _showScheduledLockNotice() {
+    final publishText = _meeting?.publishAt != null
+        ? '${_meeting!.publishAt!.day.toString().padLeft(2, '0')}/${_meeting!.publishAt!.month.toString().padLeft(2, '0')}/${_meeting!.publishAt!.year} ${_meeting!.publishAt!.hour.toString().padLeft(2, '0')}:${_meeting!.publishAt!.minute.toString().padLeft(2, '0')} WIB'
+        : 'waktu jadwal mendatang';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Pertemuan ini masih berstatus Terjadwal. Konten akan dibuka pada $publishText.'),
+        backgroundColor: AppTheme.warning,
+      ),
+    );
+  }
+
+  Future<void> _showScheduleDialog() async {
+    final now = DateTime.now();
+    DateTime pickedDate = now.add(const Duration(days: 1));
+    TimeOfDay pickedTime = const TimeOfDay(hour: 8, minute: 0);
+
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: pickedDate,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+      helpText: 'Pilih Tanggal Publikasi Pertemuan',
+    );
+    if (selectedDate == null || !mounted) return;
+
+    final selectedTime = await showTimePicker(
+      context: context,
+      initialTime: pickedTime,
+      helpText: 'Pilih Jam Publikasi (WIB)',
+    );
+    if (selectedTime == null || !mounted) return;
+
+    final scheduledDateTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      selectedTime.hour,
+      selectedTime.minute,
+    );
+
+    if (scheduledDateTime.isBefore(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Waktu publikasi terjadwal harus di waktu mendatang.'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+      return;
+    }
+
+    try {
+      await _meetingRepository.updateMeetingStatus(
+        widget.meetingId,
+        ContentStatus.scheduled,
+        publishAt: scheduledDateTime,
+      );
+      setState(() {
+        _meeting = _meeting?.copyWith(
+          status: ContentStatus.scheduled,
+          publishAt: scheduledDateTime,
+        );
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Pertemuan berhasil dijadwalkan terbit pada ${scheduledDateTime.day.toString().padLeft(2, '0')}/${scheduledDateTime.month.toString().padLeft(2, '0')}/${scheduledDateTime.year} ${scheduledDateTime.hour.toString().padLeft(2, '0')}:${scheduledDateTime.minute.toString().padLeft(2, '0')} WIB.',
+            ),
+            backgroundColor: AppTheme.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menjadwalkan pertemuan: $e'), backgroundColor: AppTheme.error),
+        );
+      }
+    }
+  }
+
+  /// Memicu promosi pertemuan terjadwal yang sudah jatuh tempo (khusus staf).
+  /// Presisi jujur: promosi berjalan saat tombol/cron dipanggil, bukan tepat-menit otomatis.
+  Future<void> _syncScheduledMeetings() async {
+    if (_isSyncingSchedule) return;
+    setState(() => _isSyncingSchedule = true);
+    try {
+      final promoted = await _meetingRepository.syncScheduledMeetings(
+        classId: _meeting?.classId,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              promoted > 0
+                  ? '$promoted pertemuan terjadwal yang jatuh tempo berhasil dipublikasikan.'
+                  : 'Tidak ada pertemuan terjadwal yang jatuh tempo saat ini.',
+            ),
+            backgroundColor: AppTheme.success,
+          ),
+        );
+        await _loadMeetingDetail();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyinkronkan jadwal: $e'), backgroundColor: AppTheme.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSyncingSchedule = false);
+    }
+  }
+
   Future<void> _updateStatus(ContentStatus newStatus) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -116,7 +245,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
       try {
         await _meetingRepository.updateMeetingStatus(widget.meetingId, newStatus);
         setState(() {
-          _meeting = _meeting?.copyWith(status: newStatus);
+          _meeting = _meeting?.copyWith(status: newStatus, clearPublishAt: true);
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -510,24 +639,50 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
               tooltip: 'Hapus Pertemuan',
               onPressed: _showDeleteMeetingDialog,
             ),
-            PopupMenuButton<ContentStatus>(
+            IconButton(
+              icon: _isSyncingSchedule
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.sync_rounded),
+              tooltip: 'Sinkronkan Jadwal Publikasi',
+              onPressed: _isSyncingSchedule ? null : _syncScheduledMeetings,
+            ),
+            PopupMenuButton<String>(
               tooltip: 'Kelola Status',
               icon: const Icon(Icons.more_vert_rounded),
-              onSelected: _updateStatus,
+              onSelected: (val) {
+                if (val == 'publish') {
+                  _updateStatus(ContentStatus.published);
+                } else if (val == 'schedule') {
+                  _showScheduleDialog();
+                } else if (val == 'draft') {
+                  _updateStatus(ContentStatus.draft);
+                } else if (val == 'archive') {
+                  _updateStatus(ContentStatus.archived);
+                }
+              },
               itemBuilder: (context) => [
                 if (meeting.status != ContentStatus.published)
                   const PopupMenuItem(
-                    value: ContentStatus.published,
-                    child: Text('Publikasikan (Published)'),
+                    value: 'publish',
+                    child: Text('Publikasikan Sekarang (Published)'),
+                  ),
+                if (meeting.status != ContentStatus.scheduled)
+                  const PopupMenuItem(
+                    value: 'schedule',
+                    child: Text('Jadwalkan Publikasi (Scheduled)'),
                   ),
                 if (meeting.status != ContentStatus.draft)
                   const PopupMenuItem(
-                    value: ContentStatus.draft,
-                    child: Text('Jadikan Draft'),
+                    value: 'draft',
+                    child: Text('Jadikan Draft / Batalkan Jadwal'),
                   ),
                 if (meeting.status != ContentStatus.archived)
                   const PopupMenuItem(
-                    value: ContentStatus.archived,
+                    value: 'archive',
                     child: Text('Arsipkan (Archived)'),
                   ),
               ],
@@ -579,6 +734,41 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                         : 'Satu pertemuan menghubungkan kuis pretest, materi bacaan terstruktur, video pembelajaran, dan post test evaluasi.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
+                  if (meeting.status == ContentStatus.scheduled) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withAlpha(20),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.withAlpha(60)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.schedule_rounded, size: 20, color: Colors.blue),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Pertemuan Terjadwal',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blue),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  meeting.publishAt != null
+                                      ? 'Dijadwalkan terbit pada ${meeting.publishAt!.day.toString().padLeft(2, '0')}/${meeting.publishAt!.month.toString().padLeft(2, '0')}/${meeting.publishAt!.year} ${meeting.publishAt!.hour.toString().padLeft(2, '0')}:${meeting.publishAt!.minute.toString().padLeft(2, '0')} WIB. Publikasi berjalan saat cron/sinkronisasi berikutnya (dalam kisaran jadwal), bukan tepat-menit otomatis.'
+                                      : 'Pertemuan disiapkan untuk jadwal publikasi mendatang.',
+                                  style: const TextStyle(fontSize: 12, color: Colors.blue),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -602,6 +792,10 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
             isAvailable: meeting.materiId != null || isStaff,
             actionLabel: meeting.materiId != null ? 'Buka Materi' : 'Buat Materi',
             onTap: () async {
+              if (_isScheduledLockedForStudent) {
+                _showScheduledLockNotice();
+                return;
+              }
               if (meeting.materiId != null) {
                 await context.push('/materials/${meeting.materiId}?classId=${meeting.classId}&meetingId=${meeting.id}');
                 if (mounted) _loadMeetingDetail();
@@ -625,6 +819,10 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
             secondaryActionLabel: (isStaff && meeting.pretestId != null) ? 'Kelola Soal' : null,
             badgeNotice: meeting.pretestId != null ? 'Wajib pernah buka materi' : null,
             onTap: () async {
+              if (_isScheduledLockedForStudent) {
+                _showScheduledLockNotice();
+                return;
+              }
               if (meeting.pretestId != null) {
                 await context.push('/pretests/${meeting.pretestId}?classId=${meeting.classId}&meetingId=${meeting.id}');
                 if (mounted) _loadMeetingDetail();
@@ -649,6 +847,10 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
             isAvailable: meeting.videoId != null || isStaff,
             actionLabel: meeting.videoId != null ? 'Tonton Video' : 'Tambah Video',
             onTap: () async {
+              if (_isScheduledLockedForStudent) {
+                _showScheduledLockNotice();
+                return;
+              }
               if (meeting.videoId != null) {
                 await context.push('/videos/${meeting.videoId}?classId=${meeting.classId}&meetingId=${meeting.id}');
                 if (mounted) _loadMeetingDetail();
@@ -671,6 +873,10 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
             actionLabel: meeting.posttestId != null ? 'Mulai Post Test' : 'Buat Post Test',
             secondaryActionLabel: (isStaff && meeting.posttestId != null) ? 'Kelola Soal' : null,
             onTap: () async {
+              if (_isScheduledLockedForStudent) {
+                _showScheduledLockNotice();
+                return;
+              }
               if (meeting.posttestId != null) {
                 await context.push('/posttests/${meeting.posttestId}?classId=${meeting.classId}&meetingId=${meeting.id}');
                 if (mounted) _loadMeetingDetail();
@@ -818,6 +1024,9 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     switch (status) {
       case ContentStatus.published:
         color = AppTheme.success;
+        break;
+      case ContentStatus.scheduled:
+        color = Colors.blue;
         break;
       case ContentStatus.archived:
         color = AppTheme.textSecondary;

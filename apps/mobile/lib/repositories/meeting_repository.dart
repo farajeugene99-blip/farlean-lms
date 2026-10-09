@@ -1,14 +1,22 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import '../core/config/api_config.dart';
 import '../models/content_status.dart';
 import '../models/meeting.dart';
 
 class MeetingRepository {
   final FirebaseFirestore? _firestore;
+  final http.Client _httpClient;
+  final FirebaseAuth? _auth;
 
-  MeetingRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null);
+  MeetingRepository({FirebaseFirestore? firestore, http.Client? httpClient, FirebaseAuth? auth})
+      : _firestore = firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null),
+        _httpClient = httpClient ?? http.Client(),
+        _auth = auth ?? (Firebase.apps.isNotEmpty ? FirebaseAuth.instance : null);
 
   /// Mengambil seluruh pertemuan dalam kelas terurut nomor pertemuan
   /// Jika isStaff == false (mahasiswa), hanya mengembalikan pertemuan berstatus Published
@@ -22,7 +30,7 @@ class MeetingRepository {
           .where('class_id', isEqualTo: classId);
 
       if (!isStaff) {
-        query = query.where('status', isEqualTo: ContentStatus.published.value);
+        query = query.where('status', whereIn: [ContentStatus.published.value, ContentStatus.scheduled.value]);
       }
 
       final snapshot = await query.get();
@@ -48,7 +56,7 @@ class MeetingRepository {
           .where('class_id', isEqualTo: classId);
 
       if (!isStaff) {
-        query = query.where('status', isEqualTo: ContentStatus.published.value);
+        query = query.where('status', whereIn: [ContentStatus.published.value, ContentStatus.scheduled.value]);
       }
 
       final aggregateQuery = query.count();
@@ -116,16 +124,27 @@ class MeetingRepository {
     }
   }
 
-  /// Memperbarui status siklus hidup pertemuan (Draft -> Published -> Archived)
-  Future<void> updateMeetingStatus(String meetingId, ContentStatus status) async {
+  /// Memperbarui status siklus hidup pertemuan (Draft -> Scheduled -> Published -> Archived)
+  Future<void> updateMeetingStatus(
+    String meetingId,
+    ContentStatus status, {
+    DateTime? publishAt,
+  }) async {
     final firestore = _firestore;
     if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
 
     try {
-      await firestore.collection('meetings').doc(meetingId).update({
+      final updates = <String, dynamic>{
         'status': status.value,
         'updated_at': FieldValue.serverTimestamp(),
-      });
+      };
+      if (status == ContentStatus.scheduled && publishAt != null) {
+        updates['publish_at'] = Timestamp.fromDate(publishAt);
+      } else if (status == ContentStatus.published || status == ContentStatus.draft) {
+        updates['publish_at'] = null;
+      }
+
+      await firestore.collection('meetings').doc(meetingId).update(updates);
     } catch (e) {
       debugPrint('Gagal mengubah status pertemuan: $e');
       rethrow;
@@ -157,6 +176,33 @@ class MeetingRepository {
       debugPrint('Gagal menautkan modul ke pertemuan: $e');
       rethrow;
     }
+  }
+
+  /// Memicu promosi pertemuan terjadwal yang sudah jatuh tempo via backend.
+  /// Dipakai staf dari UI ("Sinkronkan jadwal") maupun otomatis setelah menjadwalkan.
+  /// Mengembalikan jumlah pertemuan yang dipromosikan pada pemanggilan ini.
+  Future<int> syncScheduledMeetings({String? classId}) async {
+    final token = await _auth?.currentUser?.getIdToken();
+    if (token == null && Firebase.apps.isNotEmpty) {
+      throw StateError('Pengguna belum terautentikasi.');
+    }
+
+    final response = await _httpClient.post(
+      Uri.parse(ApiConfig.publishMeetingsUrl),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        if (classId != null && classId.trim().isNotEmpty) 'classId': classId.trim(),
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return (data['promotedCount'] as num?)?.toInt() ?? 0;
+    }
+    throw StateError(data['error'] ?? 'Gagal menyinkronkan jadwal publikasi.');
   }
 
   /// Menghapus pertemuan
