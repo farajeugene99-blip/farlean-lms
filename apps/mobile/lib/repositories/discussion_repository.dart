@@ -243,4 +243,58 @@ class DiscussionRepository {
       rethrow;
     }
   }
+
+  /// Menandai thread diskusi telah dibaca oleh pengguna (ID deterministik: {uid}_{discussionId})
+  Future<void> markAsRead({
+    required String classId,
+    required String discussionId,
+  }) async {
+    final uid = _auth?.currentUser?.uid;
+    final firestore = _firestore;
+    if (uid == null || firestore == null) return;
+
+    final readDocId = '${uid}_$discussionId';
+    try {
+      await firestore.collection('discussion_reads').doc(readDocId).set({
+        'user_id': uid,
+        'discussion_id': discussionId,
+        'class_id': classId,
+        'last_read_at': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('Catatan markAsRead: $e');
+    }
+  }
+
+  /// Mengambil status baca (last_read_at) untuk daftar thread yang sedang dimuat per halaman
+  Future<Map<String, DateTime>> getReadStatesForDiscussions({
+    required String userId,
+    required List<String> discussionIds,
+  }) async {
+    final firestore = _firestore;
+    if (firestore == null || discussionIds.isEmpty) return {};
+
+    final result = <String, DateTime>{};
+    try {
+      final futures = discussionIds.map((discId) {
+        final readDocId = '${userId}_$discId';
+        return firestore.collection('discussion_reads').doc(readDocId).get();
+      });
+
+      final snapshots = await Future.wait(futures);
+      for (final snap in snapshots) {
+        if (snap.exists) {
+          final data = snap.data();
+          final discId = data?['discussion_id'] as String?;
+          final lastReadTimestamp = data?['last_read_at'];
+          if (discId != null && lastReadTimestamp is Timestamp) {
+            result[discId] = lastReadTimestamp.toDate();
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Catatan getReadStatesForDiscussions: $e');
+    }
+    return result;
+  }
 }

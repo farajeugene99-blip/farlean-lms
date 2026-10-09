@@ -164,6 +164,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const batch = db.batch();
     batch.set(discussionRef, newDiscussionData);
 
+    // Auto-read untuk pembuat thread di transaksi/batch yang sama
+    const authorReadRef = db.collection('discussion_reads').doc(`${user.uid}_${discussionRef.id}`);
+    batch.set(authorReadRef, {
+      user_id: user.uid,
+      discussion_id: discussionRef.id,
+      class_id: cleanClassId,
+      last_read_at: FieldValue.serverTimestamp(),
+    });
+
     const rateUpdates: Record<string, any> = {
       [lastThreadAtKey]: now,
     };

@@ -757,6 +757,61 @@ async function runTests() {
     );
   });
 
+  // ============================================================================
+  // SKENARIO 46 - 50: DISCUSSION READS RULES (STATUS BACA & PRIVASI)
+  // ============================================================================
+  const validReadDocId = `${userVerifiedUid}_${discActiveId}`;
+
+  await test('Skenario 46: Siswa aktif DAPAT menulis status baca miliknya dengan serverTimestamp', async () => {
+    await assertSucceeds(
+      verifiedUserDb.collection('discussion_reads').doc(validReadDocId).set({
+        user_id: userVerifiedUid,
+        discussion_id: discActiveId,
+        class_id: classId,
+        last_read_at: serverTimestamp(),
+      })
+    );
+  });
+
+  await test('Skenario 47: Siswa DIBLOKIR menulis status baca atas nama user lain (Anti-Impersonasi)', async () => {
+    await assertFails(
+      verifiedUserDb.collection('discussion_reads').doc(`other_user_${discActiveId}`).set({
+        user_id: 'other_user',
+        discussion_id: discActiveId,
+        class_id: classId,
+        last_read_at: serverTimestamp(),
+      })
+    );
+  });
+
+  await test('Skenario 48: Siswa DIBLOKIR menulis status baca dengan waktu klien palsu (bukan serverTimestamp)', async () => {
+    await assertFails(
+      verifiedUserDb.collection('discussion_reads').doc(validReadDocId).set({
+        user_id: userVerifiedUid,
+        discussion_id: discActiveId,
+        class_id: classId,
+        last_read_at: new Date(2020, 1, 1),
+      })
+    );
+  });
+
+  await test('Skenario 49: Siswa kelas lain DIBLOKIR menulis status baca di kelas yang bukan anggotanya', async () => {
+    await assertFails(
+      otherGuruDb.collection('discussion_reads').doc(`${otherGuruUid}_${discActiveId}`).set({
+        user_id: otherGuruUid,
+        discussion_id: discActiveId,
+        class_id: classId,
+        last_read_at: serverTimestamp(),
+      })
+    );
+  });
+
+  await test('Skenario 50: Guru / Staf DIBLOKIR membaca status baca milik siswa (Privasi Riwayat Baca)', async () => {
+    await assertFails(
+      guruDb.collection('discussion_reads').doc(validReadDocId).get()
+    );
+  });
+
   // Cleanup
   await testEnv.cleanup();
 

@@ -79,6 +79,10 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
           _replies = replies;
           _isLoading = false;
         });
+        _discussionRepository.markAsRead(
+          classId: widget.classId,
+          discussionId: widget.discussionId,
+        );
       }
     } catch (e) {
       if (mounted) {

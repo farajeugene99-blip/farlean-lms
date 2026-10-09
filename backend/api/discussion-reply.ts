@@ -178,6 +178,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         updated_at: FieldValue.serverTimestamp(),
       });
 
+      // Auto-read untuk pembuat balasan di transaksi yang sama (tidak unread bagi diri sendiri)
+      const authorReadRef = db.collection('discussion_reads').doc(`${user.uid}_${cleanDiscussionId}`);
+      transaction.set(authorReadRef, {
+        user_id: user.uid,
+        discussion_id: cleanDiscussionId,
+        class_id: classId,
+        last_read_at: FieldValue.serverTimestamp(),
+      }, { merge: true });
+
       // Update Rate Limit di transaksi yang sama
       const rateUpdates: Record<string, any> = {
         last_reply_at_timestamp: now,

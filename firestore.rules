@@ -402,6 +402,30 @@ service cloud.firestore {
     }
 
     // ============================================================================
+    // 13. DISCUSSION READS (STATUS BACA FORUM PER-USER)
+    // ============================================================================
+    match /discussion_reads/{readDocId} {
+      // Hanya pemilik status baca yang boleh membaca (privasi siswa, staf tidak boleh membaca riwayat baca pengguna lain)
+      allow read: if isVerified() && resource.data.user_id == request.auth.uid;
+
+      // Pembuatan & pembaruan status baca terproteksi:
+      // - Wajib email terverifikasi & active member di kelas tersebut
+      // - Dokumen ID wajib deterministik: {uid}_{discussion_id}
+      // - user_id wajib request.auth.uid (anti-impersonasi)
+      // - last_read_at wajib request.time server timestamp (anti-pemalsuan waktu baca)
+      // - Field dibatasi ketat: user_id, discussion_id, class_id, last_read_at
+      allow create, update: if isVerified()
+        && readDocId == request.auth.uid + '_' + request.resource.data.discussion_id
+        && request.resource.data.user_id == request.auth.uid
+        && isClassMemberActive(request.resource.data.class_id)
+        && request.resource.data.last_read_at == request.time
+        && request.resource.data.keys().hasAll(['user_id', 'discussion_id', 'class_id', 'last_read_at'])
+        && request.resource.data.keys().hasOnly(['user_id', 'discussion_id', 'class_id', 'last_read_at']);
+
+      allow delete: if false;
+    }
+
+    // ============================================================================
     // GLOBAL CATCH-ALL: Deny-by-default
     // ============================================================================
     match /{document=**} {

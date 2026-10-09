@@ -28,9 +28,10 @@ class DiscussionListScreen extends StatefulWidget {
 class _DiscussionListScreenState extends State<DiscussionListScreen> {
   late final DiscussionRepository _discussionRepository;
   List<Discussion> _discussions = [];
+  Map<String, DateTime> _readTimes = {};
   bool _isLoading = true;
   String? _errorMessage;
-  int _selectedFilterIndex = 0; // 0: Semua, 1: Belum Dibalas
+  int _selectedFilterIndex = 0; // 0: Semua, 1: Belum Dibalas, 2: Belum Dibaca
   int _discussionsGen = 0;
 
   @override
@@ -90,9 +91,35 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
         isStaff: isStaff,
         filterUnanswered: _selectedFilterIndex == 1,
       );
+
+      final uid = authProvider.appUser?.uid;
+      Map<String, DateTime> readStates = {};
+      if (uid != null && list.isNotEmpty) {
+        readStates = await _discussionRepository.getReadStatesForDiscussions(
+          userId: uid,
+          discussionIds: list.map((d) => d.id).toList(),
+        );
+      }
+
+      List<Discussion> displayList = list;
+      if (_selectedFilterIndex == 2 && uid != null) {
+        displayList = list.where((thread) {
+          final readTime = readStates[thread.id];
+          if (readTime != null) {
+            final activity = thread.lastActivityAt ?? thread.createdAt ?? DateTime.now();
+            return activity.isAfter(readTime);
+          } else {
+            // Thread belum pernah ada record baca: jika dibuat sendiri dan belum ada reply -> bukan unread
+            if (thread.authorId == uid && thread.replyCount == 0) return false;
+            return true;
+          }
+        }).toList();
+      }
+
       if (mounted && currentGen == _discussionsGen) {
         setState(() {
-          _discussions = list;
+          _discussions = displayList;
+          _readTimes = readStates;
           _isLoading = false;
         });
       }
@@ -381,35 +408,60 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
   Widget _buildFilterBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        children: [
-          ChoiceChip(
-            label: const Text('Semua Diskusi'),
-            selected: _selectedFilterIndex == 0,
-            onSelected: (selected) {
-              if (selected && _selectedFilterIndex != 0) {
-                setState(() => _selectedFilterIndex = 0);
-                _loadDiscussions();
-              }
-            },
-          ),
-          const SizedBox(width: 8),
-          ChoiceChip(
-            label: const Text('Belum Dibalas'),
-            selected: _selectedFilterIndex == 1,
-            onSelected: (selected) {
-              if (selected && _selectedFilterIndex != 1) {
-                setState(() => _selectedFilterIndex = 1);
-                _loadDiscussions();
-              }
-            },
-          ),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            ChoiceChip(
+              label: const Text('Semua Diskusi'),
+              selected: _selectedFilterIndex == 0,
+              onSelected: (selected) {
+                if (selected && _selectedFilterIndex != 0) {
+                  setState(() => _selectedFilterIndex = 0);
+                  _loadDiscussions();
+                }
+              },
+            ),
+            const SizedBox(width: 8),
+            ChoiceChip(
+              label: const Text('Belum Dibalas'),
+              selected: _selectedFilterIndex == 1,
+              onSelected: (selected) {
+                if (selected && _selectedFilterIndex != 1) {
+                  setState(() => _selectedFilterIndex = 1);
+                  _loadDiscussions();
+                }
+              },
+            ),
+            const SizedBox(width: 8),
+            ChoiceChip(
+              label: const Text('Belum Dibaca'),
+              selected: _selectedFilterIndex == 2,
+              onSelected: (selected) {
+                if (selected && _selectedFilterIndex != 2) {
+                  setState(() => _selectedFilterIndex = 2);
+                  _loadDiscussions();
+                }
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildEmptyDiscussionView() {
+    String emptyTitle = 'Belum Ada Diskusi';
+    String emptyDesc = 'Jadilah yang pertama memulai tanya jawab dan ruang kolaborasi di kelas ini.';
+
+    if (_selectedFilterIndex == 1) {
+      emptyTitle = 'Tidak Ada Diskusi Belum Dibalas';
+      emptyDesc = 'Semua topik diskusi telah memiliki balasan dari pengajar atau sesama anggota.';
+    } else if (_selectedFilterIndex == 2) {
+      emptyTitle = 'Semua Diskusi Sudah Dibaca';
+      emptyDesc = 'Tidak ada aktivitas atau balasan baru yang belum Anda baca pada halaman ini.';
+    }
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -423,14 +475,12 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              _selectedFilterIndex == 1 ? 'Tidak Ada Diskusi Belum Dibalas' : 'Belum Ada Diskusi',
+              emptyTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
-              _selectedFilterIndex == 1
-                  ? 'Semua topik diskusi telah memiliki balasan dari pengajar atau sesama anggota.'
-                  : 'Jadilah yang pertama memulai tanya jawab dan ruang kolaborasi di kelas ini.',
+              emptyDesc,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
             ),
@@ -442,6 +492,19 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
 
   Widget _buildThreadCard(Discussion thread, String classId) {
     final isArchived = thread.status == DiscussionStatus.archived;
+    final uid = context.read<AuthProvider>().appUser?.uid;
+    final readTime = _readTimes[thread.id];
+    bool isUnread = false;
+    if (uid != null && !isArchived) {
+      if (readTime != null) {
+        final activity = thread.lastActivityAt ?? thread.createdAt ?? DateTime.now();
+        isUnread = activity.isAfter(readTime);
+      } else {
+        if (thread.authorId != uid || thread.replyCount > 0) {
+          isUnread = true;
+        }
+      }
+    }
 
     return Card(
       elevation: 1,
@@ -451,6 +514,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
       ),
       child: InkWell(
         onTap: () async {
+          _discussionRepository.markAsRead(classId: classId, discussionId: thread.id);
           await context.push('/diskusi/${thread.id}?classId=$classId');
           if (mounted) {
             _loadDiscussions();
@@ -464,6 +528,17 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
             children: [
               Row(
                 children: [
+                  if (isUnread) ...[
+                    Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: const BoxDecoration(
+                        color: AppTheme.secondary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
                   Expanded(
                     child: Text(
                       thread.title,

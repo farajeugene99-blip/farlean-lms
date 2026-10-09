@@ -172,6 +172,15 @@ void main() {
 
       expect(find.text('Tanya Bab Database'), findsOneWidget);
       expect(find.text('Diskusi Algoritma Dijkstra'), findsNothing);
+
+      // Uji filter "Belum Dibaca"
+      await tester.tap(find.text('Belum Dibaca'));
+      await tester.pumpAndSettle();
+
+      // Thread d2 dibuat oleh u2 (orang lain) belum pernah dibaca u1 -> tampil di Belum Dibaca
+      expect(find.text('Tanya Bab Database'), findsOneWidget);
+      // Thread d1 dibuat oleh u1 (diri sendiri) dengan 3 balasan -> tampil di Belum Dibaca
+      expect(find.text('Diskusi Algoritma Dijkstra'), findsOneWidget);
     });
 
     testWidgets('ThreadDetailScreen displays thread body and replies, with active reply composer', (tester) async {
