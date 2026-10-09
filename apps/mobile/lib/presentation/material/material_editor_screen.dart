@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
@@ -40,6 +41,30 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
   bool _isLoadingInitial = false;
   String? _initError;
   MaterialContent? _existingMaterial;
+  bool _isDirty = false;
+
+  static const String _templateDeltaJson = '[{"insert":"Pendahuluan\\n"},{"insert":"Tujuan Pembelajaran\\n"},{"insert":"Pembahasan\\n"},{"insert":"Contoh\\n"},{"insert":"Rangkuman\\n"}]';
+
+  int get _charCount {
+    try {
+      return _quillController.document.toPlainText().trim().length;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  void _markDirty() {
+    if (!_isDirty && mounted) {
+      setState(() => _isDirty = true);
+    }
+  }
+
+  void _attachDirtyListeners() {
+    _titleController.removeListener(_markDirty);
+    _titleController.addListener(_markDirty);
+    _quillController.removeListener(_markDirty);
+    _quillController.addListener(_markDirty);
+  }
 
   @override
   void initState() {
@@ -63,6 +88,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
       document: doc,
       selection: const TextSelection.collapsed(offset: 0),
     );
+    _attachDirtyListeners();
 
     // Deep-link / Reload recovery guard: Ambil data lama agar tidak tertimpa kosong
     final isExisting = widget.materiId != null &&
@@ -109,10 +135,12 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
         document: doc,
         selection: const TextSelection.collapsed(offset: 0),
       );
+      _attachDirtyListeners();
 
       setState(() {
         _existingMaterial = fetched;
         _isLoadingInitial = false;
+        _isDirty = false;
       });
     } catch (e) {
       if (mounted) {
@@ -203,7 +231,124 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
         safeIndex,
         BlockEmbed.image(urlController.text.trim()),
       );
+      _markDirty();
     }
+  }
+
+  /// Menyisipkan template struktur materi (Pendahuluan → Tujuan → Pembahasan → Contoh → Rangkuman).
+  /// Hanya mengisi editor kosong agar tidak menimpa konten guru yang sudah ada.
+  void _insertTemplate() {
+    final plainText = _quillController.document.toPlainText().trim();
+    if (plainText.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Template hanya dapat disisipkan pada editor kosong agar konten tidak tertimpa.'),
+          backgroundColor: AppTheme.warning,
+        ),
+      );
+      return;
+    }
+    try {
+      final ops = jsonDecode(_templateDeltaJson) as List;
+      final doc = Document.fromJson(ops);
+      _quillController.dispose();
+      _quillController = QuillController(
+        document: doc,
+        selection: const TextSelection.collapsed(offset: 0),
+      );
+      _attachDirtyListeners();
+      _markDirty();
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Template materi berhasil disisipkan. Silakan lengkapi setiap bagian.'),
+          backgroundColor: AppTheme.success,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menyisipkan template: $e'), backgroundColor: AppTheme.error),
+      );
+    }
+  }
+
+  /// Pratinjau tampilan mahasiswa memakai renderer read-only yang sama dengan reader.
+  void _showStudentPreview() {
+    final title = _titleController.text.trim();
+    List previewOps;
+    try {
+      previewOps = _quillController.document.toDelta().toJson() as List;
+    } catch (_) {
+      previewOps = [
+        {'insert': 'Konten belum dapat dipratinjau.\n'}
+      ];
+    }
+    final previewDoc = Document.fromJson(previewOps);
+    final previewController = QuillController(
+      document: previewDoc,
+      selection: const TextSelection.collapsed(offset: 0),
+      readOnly: true,
+    );
+    final previewFocus = FocusNode();
+    final previewScroll = ScrollController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title.isEmpty ? 'Pratinjau Materi' : title),
+        content: SizedBox(
+          width: 440,
+          height: 420,
+          child: QuillEditor(
+            controller: previewController,
+            focusNode: previewFocus,
+            scrollController: previewScroll,
+            config: const QuillEditorConfig(
+              autoFocus: false,
+              expands: true,
+              padding: EdgeInsets.zero,
+              placeholder: 'Materi kosong.',
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    ).whenComplete(() {
+      previewController.dispose();
+      previewFocus.dispose();
+      previewScroll.dispose();
+    });
+  }
+
+  /// Konfirmasi keluar saat ada perubahan yang belum disimpan.
+  Future<bool> _confirmDiscardIfDirty() async {
+    if (!_isDirty || _isSaving) return true;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Buang Perubahan?'),
+        content: const Text(
+          'Ada perubahan materi yang belum disimpan. Keluar sekarang akan membuang perubahan tersebut.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Lanjutkan Mengedit'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+            child: const Text('Buang Perubahan'),
+          ),
+        ],
+      ),
+    );
+    return discard == true;
   }
 
   Future<void> _saveMaterial(ContentStatus status) async {
@@ -258,7 +403,10 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
       }
 
       if (!mounted) return;
-      setState(() => _isSaving = false);
+      setState(() {
+        _isSaving = false;
+        _isDirty = false;
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -298,10 +446,23 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
       );
     }
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        if (await _confirmDiscardIfDirty() && context.mounted) {
+          Navigator.pop(context, result);
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text(_existingMaterial == null ? 'Buat Materi Baru' : 'Edit Materi'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.visibility_outlined, size: 20),
+            tooltip: 'Pratinjau Tampilan Mahasiswa',
+            onPressed: _isSaving ? null : _showStudentPreview,
+          ),
           TextButton(
             onPressed: _isSaving ? null : () => _saveMaterial(ContentStatus.draft),
             child: const Text('Simpan Draft'),
@@ -353,7 +514,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
           ),
           const Divider(height: 1),
 
-          // Action Toolbar tambahan untuk Gambar Cloudinary
+          // Action Toolbar tambahan untuk Gambar Cloudinary + Template
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             color: AppTheme.surface,
@@ -362,18 +523,45 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
                 OutlinedButton.icon(
                   onPressed: _isSaving ? null : _showInsertImageDialog,
                   icon: const Icon(Icons.add_photo_alternate_outlined, size: 16),
-                  label: const Text('Sisipkan Gambar Cloudinary', style: TextStyle(fontSize: 12)),
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(120, 32)),
+                  label: const Text('Gambar', style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(minimumSize: const Size(90, 32)),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: _isSaving ? null : _insertTemplate,
+                  icon: const Icon(Icons.dashboard_customize_outlined, size: 16),
+                  label: const Text('Template', style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(minimumSize: const Size(90, 32)),
                 ),
                 const Spacer(),
-                const Text(
-                  'Format: Delta JSON',
-                  style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                Text(
+                  '$_charCount karakter • Format: Delta JSON',
+                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                 ),
               ],
             ),
           ),
           const Divider(height: 1),
+
+          // Peringatan materi kosong
+          if (_charCount == 0)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: AppTheme.warning.withAlpha(20),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 16, color: AppTheme.warning),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Materi masih kosong. Tulis konten atau sisipkan template sebelum menyimpan.',
+                      style: TextStyle(fontSize: 12, color: AppTheme.warning),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           // Quill Editor
           Expanded(
@@ -392,7 +580,21 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
               ),
             ),
           ),
+
+          // Info terakhir disimpan
+          if (_existingMaterial?.updatedAt != null)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              color: AppTheme.surface,
+              child: Text(
+                'Terakhir disimpan: ${_existingMaterial!.updatedAt!.day.toString().padLeft(2, '0')}/${_existingMaterial!.updatedAt!.month.toString().padLeft(2, '0')}/${_existingMaterial!.updatedAt!.year} ${_existingMaterial!.updatedAt!.hour.toString().padLeft(2, '0')}:${_existingMaterial!.updatedAt!.minute.toString().padLeft(2, '0')} • Versi ${_existingMaterial!.version}',
+                style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+            ),
         ],
+      ),
       ),
     );
   }
