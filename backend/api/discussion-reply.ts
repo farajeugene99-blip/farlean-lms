@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
 import { applyCors } from '../lib/cors';
 
-const ALLOWED_BODY_FIELDS = new Set(['discussionId', 'body', 'client_reply_id']);
+const ALLOWED_BODY_FIELDS = new Set(['discussionId', 'body', 'client_reply_id', 'parent_id']);
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 menit
 const MAX_REPLY_PER_WINDOW = 30;
 const REPLY_MIN_INTERVAL_MS = 3 * 1000; // 3 detik per user
@@ -27,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  const { discussionId, body: contentBody, client_reply_id } = body;
+  const { discussionId, body: contentBody, client_reply_id, parent_id } = body;
 
   if (!discussionId || typeof discussionId !== 'string' || discussionId.trim().length === 0) {
     return res.status(400).json({ error: 'discussionId wajib diisi.' });
@@ -45,6 +45,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
     cleanClientReplyId = client_reply_id.trim();
+  }
+
+  let cleanParentId: string | null = null;
+  if (parent_id !== undefined && parent_id !== null) {
+    if (typeof parent_id !== 'string' || parent_id.trim().length === 0) {
+      return res.status(400).json({ error: 'Format parent_id tidak valid.' });
+    }
+    cleanParentId = parent_id.trim();
   }
 
   const cleanDiscussionId = discussionId.trim();
@@ -149,6 +157,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    let resolvedParentId: string | null = null;
+    let parentAuthorName: string | null = null;
+
+    if (cleanParentId) {
+      const parentReplyDoc = await discussionRef.collection('replies').doc(cleanParentId).get();
+      if (!parentReplyDoc.exists) {
+        return res.status(404).json({ error: 'Balasan induk yang dituju tidak ditemukan.' });
+      }
+      const parentData = parentReplyDoc.data() || {};
+      if (parentData.status === 'ARCHIVED') {
+        return res.status(400).json({ error: 'Balasan induk telah diarsipkan. Pengiriman balasan ditolak.' });
+      }
+
+      // Twitter/X Flattening: Jika induk sudah memiliki parent_id, ratakan ke root parent
+      if (parentData.parent_id) {
+        resolvedParentId = parentData.parent_id;
+      } else {
+        resolvedParentId = cleanParentId;
+      }
+      parentAuthorName = parentData.author_display_name || 'Pengguna';
+    }
+
     // 7. Transaksi Atomik: Buat Balasan + Increment reply_count & update last_activity_at di Induk + update Rate Limit
     await db.runTransaction(async (transaction) => {
       const freshDiscussionDoc = await transaction.get(discussionRef);
@@ -160,7 +190,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // Tulis subkoleksi balasan
-      transaction.set(replyRef, {
+      const replyData: Record<string, any> = {
         discussion_id: cleanDiscussionId,
         author_id: user.uid,
         author_display_name: authorDisplayName,
@@ -169,7 +199,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: 'ACTIVE',
         created_at: FieldValue.serverTimestamp(),
         updated_at: FieldValue.serverTimestamp(),
-      });
+      };
+
+      if (resolvedParentId) {
+        replyData.parent_id = resolvedParentId;
+        replyData.parent_author_name = parentAuthorName;
+      }
+
+      transaction.set(replyRef, replyData);
 
       // Update metadata induk diskusi (menaikkan last_activity_at)
       transaction.update(discussionRef, {

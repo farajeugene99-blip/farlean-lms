@@ -241,6 +241,87 @@ void main() {
       expect(find.byIcon(Icons.send_rounded), findsOneWidget);
     });
 
+    testWidgets('ThreadDetailScreen displays Twitter/X thread hierarchy and allows replying to reply', (tester) async {
+      final fakeUser = FakeUser(uid: 'u1', email: 'user@farlean.edu');
+      final mockAuth = MockAuthService(mockCurrentUser: fakeUser);
+      final authProvider = AuthProvider(authService: mockAuth);
+
+      final repo = MockDiscussionRepoForUI(
+        mockDiscussions: [
+          const Discussion(
+            id: 'd1',
+            classId: 'c1',
+            title: 'Diskusi Algoritma',
+            body: 'Pertanyaan algoritma dasar.',
+            authorId: 'u1',
+            authorDisplayName: 'Mahasiswa 1',
+          ),
+        ],
+        mockReplies: [
+          const DiscussionReply(
+            id: 'rep_root_1',
+            discussionId: 'd1',
+            authorId: 'u2',
+            authorDisplayName: 'Dosen Pembimbing',
+            body: 'Gunakan pendekatan divide and conquer.',
+          ),
+          const DiscussionReply(
+            id: 'rep_child_1',
+            discussionId: 'd1',
+            authorId: 'u3',
+            authorDisplayName: 'Mahasiswa 2',
+            body: 'Apakah kompleksitasnya O(n log n)?',
+            parentId: 'rep_root_1',
+            parentAuthorName: 'Dosen Pembimbing',
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+            ChangeNotifierProvider<ClassProvider>(create: (_) => ClassProvider()),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: ThreadDetailScreen(
+              discussionId: 'd1',
+              classId: 'c1',
+              discussionRepository: repo,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Verifikasi kedua balasan tampil
+      expect(find.text('Dosen Pembimbing'), findsOneWidget);
+      expect(find.text('Gunakan pendekatan divide and conquer.'), findsOneWidget);
+      expect(find.text('Mahasiswa 2'), findsOneWidget);
+      expect(find.text('@Dosen Pembimbing'), findsOneWidget);
+      expect(find.text('Apakah kompleksitasnya O(n log n)?'), findsOneWidget);
+
+      // Verifikasi tombol Balas tersedia
+      expect(find.text('Balas'), findsNWidgets(2));
+
+      // Ketuk tombol Balas pada balasan Dosen
+      await tester.tap(find.text('Balas').first);
+      await tester.pumpAndSettle();
+
+      // Verifikasi banner Membalas muncul
+      expect(find.textContaining('Membalas @Dosen Pembimbing'), findsOneWidget);
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+
+      // Batalkan mode balas dengan tombol X
+      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.pumpAndSettle();
+
+      // Banner harus hilang
+      expect(find.textContaining('Membalas @Dosen Pembimbing'), findsNothing);
+    });
+
     testWidgets('ThreadDetailScreen displays archived banner and disables composer on ARCHIVED thread', (tester) async {
       final fakeUser = FakeUser(uid: 'u1', email: 'user@farlean.edu');
       final mockAuth = MockAuthService(mockCurrentUser: fakeUser);

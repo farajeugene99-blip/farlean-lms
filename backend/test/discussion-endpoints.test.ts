@@ -380,6 +380,118 @@ async function runDiscussionTests() {
     }
   });
 
+  // 9. Mendukung pengiriman balasan berantai (Thread reply dengan parent_id)
+  let rootReplyId = '';
+  await test('9. /api/discussion-reply mendukung parent_id dan menyimpan relasi thread', async () => {
+    // Un-archive discussion for testing
+    await db.collection('discussions').doc(createdDiscussionId).update({ status: 'ACTIVE' });
+    await db.collection('rate_limits').doc(teacherUid).delete();
+    await db.collection('rate_limits').doc(studentUid).delete();
+
+    setTokenVerifier(async () => ({
+      uid: teacherUid,
+      email: 'dosen@dosen.farlean.edu',
+      email_verified: true,
+      role: 'GURU',
+    } as any));
+
+    // Kirim balasan root baru
+    const req1: any = {
+      method: 'POST',
+      headers: { authorization: 'Bearer mock-token' },
+      body: {
+        discussionId: createdDiscussionId,
+        body: 'Ini balasan induk tingkat pertama.',
+      },
+    };
+    const res1 = createMockRes();
+    await discussionReplyHandler(req1, res1 as any);
+    if (res1.statusCode !== 201) throw new Error(`Expected 201, got ${res1.statusCode}: ${JSON.stringify(res1.jsonData)}`);
+    rootReplyId = res1.jsonData.replyId;
+
+    // Siswa membalas ke balasan induk (child reply)
+    setTokenVerifier(async () => ({
+      uid: studentUid,
+      email: 'ahmad@students.farlean.edu',
+      email_verified: true,
+      role: 'USER',
+    } as any));
+
+    const req2: any = {
+      method: 'POST',
+      headers: { authorization: 'Bearer mock-token' },
+      body: {
+        discussionId: createdDiscussionId,
+        body: 'Saya setuju dengan poin tersebut.',
+        parent_id: rootReplyId,
+      },
+    };
+    const res2 = createMockRes();
+    await discussionReplyHandler(req2, res2 as any);
+    if (res2.statusCode !== 201) throw new Error(`Expected 201, got ${res2.statusCode}: ${JSON.stringify(res2.jsonData)}`);
+
+    const childReplyDoc = await db.collection('discussions').doc(createdDiscussionId).collection('replies').doc(res2.jsonData.replyId).get();
+    if (!childReplyDoc.exists) throw new Error('Child reply doc not found');
+    const childData = childReplyDoc.data();
+    if (childData?.parent_id !== rootReplyId) throw new Error(`Expected parent_id ${rootReplyId}, got ${childData?.parent_id}`);
+    if (!childData?.parent_author_name) throw new Error('Expected parent_author_name to be set');
+  });
+
+  // 10. Meratakan reply-ke-anak ke root parent (Twitter/X style flatten depth-1)
+  await test('10. /api/discussion-reply meratakan nesting bertingkat ke root parent (max depth 1)', async () => {
+    // Ambil child reply yang baru dibuat
+    const repliesSnap = await db.collection('discussions').doc(createdDiscussionId).collection('replies')
+      .where('parent_id', '==', rootReplyId).limit(1).get();
+    const firstChildId = repliesSnap.docs[0].id;
+
+    await db.collection('rate_limits').doc(teacherUid).delete();
+
+    // Balas ke child reply -> harus diratakan ke rootReplyId
+    setTokenVerifier(async () => ({
+      uid: teacherUid,
+      email: 'dosen@dosen.farlean.edu',
+      email_verified: true,
+      role: 'GURU',
+    } as any));
+
+    const req: any = {
+      method: 'POST',
+      headers: { authorization: 'Bearer mock-token' },
+      body: {
+        discussionId: createdDiscussionId,
+        body: 'Menjawab balasan anak (harus diratakan ke induk).',
+        parent_id: firstChildId,
+      },
+    };
+    const res = createMockRes();
+    await discussionReplyHandler(req, res as any);
+    if (res.statusCode !== 201) throw new Error(`Expected 201, got ${res.statusCode}: ${JSON.stringify(res.jsonData)}`);
+
+    const newChildDoc = await db.collection('discussions').doc(createdDiscussionId).collection('replies').doc(res.jsonData.replyId).get();
+    const newChildData = newChildDoc.data();
+    if (newChildData?.parent_id !== rootReplyId) {
+      throw new Error(`Expected flattened parent_id ${rootReplyId}, got ${newChildData?.parent_id}`);
+    }
+  });
+
+  // 11. Menolak parent_id yang tidak ada (404)
+  await test('11. /api/discussion-reply menolak parent_id tidak ditemukan (404)', async () => {
+    await db.collection('rate_limits').doc(teacherUid).delete();
+
+    const req: any = {
+      method: 'POST',
+      headers: { authorization: 'Bearer mock-token' },
+      body: {
+        discussionId: createdDiscussionId,
+        body: 'Balasan ke parent fiktif.',
+        parent_id: 'non_existent_reply_999',
+      },
+    };
+    const res = createMockRes();
+    await discussionReplyHandler(req, res as any);
+    if (res.statusCode !== 404) throw new Error(`Expected 404, got ${res.statusCode}`);
+  });
+
   resetTokenVerifier();
 
   console.log(`\n========================================`);

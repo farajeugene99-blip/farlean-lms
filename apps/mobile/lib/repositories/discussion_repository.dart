@@ -123,6 +123,7 @@ class DiscussionRepository {
     required String discussionId,
     required String body,
     String? clientReplyId,
+    String? parentId,
   }) async {
     if (discussionId.trim().isEmpty) throw ArgumentError('discussionId tidak boleh kosong.');
     if (body.trim().isEmpty) throw ArgumentError('Isi balasan tidak boleh kosong.');
@@ -143,6 +144,8 @@ class DiscussionRepository {
         'body': body.trim(),
         if (clientReplyId != null && clientReplyId.trim().isNotEmpty)
           'client_reply_id': clientReplyId.trim(),
+        if (parentId != null && parentId.trim().isNotEmpty)
+          'parent_id': parentId.trim(),
       }),
     );
 

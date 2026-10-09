@@ -117,6 +117,8 @@ class DiscussionReply {
   final String authorDisplayName;
   final String body;
   final DiscussionStatus status;
+  final String? parentId;
+  final String? parentAuthorName;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -127,6 +129,8 @@ class DiscussionReply {
     required this.authorDisplayName,
     required this.body,
     this.status = DiscussionStatus.active,
+    this.parentId,
+    this.parentAuthorName,
     this.createdAt,
     this.updatedAt,
   });
@@ -150,6 +154,8 @@ class DiscussionReply {
       authorDisplayName: map['author_display_name'] as String? ?? 'Pengguna',
       body: map['body'] as String? ?? '',
       status: DiscussionStatus.fromString(map['status'] as String?),
+      parentId: map['parent_id'] as String?,
+      parentAuthorName: map['parent_author_name'] as String?,
       createdAt: parseDate(map['created_at']),
       updatedAt: parseDate(map['updated_at']),
     );
@@ -162,6 +168,8 @@ class DiscussionReply {
       'author_display_name': authorDisplayName,
       'body': body,
       'status': status.value,
+      if (parentId != null) 'parent_id': parentId,
+      if (parentAuthorName != null) 'parent_author_name': parentAuthorName,
       'created_at': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
       'updated_at': updatedAt != null ? Timestamp.fromDate(updatedAt!) : FieldValue.serverTimestamp(),
     };
