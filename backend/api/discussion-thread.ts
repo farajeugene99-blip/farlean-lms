@@ -2,9 +2,10 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
 import { applyCors } from '../lib/cors';
 
-const ALLOWED_BODY_FIELDS = new Set(['classId', 'title', 'body']);
+const ALLOWED_BODY_FIELDS = new Set(['classId', 'title', 'body', 'client_request_id']);
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 menit
 const MAX_THREAD_PER_WINDOW = 10;
+const THREAD_MIN_INTERVAL_MS = 10 * 1000; // 10 detik per class
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) return;
@@ -26,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  const { classId, title, body: contentBody } = body;
+  const { classId, title, body: contentBody, client_request_id } = body;
 
   if (!classId || typeof classId !== 'string' || classId.trim().length === 0) {
     return res.status(400).json({ error: 'classId wajib diisi.' });
@@ -40,14 +41,70 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Isi diskusi harus antara 3 hingga 5000 karakter.' });
   }
 
+  let cleanClientRequestId: string | null = null;
+  if (client_request_id !== undefined && client_request_id !== null) {
+    if (typeof client_request_id !== 'string' || !/^[A-Za-z0-9_-]{8,64}$/.test(client_request_id.trim())) {
+      return res.status(400).json({
+        error: 'Format client_request_id tidak valid (harus 8-64 karakter alfanumerik, dash, atau underscore).',
+      });
+    }
+    cleanClientRequestId = client_request_id.trim();
+  }
+
   const cleanClassId = classId.trim();
 
   try {
-    // 3. Rate Limiting Per-User
+    // 3. Cek Idempotensi Terlebih Dahulu (Sebelum Rate Limit)
+    // Menggunakan ID ber-namespace: {uid}_{client_request_id}
+    const discussionRef = cleanClientRequestId
+      ? db.collection('discussions').doc(`${user.uid}_${cleanClientRequestId}`)
+      : db.collection('discussions').doc();
+
+    if (cleanClientRequestId) {
+      const existingDoc = await discussionRef.get();
+      if (existingDoc.exists) {
+        const existingData = existingDoc.data() || {};
+        if (existingData.author_id === user.uid) {
+          // Bandingkan payload
+          if (
+            existingData.class_id === cleanClassId &&
+            existingData.title === title.trim() &&
+            existingData.body === contentBody.trim()
+          ) {
+            // Retry yang sah: kembalikan dokumen yang sama tanpa kena penalti rate limit
+            return res.status(200).json({
+              success: true,
+              discussionId: existingDoc.id,
+              idempotent: true,
+              message: 'Diskusi berhasil dimuat kembali (idempotent).',
+            });
+          } else {
+            // ID sama tetapi payload berbeda
+            return res.status(409).json({
+              error: 'client_request_id sudah pernah digunakan dengan data diskusi yang berbeda.',
+            });
+          }
+        } else {
+          return res.status(409).json({
+            error: 'client_request_id mengalami konflik kepemilikan dokumen.',
+          });
+        }
+      }
+    }
+
+    // 4. Rate Limiting Per-User (Hanya untuk dokumen baru)
     const rateLimitRef = db.collection('rate_limits').doc(user.uid);
     const rateLimitDoc = await rateLimitRef.get();
     const now = Date.now();
     const rateData = rateLimitDoc.data() || {};
+
+    const lastThreadAtKey = `thread_last_at_${cleanClassId}`;
+    const lastThreadAt = rateData[lastThreadAtKey] || 0;
+    if (now - lastThreadAt < THREAD_MIN_INTERVAL_MS) {
+      return res.status(429).json({
+        error: 'Mohon tunggu 10 detik sebelum membuat diskusi baru di kelas ini.',
+      });
+    }
 
     const windowStart = rateData.thread_window_start || 0;
     const threadCount = rateData.thread_count || 0;
@@ -60,7 +117,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // 4. Periksa Kelas
+    // 5. Periksa Kelas
     const classDoc = await db.collection('classes').doc(cleanClassId).get();
     if (!classDoc.exists) {
       return res.status(404).json({ error: 'Kelas tidak ditemukan.' });
@@ -71,7 +128,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Kelas berstatus Archived. Pembuatan diskusi baru ditolak.' });
     }
 
-    // 5. Verifikasi Keanggotaan & Dapatkan Nama Terpercaya (Anti-Impersonasi)
+    // 6. Verifikasi Keanggotaan & Dapatkan Nama Terpercaya (Anti-Impersonasi)
     const role = (user as any).role || 'USER';
     const isOwner = classData.teacher_id === user.uid || role === 'ADMIN';
 
@@ -89,8 +146,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // 6. Simpan Dokumen Diskusi
-    const discussionRef = db.collection('discussions').doc();
+    // 7. Simpan Dokumen Diskusi Secara Atomik bersama Rate Limit
     const newDiscussionData = {
       class_id: cleanClassId,
       title: title.trim(),
@@ -99,25 +155,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       author_display_name: authorDisplayName,
       status: 'ACTIVE',
       reply_count: 0,
+      client_request_id: cleanClientRequestId,
       last_activity_at: FieldValue.serverTimestamp(),
       created_at: FieldValue.serverTimestamp(),
       updated_at: FieldValue.serverTimestamp(),
     };
 
-    await discussionRef.set(newDiscussionData);
+    const batch = db.batch();
+    batch.set(discussionRef, newDiscussionData);
 
-    // 7. Update Counter Rate Limit
+    const rateUpdates: Record<string, any> = {
+      [lastThreadAtKey]: now,
+    };
     if (now - windowStart < RATE_LIMIT_WINDOW_MS) {
-      await rateLimitRef.set(
-        { thread_count: threadCount + 1, last_thread_at: FieldValue.serverTimestamp() },
-        { merge: true }
-      );
+      rateUpdates.thread_count = threadCount + 1;
     } else {
-      await rateLimitRef.set(
-        { thread_window_start: now, thread_count: 1, last_thread_at: FieldValue.serverTimestamp() },
-        { merge: true }
-      );
+      rateUpdates.thread_window_start = now;
+      rateUpdates.thread_count = 1;
     }
+    batch.set(rateLimitRef, rateUpdates, { merge: true });
+
+    await batch.commit();
 
     return res.status(201).json({
       success: true,

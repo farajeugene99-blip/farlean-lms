@@ -146,6 +146,7 @@ async function runDiscussionTests() {
 
   // 4. Anggota aktif berhasil membuat thread dengan display_name terpercaya dari DB (201)
   let createdDiscussionId = '';
+  const testClientReqId = 'req_id_' + Date.now();
   await test('4. Anggota aktif berhasil membuat thread dan display_name aman dari impersonasi (201)', async () => {
     setTokenVerifier(async () => ({
       uid: studentUid,
@@ -162,6 +163,7 @@ async function runDiscussionTests() {
         classId,
         title: 'Tanya Mengenai Algoritma Greedy',
         body: 'Apakah algoritma greedy selalu menghasilkan solusi optimal untuk knapsack problem?',
+        client_request_id: testClientReqId,
       },
     };
     const res = createMockRes();
@@ -182,6 +184,85 @@ async function runDiscussionTests() {
     }
     if (data.status !== 'ACTIVE') throw new Error('Expected status ACTIVE');
     if (data.reply_count !== 0) throw new Error('Expected reply_count 0');
+  });
+
+  // 4b. Idempotensi: retry kirim dengan client_request_id sama dan payload sama mengembalikan 200 OK (idempotent: true)
+  await test('4b. Retry dengan client_request_id sama mengembalikan dokumen yang sama tanpa kena rate-limit (200)', async () => {
+    setTokenVerifier(async () => ({
+      uid: studentUid,
+      email: 'ahmad@students.farlean.edu',
+      email_verified: true,
+      role: 'USER',
+    } as any));
+
+    const req: any = {
+      method: 'POST',
+      headers: { authorization: 'Bearer mock-token' },
+      body: {
+        classId,
+        title: 'Tanya Mengenai Algoritma Greedy',
+        body: 'Apakah algoritma greedy selalu menghasilkan solusi optimal untuk knapsack problem?',
+        client_request_id: testClientReqId,
+      },
+    };
+    const res = createMockRes();
+    await discussionThreadHandler(req, res as any);
+
+    if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+    if (res.jsonData?.discussionId !== createdDiscussionId) {
+      throw new Error(`Expected same discussionId, got ${res.jsonData?.discussionId}`);
+    }
+    if (res.jsonData?.idempotent !== true) throw new Error('Expected idempotent: true');
+  });
+
+  // 4c. Konflik Idempotensi: client_request_id sama tetapi payload berbeda ditolak (409)
+  await test('4c. client_request_id sama dengan isi berbeda ditolak (409 Conflict)', async () => {
+    setTokenVerifier(async () => ({
+      uid: studentUid,
+      email: 'ahmad@students.farlean.edu',
+      email_verified: true,
+      role: 'USER',
+    } as any));
+
+    const req: any = {
+      method: 'POST',
+      headers: { authorization: 'Bearer mock-token' },
+      body: {
+        classId,
+        title: 'Judul Diubah Berbeda',
+        body: 'Isi berbeda',
+        client_request_id: testClientReqId,
+      },
+    };
+    const res = createMockRes();
+    await discussionThreadHandler(req, res as any);
+
+    if (res.statusCode !== 409) throw new Error(`Expected 409, got ${res.statusCode}`);
+  });
+
+  // 4d. Rate limit: thread baru dengan client_request_id berbeda dalam interval < 10 detik ditolak (429)
+  await test('4d. Pembuatan thread baru dalam selang < 10 detik ditolak rate limit (429)', async () => {
+    setTokenVerifier(async () => ({
+      uid: studentUid,
+      email: 'ahmad@students.farlean.edu',
+      email_verified: true,
+      role: 'USER',
+    } as any));
+
+    const req: any = {
+      method: 'POST',
+      headers: { authorization: 'Bearer mock-token' },
+      body: {
+        classId,
+        title: 'Thread Baru Terlalu Cepat',
+        body: 'Harus kena 429',
+        client_request_id: 'req_id_diff_' + Date.now(),
+      },
+    };
+    const res = createMockRes();
+    await discussionThreadHandler(req, res as any);
+
+    if (res.statusCode !== 429) throw new Error(`Expected 429, got ${res.statusCode}`);
   });
 
   // 5. Guru pemilik berhasil membuat thread (201)
