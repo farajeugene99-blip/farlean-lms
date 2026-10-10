@@ -51,13 +51,17 @@ class FirebaseConfig {
 
     // B. Firestore Emulator
     try {
+      // Pada platform non-web, nonaktifkan offline persistence sebelum menghubungkan ke emulator.
+      // Pada Flutter Web, useFirestoreEmulator mengonfigurasi WebChannel transport secara langsung.
+      if (!kIsWeb) {
+        FirebaseFirestore.instance.settings = const Settings(
+          persistenceEnabled: false,
+        );
+      }
       FirebaseFirestore.instance.useFirestoreEmulator(
         host,
         firestoreEmulatorPort,
         sslEnabled: false,
-      );
-      FirebaseFirestore.instance.settings = const Settings(
-        persistenceEnabled: false,
       );
       debugPrint('🛡️ [FirebaseConfig] Firestore Emulator aktif di $host:$firestoreEmulatorPort');
     } catch (e) {
