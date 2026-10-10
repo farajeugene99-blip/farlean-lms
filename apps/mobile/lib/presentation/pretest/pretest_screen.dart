@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../models/content_status.dart';
 import '../../models/pretest.dart';
 import '../../models/question.dart';
 import '../../models/test_attempt.dart';
@@ -22,6 +23,7 @@ class PretestScreen extends StatefulWidget {
   final PretestRepository? pretestRepository;
   final AttemptRepository? attemptRepository;
   final MaterialRepository? materialRepository;
+  final DateTime Function()? nowProvider;
 
   const PretestScreen({
     super.key,
@@ -31,6 +33,7 @@ class PretestScreen extends StatefulWidget {
     this.pretestRepository,
     this.attemptRepository,
     this.materialRepository,
+    this.nowProvider,
   });
 
   @override
@@ -103,6 +106,15 @@ class _PretestScreenState extends State<PretestScreen> {
       }
       _pretest = pretest;
 
+      // Enforce status Published di sisi klien (Client Published Gate)
+      if (pretest.status != ContentStatus.published) {
+        setState(() {
+          _errorMessage = 'Kuis pretest masih berstatus ${pretest.status.value} dan belum dibuka.';
+          _isLoading = false;
+        });
+        return;
+      }
+
       final effectiveClassId = widget.classId.isNotEmpty ? widget.classId : pretest.classId;
       final effectiveMeetingId = widget.meetingId.isNotEmpty ? widget.meetingId : pretest.meetingId;
 
@@ -143,6 +155,24 @@ class _PretestScreenState extends State<PretestScreen> {
       );
 
       if (inProgressAttempt != null) {
+        // Cek apakah attempt recovery ini sudah kadaluarsa (expired)
+        final now = (widget.nowProvider ?? DateTime.now)();
+        final durationSeconds = pretest.duration * 60;
+        final startedAt = inProgressAttempt.startedAt ?? now;
+        final elapsedSeconds = now.difference(startedAt).inSeconds;
+        final remaining = durationSeconds - elapsedSeconds;
+
+        if (remaining <= 0) {
+          // Attempt basi. Jika tidak ada jawaban sama sekali, tandai sesi berakhir tanpa auto-submit 0
+          if (inProgressAttempt.answers.isEmpty) {
+            setState(() {
+              _errorMessage = 'Sesi pengerjaan sebelumnya telah berakhir sebelum jawaban dikumpulkan.';
+              _isLoading = false;
+            });
+            return;
+          }
+        }
+
         // RECOVERY SESSION
         _currentAttempt = inProgressAttempt;
         _answers.addAll(inProgressAttempt.answers);
@@ -200,9 +230,10 @@ class _PretestScreenState extends State<PretestScreen> {
   void _startServerTimer() {
     if (_pretest == null || _currentAttempt == null) return;
 
+    final now = (widget.nowProvider ?? DateTime.now)();
     final durationSeconds = _pretest!.duration * 60;
-    final startedAt = _currentAttempt!.startedAt ?? DateTime.now();
-    final elapsedSeconds = DateTime.now().difference(startedAt).inSeconds;
+    final startedAt = _currentAttempt!.startedAt ?? now;
+    final elapsedSeconds = now.difference(startedAt).inSeconds;
 
     _remainingSeconds = durationSeconds - elapsedSeconds;
     if (_remainingSeconds <= 0) {
@@ -250,7 +281,7 @@ class _PretestScreenState extends State<PretestScreen> {
         backgroundColor: AppTheme.warning,
       ),
     );
-    await _submitAttempt();
+    await _submitAttempt(autoSubmit: true, reason: 'timeout');
   }
 
   Future<void> _confirmSubmit() async {
@@ -277,13 +308,16 @@ class _PretestScreenState extends State<PretestScreen> {
     );
 
     if (confirmed == true) {
-      await _submitAttempt();
+      await _submitAttempt(autoSubmit: false, reason: 'manual');
     }
   }
 
-  Future<void> _submitAttempt() async {
+  Future<void> _submitAttempt({bool autoSubmit = false, String? reason}) async {
     if (_isSubmitting || _currentAttempt == null) return;
     setState(() => _isSubmitting = true);
+
+    _countdownTimer?.cancel();
+    _autosaveDebounce?.cancel();
 
     try {
       // Simpan jawaban final sebelum pemanggilan grade
@@ -293,17 +327,15 @@ class _PretestScreenState extends State<PretestScreen> {
       );
 
       // Panggil backend /api/grade untuk grading server-side yang idempoten
-      GradeResult? gradeResult;
-      try {
-        final gradeService = GradeService();
-        gradeResult = await gradeService.submitAndGrade(_currentAttempt!.id);
-      } catch (e) {
-        debugPrint('Catatan grading backend: $e');
-      }
+      final gradeService = GradeService();
+      final gradeResult = await gradeService.submitAndGrade(
+        _currentAttempt!.id,
+        autoSubmit: autoSubmit,
+        reason: reason,
+      );
 
-      // Pengerjaan disimpan, navigasi kembali dengan pesan
+      // Pengerjaan disimpan dan berhasil dinilai
       if (!mounted) return;
-      setState(() => _isSubmitting = false);
 
       await showDialog<void>(
         context: context,
@@ -320,22 +352,20 @@ class _PretestScreenState extends State<PretestScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (gradeResult != null) ...[
-                Text(
-                  'Skor Akhir: ${gradeResult.score}',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primary,
-                  ),
+              Text(
+                'Skor Akhir: ${gradeResult.score}',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primary,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  'Poin diperoleh: ${gradeResult.pointsEarned} dari ${gradeResult.totalPoints} poin',
-                  style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-                ),
-                const SizedBox(height: 12),
-              ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Poin diperoleh: ${gradeResult.pointsEarned} dari ${gradeResult.totalPoints} poin',
+                style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 12),
               const Text(
                 'Jawaban Anda telah tersimpan dengan aman dan sesi kuis telah dikunci.',
                 style: TextStyle(color: AppTheme.textSecondary),

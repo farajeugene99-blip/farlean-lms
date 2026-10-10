@@ -321,7 +321,18 @@ service cloud.firestore {
         && request.resource.data.status == 'in_progress'
         && request.resource.data.started_at == request.time
         && (!('score' in request.resource.data) || request.resource.data.score == null)
-        && (!('kind' in request.resource.data) || request.resource.data.kind in ['pretest', 'posttest']);
+        && (!('kind' in request.resource.data) || request.resource.data.kind in ['pretest', 'posttest'])
+        && (
+          (request.resource.data.get('kind', 'pretest') == 'pretest'
+            && exists(/databases/$(database)/documents/pretests/$(request.resource.data.test_id))
+            && get(/databases/$(database)/documents/pretests/$(request.resource.data.test_id)).data.status == 'Published'
+            && get(/databases/$(database)/documents/pretests/$(request.resource.data.test_id)).data.class_id == request.resource.data.class_id)
+          ||
+          (request.resource.data.get('kind', 'pretest') == 'posttest'
+            && exists(/databases/$(database)/documents/posttests/$(request.resource.data.test_id))
+            && get(/databases/$(database)/documents/posttests/$(request.resource.data.test_id)).data.status == 'Published'
+            && get(/databases/$(database)/documents/posttests/$(request.resource.data.test_id)).data.class_id == request.resource.data.class_id)
+        );
 
       // Mengupdate attempt (Autosave Jawaban):
       // - Hanya boleh selama status masih 'in_progress'

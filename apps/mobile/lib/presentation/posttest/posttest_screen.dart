@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../models/content_status.dart';
 import '../../models/posttest.dart';
 import '../../models/question.dart';
 import '../../models/test_attempt.dart';
@@ -18,6 +19,7 @@ class PosttestScreen extends StatefulWidget {
   final String meetingId;
   final PosttestRepository? posttestRepository;
   final AttemptRepository? attemptRepository;
+  final DateTime Function()? nowProvider;
 
   const PosttestScreen({
     super.key,
@@ -26,6 +28,7 @@ class PosttestScreen extends StatefulWidget {
     this.meetingId = '',
     this.posttestRepository,
     this.attemptRepository,
+    this.nowProvider,
   });
 
   @override
@@ -93,6 +96,25 @@ class _PosttestScreenState extends State<PosttestScreen> {
         });
         return;
       }
+      _posttest = posttest;
+
+      // Enforce status Published di sisi klien
+      if (posttest.status != ContentStatus.published) {
+        setState(() {
+          _errorMessage = 'Kuis post test masih berstatus ${posttest.status.value} dan belum dibuka.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final effectiveClassId = widget.classId.isNotEmpty ? widget.classId : posttest.classId;
+      if (effectiveClassId.isEmpty) {
+        setState(() {
+          _errorMessage = 'Kuis post test tidak terhubung dengan kelas yang valid.';
+          _isLoading = false;
+        });
+        return;
+      }
 
       final rawQuestions = await _posttestRepository.getQuestions(widget.posttestId);
       if (rawQuestions.isEmpty) {
@@ -131,7 +153,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
         attempt = await _attemptRepository.startAttempt(
           userId: uid,
           testId: widget.posttestId,
-          classId: widget.classId,
+          classId: effectiveClassId,
           attemptNo: attemptCount + 1,
           questionOrder: questionOrder,
           kind: 'posttest',
@@ -139,6 +161,23 @@ class _PosttestScreenState extends State<PosttestScreen> {
 
         _questions = shuffled;
       } else {
+        // Cek apakah attempt recovery ini sudah kadaluarsa (expired)
+        final now = (widget.nowProvider ?? DateTime.now)();
+        final durationSeconds = posttest.duration * 60;
+        final startedAt = attempt.startedAt ?? now;
+        final elapsedSeconds = now.difference(startedAt).inSeconds;
+        final remaining = durationSeconds - elapsedSeconds;
+
+        if (remaining <= 0) {
+          if (attempt.answers.isEmpty) {
+            setState(() {
+              _errorMessage = 'Sesi pengerjaan sebelumnya telah berakhir sebelum jawaban dikumpulkan.';
+              _isLoading = false;
+            });
+            return;
+          }
+        }
+
         // Pulihkan urutan soal dari attempt sebelumnya
         final questionMap = {for (final q in rawQuestions) q.id: q};
         _questions = attempt.questionOrder
@@ -154,12 +193,12 @@ class _PosttestScreenState extends State<PosttestScreen> {
         _answers.addAll(attempt.answers);
       }
 
+      _currentAttempt = attempt;
+
       // 2. Hitung Sisa Waktu dari started_at
       _startTimer(posttest, attempt);
 
       setState(() {
-        _posttest = posttest;
-        _currentAttempt = attempt;
         _isLoading = false;
       });
     } catch (e) {
@@ -174,7 +213,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
 
   void _startTimer(Posttest posttest, TestAttempt attempt) {
     _countdownTimer?.cancel();
-    final now = DateTime.now();
+    final now = (widget.nowProvider ?? DateTime.now)();
     final startTime = attempt.startedAt ?? now;
     final elapsedSec = now.difference(startTime).inSeconds;
     final totalAllowedSec = posttest.duration * 60;
@@ -222,7 +261,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
     });
   }
 
-  Future<void> _submitAttempt({bool autoSubmit = false}) async {
+  Future<void> _submitAttempt({bool autoSubmit = false, String? reason}) async {
     final attempt = _currentAttempt;
     if (attempt == null || _isSubmitting) return;
 
@@ -265,7 +304,11 @@ class _PosttestScreenState extends State<PosttestScreen> {
       );
 
       final gradeService = GradeService();
-      final gradeResult = await gradeService.submitAndGrade(attempt.id);
+      final gradeResult = await gradeService.submitAndGrade(
+        attempt.id,
+        autoSubmit: autoSubmit,
+        reason: reason ?? (autoSubmit ? 'timeout' : 'manual'),
+      );
 
       if (!mounted) return;
       _showResultDialog(gradeResult);
@@ -290,7 +333,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
         backgroundColor: AppTheme.warning,
       ),
     );
-    _submitAttempt(autoSubmit: true);
+    _submitAttempt(autoSubmit: true, reason: 'timeout');
   }
 
   void _showResultDialog(GradeResult result) {
@@ -346,11 +389,11 @@ class _PosttestScreenState extends State<PosttestScreen> {
       );
     }
 
-    if (_errorMessage != null) {
+    if (_errorMessage != null || _posttest == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Post Test')),
         body: ErrorView(
-          message: _errorMessage!,
+          message: _errorMessage ?? 'Kuis post test tidak tersedia.',
           onRetry: _loadPosttestSession,
         ),
       );

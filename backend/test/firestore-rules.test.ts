@@ -1006,6 +1006,33 @@ async function runTests() {
     );
   });
 
+  await test('Skenario 60: Siswa DIBLOKIR membuat attempt jika pretest berstatus Draft (Server-Enforced Published Gate)', async () => {
+    // Seed attempt pada pretest_draft
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc('att_illegal_draft').set({
+        user_id: userVerifiedUid,
+        class_id: classId,
+        test_id: 'pretest_draft',
+        status: 'in_progress',
+        started_at: serverTimestamp(),
+        kind: 'pretest',
+      })
+    );
+  });
+
+  await test('Skenario 61: Siswa DIBLOKIR membuat attempt jika class_id tidak cocok dengan kuis (Class Isolation)', async () => {
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc('att_illegal_mismatched_class').set({
+        user_id: userVerifiedUid,
+        class_id: otherClassId, // Salah kelas!
+        test_id: 'pretest_published', // Milik classId
+        status: 'in_progress',
+        started_at: serverTimestamp(),
+        kind: 'pretest',
+      })
+    );
+  });
+
   // Cleanup
   await testEnv.cleanup();
 

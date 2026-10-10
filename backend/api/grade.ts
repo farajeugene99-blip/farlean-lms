@@ -15,7 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await verifyAuth(req, res, { requireEmailVerified: true });
   if (!user) return;
 
-  const { attemptId } = req.body || {};
+  const { attemptId, autoSubmit, reason } = req.body || {};
   if (!attemptId || typeof attemptId !== 'string') {
     return res.status(400).json({ error: 'attemptId wajib diisi.' });
   }
@@ -114,6 +114,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
+      // F2. Validasi Ambang Minimum & Anti-Instant Finish Loop
+      // Jika kuis dikumpulkan tanpa jawaban sama sekali (< 5 detik dari waktu mulai) secara manual, tolak.
+      const startedMs = attemptData.started_at?.toMillis
+        ? attemptData.started_at.toMillis()
+        : (attemptData.started_at ? new Date(attemptData.started_at).getTime() : now);
+      const elapsedFromStartMs = now - startedMs;
+      const userAnswers = attemptData.answers || {};
+      const answerCount = Object.keys(userAnswers).length;
+
+      if (answerCount === 0 && elapsedFromStartMs < 5000 && !autoSubmit) {
+        throw { status: 400, message: 'Pengumpulan kuis tidak valid: kuis belum dikerjakan.' };
+      }
+
       // G. Baca Dokumen Best Score sebelumnya (Semua read harus sebelum write)
       let bestDoc: any = null;
       let bestScoreRef: any = null;
@@ -139,7 +152,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       let totalPoints = 0;
       let pointsEarned = 0;
-      const userAnswers = attemptData.answers || {};
       const keySnapshotMap: Record<string, { correct_option: number; points: number; version: number }> = {};
 
       for (const keyDoc of keysSnapshot.docs) {
@@ -173,6 +185,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         score: finalScore,
         points_earned: pointsEarned,
         total_points: totalPoints,
+        auto_submitted: Boolean(autoSubmit),
+        submission_reason: typeof reason === 'string' && reason.length > 0
+            ? reason
+            : (autoSubmit ? 'timeout' : 'manual'),
         submitted_at: FieldValue.serverTimestamp(),
         graded_at: FieldValue.serverTimestamp(),
         key_snapshot: keySnapshotMap,

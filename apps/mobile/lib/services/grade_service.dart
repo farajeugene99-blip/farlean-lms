@@ -60,7 +60,11 @@ class GradeService {
         _httpClient = httpClient ?? http.Client();
 
   /// Mengirim attempt ke backend serverless /api/grade untuk dinilai secara transaksional
-  Future<GradeResult> submitAndGrade(String attemptId) async {
+  Future<GradeResult> submitAndGrade(
+    String attemptId, {
+    bool autoSubmit = false,
+    String? reason,
+  }) async {
     final cleanAttemptId = attemptId.trim();
     if (cleanAttemptId.isEmpty) {
       throw const GradeException('attemptId tidak boleh kosong.');
@@ -77,7 +81,7 @@ class GradeService {
     }
 
     try {
-      final uri = Uri.parse('${ApiConfig.baseUrl}/api/grade');
+      final uri = Uri.parse(ApiConfig.gradeUrl);
       final response = await _httpClient.post(
         uri,
         headers: {
@@ -86,6 +90,8 @@ class GradeService {
         },
         body: jsonEncode({
           'attemptId': cleanAttemptId,
+          if (autoSubmit) 'autoSubmit': true,
+          if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
         }),
       );
 

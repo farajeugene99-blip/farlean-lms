@@ -192,6 +192,36 @@ async function runApiTests() {
     }
   });
 
+  // Skenario 4b: Anti-Instant-Finish (Tolak pengumpulan 0 jawaban < 5 detik)
+  await test('4b. /api/grade menolak pengumpulan kuis kosong < 5 detik tanpa autoSubmit (Anti-Instant-Finish)', async () => {
+    const emptyInstantAttemptRef = db.collection('attempts').doc('attempt_empty_instant_test');
+    await emptyInstantAttemptRef.set({
+      user_id: studentUid,
+      class_id: testClassId,
+      test_id: validTestId,
+      status: 'in_progress',
+      answers: {},
+      started_at: new Date(), // Baru saja dimulai (0 detik)
+    });
+
+    setTokenVerifier(async () => ({ uid: studentUid, email_verified: true, role: 'USER' }));
+    try {
+      const req = {
+        method: 'POST',
+        headers: { authorization: 'Bearer valid_token' },
+        body: { attemptId: 'attempt_empty_instant_test', autoSubmit: false },
+      } as any;
+      const res = createMockRes();
+      await gradeHandler(req, res as any);
+      if (res.statusCode !== 400) throw new Error(`Expected 400, got ${res.statusCode}`);
+      if (!res.jsonData?.error?.includes('belum dikerjakan')) {
+        throw new Error(`Expected error about belum dikerjakan, got: ${res.jsonData?.error}`);
+      }
+    } finally {
+      resetTokenVerifier();
+    }
+  });
+
   // Skenario 5: Deadline terlewati
   await test('5. /api/grade menolak penilaian jika deadline kuis terlewat (400)', async () => {
     const expiredAttemptRef = db.collection('attempts').doc('attempt_expired_test');

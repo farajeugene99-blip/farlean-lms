@@ -30,6 +30,7 @@ class ApiConfig {
   static String get deleteQuestionUrl => '$baseUrl/api/delete-question';
   static String get publishTestUrl => '$baseUrl/api/publish-test';
   static String get publishMeetingsUrl => '$baseUrl/api/publish-meetings';
+  static String get gradeUrl => '$baseUrl/api/grade';
   static String get discussionThreadUrl => '$baseUrl/api/discussion-thread';
   static String get discussionReplyUrl => '$baseUrl/api/discussion-reply';
 }

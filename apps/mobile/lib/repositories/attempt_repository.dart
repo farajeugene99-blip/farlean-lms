@@ -99,6 +99,12 @@ class AttemptRepository {
       map['kind'] = kind;
 
       await docRef.set(map);
+      try {
+        final freshDoc = await docRef.get();
+        if (freshDoc.exists) {
+          return TestAttempt.fromFirestore(freshDoc);
+        }
+      } catch (_) {}
       return attempt;
     } catch (e) {
       debugPrint('Gagal memulai attempt: $e');
