@@ -112,43 +112,31 @@ class PosttestRepository {
     }
   }
 
-  /// Memperbarui status posttest dengan validasi server-side
+  /// Memperbarui status posttest dengan validasi server-side via /api/publish-test
   Future<void> updatePosttestStatus(String testId, ContentStatus status) async {
     final token = await _auth?.currentUser?.getIdToken();
+    if (token == null && Firebase.apps.isNotEmpty) {
+      throw StateError('Pengguna belum terautentikasi.');
+    }
+
     if (token != null) {
-      try {
-        final response = await _httpClient.post(
-          Uri.parse(ApiConfig.publishTestUrl),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode({
-            'testId': testId.trim(),
-            'status': status.value,
-          }),
-        );
-        if (response.statusCode == 200) return;
-        final errJson = jsonDecode(response.body);
-        throw StateError(errJson['error'] ?? 'Gagal memperbarui status posttest.');
-      } catch (e) {
-        if (e is StateError) rethrow;
-        debugPrint('Catatan publish-test API: $e');
-      }
+      final response = await _httpClient.post(
+        Uri.parse(ApiConfig.publishTestUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'testId': testId.trim(),
+          'status': status.value,
+        }),
+      );
+      if (response.statusCode == 200) return;
+      final errJson = jsonDecode(response.body);
+      throw StateError(errJson['error'] ?? 'Gagal memperbarui status posttest.');
     }
 
-    final firestore = _firestore;
-    if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
-
-    try {
-      await firestore.collection('posttests').doc(testId).update({
-        'status': status.value,
-        'updated_at': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      debugPrint('Gagal mengubah status posttest: $e');
-      rethrow;
-    }
+    if (_firestore == null) throw StateError('Firestore belum diinisialisasi.');
   }
 
   /// Menyimpan soal dan kunci jawaban melalui Backend API (/api/save-question)

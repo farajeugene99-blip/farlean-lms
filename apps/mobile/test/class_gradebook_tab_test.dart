@@ -194,6 +194,8 @@ void main() {
       expect(find.text('Semua Pertemuan (Ringkasan)'), findsOneWidget);
       expect(find.textContaining('Menampilkan 1-2 dari 2 mahasiswa'), findsOneWidget);
       expect(find.text('Budi Santoso'), findsOneWidget);
+      await tester.drag(find.byType(ListView).last, const Offset(0, -300));
+      await tester.pumpAndSettle();
       expect(find.text('Siti Rahma'), findsOneWidget);
     });
 
@@ -246,6 +248,48 @@ void main() {
       expect(find.text('Pertemuan 1: Pengenalan Widget'), findsOneWidget);
       expect(find.text('Pretest: 85.0'), findsOneWidget);
       expect(find.text('Post Test: 95.0'), findsOneWidget);
+    });
+
+    testWidgets('4. GURU non-owner melihat banner akses terbatas pada tab Rekap Nilai', (tester) async {
+      final fakeUser = FakeUser(uid: 'other_guru_99', email: 'other@dosen.farlean.edu');
+      final mockAuth = MockAuthService(
+        mockCurrentUser: fakeUser,
+        mockProfileToReturn: AppUser(
+          uid: 'other_guru_99',
+          name: 'Dosen Luar',
+          email: 'other@dosen.farlean.edu',
+          accountType: AccountType.dosen,
+          role: UserRole.guru,
+        ),
+      );
+      final authProvider = AuthProvider(authService: mockAuth);
+
+      final classRepo = MockClassRepoForGradebook(
+        mockClass: testClass, // teacher_id is teacher_01, not other_guru_99
+        mockMembers: testMembers,
+      );
+      final meetingRepo = MockMeetingRepoForGradebook(mockMeetings: testMeetings);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: ChangeNotifierProvider<AuthProvider>.value(
+            value: authProvider,
+            child: ClassDetailScreen(
+              classId: 'c1',
+              classRepository: classRepo,
+              meetingRepository: meetingRepo,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Rekap Nilai'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Akses Rekap Nilai Terbatas'), findsOneWidget);
+      expect(find.textContaining('hanya Pengajar Pemilik Kelas dan Admin'), findsOneWidget);
     });
   });
 }

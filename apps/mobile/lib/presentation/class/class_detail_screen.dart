@@ -526,6 +526,37 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Widget _buildGradebookTab(bool isOwner, bool isStaff) {
+    if (!isOwner && isStaff) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.warning.withAlpha(25),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.lock_person_outlined, size: 48, color: AppTheme.warning),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Akses Rekap Nilai Terbatas',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Sesuai kebijakan perlindungan data akademik Farlean LMS, hanya Pengajar Pemilik Kelas dan Admin yang memiliki wewenang untuk mengakses rekapitulasi nilai mahasiswa di kelas ini.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppTheme.textSecondary, height: 1.4),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     if (!isOwner && !isStaff) {
       return _buildStudentPersonalGradebook();
     }
@@ -652,6 +683,29 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             ],
           ),
           const SizedBox(height: 14),
+        ] else ...[
+          Row(
+            children: [
+              Expanded(
+                child: _buildKpiCard(
+                  title: 'Total Pertemuan',
+                  value: '${_meetings.length}',
+                  subtitle: '${_meetings.where((m) => m.pretestId != null || m.posttestId != null).length} ber-modul kuis',
+                  color: AppTheme.primary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildKpiCard(
+                  title: 'Total Mahasiswa',
+                  value: '$totalStudents',
+                  subtitle: 'Terdaftar di kelas ini',
+                  color: AppTheme.success,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
         ],
 
         Container(
@@ -770,9 +824,61 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       ],
                     )
                   else
-                    const Text(
-                      'Pilih pertemuan spesifik di atas untuk melihat rincian skor mahasiswa.',
-                      style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                    Builder(
+                      builder: (context) {
+                        int doneCount = 0;
+                        int totalModules = 0;
+                        final List<Widget> summaryChips = [];
+
+                        for (final m in _meetings) {
+                          if (m.pretestId != null) {
+                            totalModules++;
+                            final s = _classPretestScores['${m.pretestId}_${member.uid}'];
+                            if (s != null) {
+                              doneCount++;
+                              summaryChips.add(_buildMiniSummaryChip('P${m.number} Pre', s, AppTheme.secondary));
+                            }
+                          }
+                          if (m.posttestId != null) {
+                            totalModules++;
+                            final s = _classPosttestScores['${m.posttestId}_${member.uid}'];
+                            if (s != null) {
+                              doneCount++;
+                              summaryChips.add(_buildMiniSummaryChip('P${m.number} Post', s, Colors.deepPurple));
+                            }
+                          }
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.assignment_turned_in_outlined, size: 14, color: AppTheme.primary),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Progres Kuis: $doneCount dari $totalModules diselesaikan',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                                ),
+                              ],
+                            ),
+                            if (summaryChips.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                children: summaryChips,
+                              ),
+                            ] else if (totalModules > 0) ...[
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Belum ada kuis yang dikerjakan pada pertemuan mana pun.',
+                                style: TextStyle(fontSize: 11, color: AppTheme.warning),
+                              ),
+                            ],
+                          ],
+                        );
+                      },
                     ),
                 ],
               ),
@@ -780,6 +886,21 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           );
         }),
       ],
+    );
+  }
+
+  Widget _buildMiniSummaryChip(String label, double score, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withAlpha(60)),
+      ),
+      child: Text(
+        '$label: ${score.toStringAsFixed(1)}',
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+      ),
     );
   }
 
