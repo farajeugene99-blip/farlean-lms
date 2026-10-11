@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../models/app_user.dart';
 import '../../repositories/attempt_repository.dart';
 import '../../repositories/user_repository.dart';
 import '../../services/auth_provider.dart';
@@ -124,14 +125,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _showEditNimDialog() async {
+  Future<void> _showEditNimDialog(String label) async {
     final controller = TextEditingController(text: _nimNip ?? '');
     final formKey = GlobalKey<FormState>();
 
     final updated = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Nomor Induk (NIM / NIP)'),
+        title: Text('Nomor Induk ($label)'),
         content: SizedBox(
           width: 440,
           child: Form(
@@ -149,12 +150,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   controller: controller,
                   autofocus: true,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'NIM / NIP',
-                    prefixIcon: Icon(Icons.badge_outlined, size: 20),
+                  decoration: InputDecoration(
+                    labelText: label,
+                    prefixIcon: const Icon(Icons.badge_outlined, size: 20),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'NIM/NIP wajib diisi';
+                    if (v == null || v.trim().isEmpty) return '$label wajib diisi';
                     return null;
                   },
                 ),
@@ -181,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
                     SnackBar(
-                      content: Text('Gagal menyimpan NIM/NIP: $e'),
+                      content: Text('Gagal menyimpan $label: $e'),
                       backgroundColor: AppTheme.error,
                     ),
                   );
@@ -199,8 +200,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (updated == true && mounted) {
       setState(() => _nimNip = controller.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('NIM/NIP berhasil disimpan di private identity.'),
+        SnackBar(
+          content: Text('$label berhasil disimpan di private identity.'),
           backgroundColor: AppTheme.success,
         ),
       );
@@ -341,6 +342,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final role = appUser?.role.value ?? 'USER';
     final isVerified = firebaseUser?.emailVerified ?? false;
 
+    final String? identityLabel;
+    if (appUser == null) {
+      identityLabel = null;
+    } else if (appUser.accountType == AccountType.mahasiswa) {
+      identityLabel = 'NIM';
+    } else if (appUser.accountType == AccountType.dosen) {
+      identityLabel = 'NIP';
+    } else {
+      identityLabel = null;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profil Pengguna'),
@@ -411,20 +423,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Card(
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.badge_outlined),
-                  title: const Text('Nomor Induk (NIM / NIP)'),
-                  subtitle: Text(
-                    _isLoadingIdentity
-                        ? 'Memuat...'
-                        : (_nimNip != null ? _nimNip! : 'Belum diisi (Klik untuk menambahkan)'),
+                if (identityLabel != null) ...[
+                  ListTile(
+                    leading: const Icon(Icons.badge_outlined),
+                    title: Text('Nomor Induk ($identityLabel)'),
+                    subtitle: Text(
+                      _isLoadingIdentity
+                          ? 'Memuat...'
+                          : (_nimNip != null && _nimNip!.isNotEmpty
+                              ? _nimNip!
+                              : 'Belum diisi (Klik untuk menambahkan)'),
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      onPressed: () => _showEditNimDialog(identityLabel!),
+                    ),
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 20),
-                    onPressed: _showEditNimDialog,
-                  ),
-                ),
-                const Divider(height: 1),
+                  const Divider(height: 1),
+                ],
                 ListTile(
                   leading: const Icon(Icons.security_rounded),
                   title: const Text('Status Verifikasi Email'),

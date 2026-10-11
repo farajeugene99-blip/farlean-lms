@@ -5,6 +5,7 @@ import 'package:mobile/models/app_user.dart';
 import 'package:mobile/models/class_member.dart';
 import 'package:mobile/models/classroom.dart';
 import 'package:mobile/presentation/class/class_detail_screen.dart';
+import 'package:mobile/presentation/main/profile_screen.dart';
 import 'package:mobile/repositories/class_repository.dart';
 import 'package:mobile/repositories/meeting_repository.dart';
 import 'package:mobile/services/auth_provider.dart';
@@ -73,6 +74,19 @@ void main() {
           accountType: AccountType.mahasiswa,
           status: MemberStatus.active,
         ),
+        const ClassMember(
+          uid: 'teacher_01',
+          displayName: 'Dosen Pembimbing',
+          accountType: AccountType.dosen,
+          status: MemberStatus.active,
+          nim: '198501012010011001',
+        ),
+        const ClassMember(
+          uid: 'guest_01',
+          displayName: 'Peserta Umum',
+          accountType: AccountType.umum,
+          status: MemberStatus.active,
+        ),
       ];
     });
 
@@ -95,7 +109,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('1. Staf melihat baris NIM hanya untuk anggota yang mengisi NIM', (tester) async {
+    testWidgets('1. Staf/Owner melihat NIM untuk Mahasiswa, NIP untuk Dosen, dan tidak ada label untuk Umum/kosong', (tester) async {
       await pumpScreen(
         tester,
         _authFor(
@@ -107,14 +121,21 @@ void main() {
         ),
       );
 
+      // Mahasiswa dengan NIM -> 'NIM: 230000001'
       expect(find.text('NIM: 230000001'), findsOneWidget);
-      // Anggota tanpa NIM tidak menampilkan label NIM kosong/placeholder
+      // Dosen dengan NIP -> 'NIP: 198501012010011001'
+      expect(find.text('NIP: 198501012010011001'), findsOneWidget);
+      // Mahasiswa tanpa NIM tidak menampilkan label NIM kosong/placeholder
       expect(find.textContaining('Siti Rahma'), findsOneWidget);
       expect(find.text('NIM: -'), findsNothing);
       expect(find.text('NIM: null'), findsNothing);
+      // Peserta UMUM tidak menampilkan identitas
+      expect(find.textContaining('Peserta Umum'), findsOneWidget);
+      expect(find.textContaining('NIM: Peserta Umum'), findsNothing);
+      expect(find.textContaining('NIP: Peserta Umum'), findsNothing);
     });
 
-    testWidgets('2. Mahasiswa peer tidak melihat NIM siapa pun', (tester) async {
+    testWidgets('2. Mahasiswa peer tidak melihat NIM atau NIP siapa pun di daftar anggota', (tester) async {
       await pumpScreen(
         tester,
         _authFor(
@@ -127,7 +148,106 @@ void main() {
       );
 
       expect(find.text('Budi Santoso'), findsOneWidget);
+      expect(find.text('Dosen Pembimbing'), findsOneWidget);
+      expect(find.text('Peserta Umum'), findsOneWidget);
       expect(find.textContaining('NIM:'), findsNothing);
+      expect(find.textContaining('NIP:'), findsNothing);
+    });
+  });
+
+  group('ProfileScreen Dynamic Identity Label Tests (G2)', () {
+    testWidgets('3. Akun MAHASISWA menampilkan label Nomor Induk (NIM)', (tester) async {
+      final authProvider = _authFor(
+        uid: 'mhs_01',
+        email: 'mhs@farlean.edu',
+        type: AccountType.mahasiswa,
+        role: UserRole.user,
+        name: 'Mahasiswa Pintar',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: ChangeNotifierProvider<AuthProvider>.value(
+            value: authProvider,
+            child: const ProfileScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nomor Induk (NIM)'), findsOneWidget);
+      expect(find.text('Nomor Induk (NIP)'), findsNothing);
+    });
+
+    testWidgets('4. Akun DOSEN menampilkan label Nomor Induk (NIP)', (tester) async {
+      final authProvider = _authFor(
+        uid: 'dsn_01',
+        email: 'dosen@dosen.farlean.edu',
+        type: AccountType.dosen,
+        role: UserRole.guru,
+        name: 'Dosen Teladan',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: ChangeNotifierProvider<AuthProvider>.value(
+            value: authProvider,
+            child: const ProfileScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nomor Induk (NIP)'), findsOneWidget);
+      expect(find.text('Nomor Induk (NIM)'), findsNothing);
+    });
+
+    testWidgets('5. Akun UMUM menyembunyikan baris Nomor Induk sepenuhnya', (tester) async {
+      final authProvider = _authFor(
+        uid: 'general_01',
+        email: 'umum@gmail.com',
+        type: AccountType.umum,
+        role: UserRole.user,
+        name: 'Pengguna Umum',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: ChangeNotifierProvider<AuthProvider>.value(
+            value: authProvider,
+            child: const ProfileScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Nomor Induk'), findsNothing);
+    });
+
+    testWidgets('6. Profil yang belum selesai dimuat (appUser null) menyembunyikan baris nomor induk', (tester) async {
+      final fakeUser = FakeUser(uid: 'loading_user', email: 'load@test.com');
+      final mockAuth = MockAuthService(
+        mockCurrentUser: fakeUser,
+        mockProfileToReturn: null, // appUser will be null
+      );
+      final authProvider = AuthProvider(authService: mockAuth);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: ChangeNotifierProvider<AuthProvider>.value(
+            value: authProvider,
+            child: const ProfileScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Baris identitas disembunyikan sampai profil selesai dimuat
+      expect(find.textContaining('Nomor Induk'), findsNothing);
     });
   });
 }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth/role_guard.dart';
 import '../../core/theme/app_theme.dart';
+import '../../models/app_user.dart';
 import '../../models/class_member.dart';
 import '../../models/classroom.dart';
 import '../../models/content_status.dart';
@@ -1063,7 +1064,20 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       separatorBuilder: (_, _) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final member = _members[index];
-        final showNim = isStaff && member.nim != null && member.nim!.trim().isNotEmpty;
+        final String identityPrefix;
+        if (member.accountType == AccountType.dosen) {
+          identityPrefix = 'NIP';
+        } else if (member.accountType == AccountType.mahasiswa) {
+          identityPrefix = 'NIM';
+        } else {
+          identityPrefix = '';
+        }
+
+        final showIdentity = isStaff &&
+            identityPrefix.isNotEmpty &&
+            member.nim != null &&
+            member.nim!.trim().isNotEmpty;
+
         return ListTile(
           leading: CircleAvatar(
             backgroundColor: AppTheme.primary.withAlpha(20),
@@ -1078,11 +1092,11 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Tipe: ${member.accountType} • Status: ${member.status.value}'),
-                    if (showNim)
+                    if (showIdentity)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
-                          'NIM: ${member.nim}',
+                          '$identityPrefix: ${member.nim}',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
