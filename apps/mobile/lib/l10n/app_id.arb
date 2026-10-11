@@ -1,0 +1,56 @@
+{
+  "@@locale": "id",
+
+  "appName": "Farlean LMS",
+  "@appName": { "description": "Nama aplikasi" },
+
+  "navHome": "Beranda",
+  "@navHome": { "description": "Label navigasi beranda" },
+
+  "navClass": "Kelas",
+  "@navClass": { "description": "Label navigasi kelas" },
+
+  "navProfile": "Profil",
+  "@navProfile": { "description": "Label navigasi profil" },
+
+  "btnSave": "Simpan",
+  "@btnSave": { "description": "Tombol simpan generik" },
+
+  "btnCancel": "Batal",
+  "@btnCancel": { "description": "Tombol batal generik" },
+
+  "btnConfirm": "Konfirmasi",
+  "@btnConfirm": { "description": "Tombol konfirmasi generik" },
+
+  "btnClose": "Tutup",
+  "@btnClose": { "description": "Tombol tutup generik" },
+
+  "btnLogout": "Keluar",
+  "@btnLogout": { "description": "Tombol keluar/logout" },
+
+  "btnChangePassword": "Ganti Kata Sandi",
+  "@btnChangePassword": { "description": "Tombol ganti kata sandi" },
+
+  "labelLoading": "Memuat...",
+  "@labelLoading": { "description": "Teks loading generik" },
+
+  "labelError": "Terjadi kesalahan",
+  "@labelError": { "description": "Label error generik" },
+
+  "labelRetry": "Coba Lagi",
+  "@labelRetry": { "description": "Tombol coba lagi setelah error" },
+
+  "labelVersion": "Versi {version}",
+  "@labelVersion": {
+    "description": "Label versi dengan nomor",
+    "placeholders": {
+      "version": { "type": "int" }
+    }
+  },
+
+  "labelLastSaved": "Terakhir disimpan",
+  "@labelLastSaved": { "description": "Label riwayat simpan materi" },
+
+  "labelWib": "WIB",
+  "@labelWib": { "description": "Label zona waktu WIB" }
+}

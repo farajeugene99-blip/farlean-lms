@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/auth/role_guard.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/date_formatter.dart';
 import '../../models/content_status.dart';
 import '../../models/meeting.dart';
 import '../../repositories/meeting_repository.dart';
@@ -478,7 +479,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
                     const Icon(Icons.schedule_rounded, size: 14, color: Colors.blue),
                     const SizedBox(width: 4),
                     Text(
-                      'Terbit: ${meeting.publishAt!.day.toString().padLeft(2, '0')}/${meeting.publishAt!.month.toString().padLeft(2, '0')}/${meeting.publishAt!.year} ${meeting.publishAt!.hour.toString().padLeft(2, '0')}:${meeting.publishAt!.minute.toString().padLeft(2, '0')} WIB',
+                      'Terbit: ${DateFormatter.formatWib(meeting.publishAt)}',
                       style: const TextStyle(fontSize: 11, color: Colors.blue, fontWeight: FontWeight.w500),
                     ),
                   ],

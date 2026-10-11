@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth/role_guard.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/date_formatter.dart';
 import '../../models/content_status.dart';
 import '../../models/meeting.dart';
 import '../../models/posttest.dart';
@@ -105,7 +106,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
 
   void _showScheduledLockNotice() {
     final publishText = _meeting?.publishAt != null
-        ? '${_meeting!.publishAt!.day.toString().padLeft(2, '0')}/${_meeting!.publishAt!.month.toString().padLeft(2, '0')}/${_meeting!.publishAt!.year} ${_meeting!.publishAt!.hour.toString().padLeft(2, '0')}:${_meeting!.publishAt!.minute.toString().padLeft(2, '0')} WIB'
+        ? DateFormatter.formatWib(_meeting!.publishAt)
         : 'waktu jadwal mendatang';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -170,7 +171,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Pertemuan berhasil dijadwalkan terbit pada ${scheduledDateTime.day.toString().padLeft(2, '0')}/${scheduledDateTime.month.toString().padLeft(2, '0')}/${scheduledDateTime.year} ${scheduledDateTime.hour.toString().padLeft(2, '0')}:${scheduledDateTime.minute.toString().padLeft(2, '0')} WIB.',
+              'Pertemuan berhasil dijadwalkan terbit pada ${DateFormatter.formatWib(scheduledDateTime)}.',
             ),
             backgroundColor: AppTheme.success,
           ),
@@ -758,7 +759,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                                 const SizedBox(height: 2),
                                 Text(
                                   meeting.publishAt != null
-                                      ? 'Dijadwalkan terbit pada ${meeting.publishAt!.day.toString().padLeft(2, '0')}/${meeting.publishAt!.month.toString().padLeft(2, '0')}/${meeting.publishAt!.year} ${meeting.publishAt!.hour.toString().padLeft(2, '0')}:${meeting.publishAt!.minute.toString().padLeft(2, '0')} WIB. Publikasi berjalan saat cron/sinkronisasi berikutnya (dalam kisaran jadwal), bukan tepat-menit otomatis.'
+                                      ? 'Dijadwalkan terbit pada ${DateFormatter.formatWib(meeting.publishAt)}. Publikasi berjalan saat cron/sinkronisasi berikutnya (dalam kisaran jadwal), bukan tepat-menit otomatis.'
                                       : 'Pertemuan disiapkan untuk jadwal publikasi mendatang.',
                                   style: const TextStyle(fontSize: 12, color: Colors.blue),
                                 ),

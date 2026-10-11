@@ -1,0 +1,20 @@
+{
+  "@@locale": "en",
+
+  "appName": "Farlean LMS",
+  "navHome": "Home",
+  "navClass": "Classes",
+  "navProfile": "Profile",
+  "btnSave": "Save",
+  "btnCancel": "Cancel",
+  "btnConfirm": "Confirm",
+  "btnClose": "Close",
+  "btnLogout": "Logout",
+  "btnChangePassword": "Change Password",
+  "labelLoading": "Loading...",
+  "labelError": "An error occurred",
+  "labelRetry": "Retry",
+  "labelVersion": "Version {version}",
+  "labelLastSaved": "Last saved",
+  "labelWib": "WIB"
+}

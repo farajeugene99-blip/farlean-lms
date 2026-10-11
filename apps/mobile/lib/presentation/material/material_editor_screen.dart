@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/date_formatter.dart';
 import '../../models/content_status.dart';
 import '../../models/delta_sanitizer.dart';
 import '../../models/material_content.dart';
@@ -588,7 +589,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               color: AppTheme.surface,
               child: Text(
-                'Terakhir disimpan: ${_existingMaterial!.updatedAt!.day.toString().padLeft(2, '0')}/${_existingMaterial!.updatedAt!.month.toString().padLeft(2, '0')}/${_existingMaterial!.updatedAt!.year} ${_existingMaterial!.updatedAt!.hour.toString().padLeft(2, '0')}:${_existingMaterial!.updatedAt!.minute.toString().padLeft(2, '0')} • Versi ${_existingMaterial!.version}',
+                'Terakhir disimpan: ${DateFormatter.formatLastSaved(_existingMaterial!.updatedAt, _existingMaterial!.version)}',
                 style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                 textAlign: TextAlign.center,
               ),
