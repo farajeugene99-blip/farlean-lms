@@ -21,6 +21,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  // Proteksi Lingkungan Produksi: Cegah pemanggilan destruktif tak sengaja tanpa flag izin server
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+  if (isProduction && process.env.ALLOW_CLASS_PURGE !== 'true') {
+    return res.status(403).json({
+      error: 'Akses ditolak: Penghapusan kelas dinonaktifkan di lingkungan produksi (ALLOW_CLASS_PURGE).',
+    });
+  }
+
   const { classId, force = false } = req.body || {};
   if (!classId || typeof classId !== 'string') {
     return res.status(400).json({ error: 'classId wajib diisi.' });

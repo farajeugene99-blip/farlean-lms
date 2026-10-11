@@ -1,8 +1,18 @@
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
-process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8080';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST || '127.0.0.1:9099';
+// 1. Safety Guard: Require emulator or explicit production override
+const hasFirestoreEmulator = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
+const allowProduction = process.env.ALLOW_PRODUCTION_AUDIT === 'true';
+
+if (!hasFirestoreEmulator && !allowProduction) {
+  console.error('\n🚨 ========================================================');
+  console.error('❌ FATAL: Skrip audit/pemulihan attempt HANYA boleh dijalankan pada Firebase Emulator');
+  console.error('atau dengan environment variable ALLOW_PRODUCTION_AUDIT=true.');
+  console.error('========================================================\n');
+  process.exit(1);
+}
+
 const projectId = process.env.FIREBASE_PROJECT_ID || 'farlean-lms';
 
 if (!getApps().length) {

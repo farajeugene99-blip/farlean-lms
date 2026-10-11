@@ -956,6 +956,50 @@ async function runTests() {
     );
   });
 
+  await test('Skenario 56b: Siswa DAPAT membaca dokumen pretest_scores miliknya sendiri', async () => {
+    await assertSucceeds(
+      verifiedUserDb
+        .collection('classes')
+        .doc(classId)
+        .collection('pretest_scores')
+        .doc(`pretest_published_${userVerifiedUid}`)
+        .get()
+    );
+  });
+
+  await test('Skenario 56c: Siswa DAPAT query list pretest_scores miliknya sendiri dengan filter user_id', async () => {
+    await assertSucceeds(
+      verifiedUserDb
+        .collection('classes')
+        .doc(classId)
+        .collection('pretest_scores')
+        .where('user_id', '==', userVerifiedUid)
+        .get()
+    );
+  });
+
+  await test('Skenario 56d: Guru pemilik kelas DAPAT membaca seluruh pretest_scores di kelasnya', async () => {
+    await assertSucceeds(
+      guruDb
+        .collection('classes')
+        .doc(classId)
+        .collection('pretest_scores')
+        .doc(`pretest_published_${userVerifiedUid}`)
+        .get()
+    );
+  });
+
+  await test('Skenario 56e: Guru non-owner DIBLOKIR membaca pretest_scores di kelas milik guru lain', async () => {
+    await assertFails(
+      otherGuruDb
+        .collection('classes')
+        .doc(classId)
+        .collection('pretest_scores')
+        .doc(`pretest_published_${userVerifiedUid}`)
+        .get()
+    );
+  });
+
   await test('Skenario 57: Siswa yang BUKAN anggota kelas DIBLOKIR menulis materi_views', async () => {
     const outsiderUid = 'user_outsider_99';
     const outsiderDb = testEnv

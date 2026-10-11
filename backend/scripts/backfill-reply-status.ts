@@ -7,9 +7,11 @@ const allowProduction = process.env.ALLOW_PRODUCTION_MIGRATION === 'true';
 const isDryRun = process.env.DRY_RUN === 'true' || process.argv.includes('--dry-run');
 
 if (!hasFirestoreEmulator && !allowProduction) {
-  // If neither emulator env var nor production flag is set, check if emulator is on default port
-  process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080';
-  process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
+  console.error('\n🚨 ========================================================');
+  console.error('❌ FATAL: Skrip backfill balasan HANYA boleh dijalankan pada Firebase Emulator');
+  console.error('atau dengan environment variable ALLOW_PRODUCTION_MIGRATION=true.');
+  console.error('========================================================\n');
+  process.exit(1);
 }
 
 const projectId = process.env.FIREBASE_PROJECT_ID || 'farlean-lms';

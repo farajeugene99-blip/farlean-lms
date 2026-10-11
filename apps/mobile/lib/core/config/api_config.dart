@@ -15,6 +15,11 @@ class ApiConfig {
       return definedUrl;
     }
 
+    // Penegakan Keamanan Release: Dilarang fallback ke loopback/cleartext HTTP di mode produksi
+    if (kReleaseMode) {
+      throw StateError('Produksi Farlean LMS mewajibkan --dart-define=API_BASE_URL=https://... dikonfigurasi saat build release.');
+    }
+
     if (kIsWeb) return 'http://127.0.0.1:$backendPort';
     if (!kIsWeb && Platform.isAndroid) return 'http://10.0.2.2:$backendPort';
     return 'http://127.0.0.1:$backendPort';
