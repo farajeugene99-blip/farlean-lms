@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/auth_provider.dart';
+import 'auth_error_localization.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -17,6 +19,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
+
+  // Batas minimum karakter kata sandi untuk registrasi (sesuai Firebase default).
+  static const int _passwordMinLength = 6;
 
   @override
   void dispose() {
@@ -40,9 +45,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
 
     if (!success && authProvider.errorMessage != null) {
+      final l10n = AppLocalizations.of(context);
+      final msg = AuthErrorLocalization.fromCode(
+        l10n,
+        authProvider.authErrorCode,
+        fallbackMessage: authProvider.errorMessage,
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.errorMessage!),
+          content: Text(msg),
           backgroundColor: AppTheme.error,
         ),
       );
@@ -51,11 +62,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authProvider = context.watch<AuthProvider>();
     final isLoading = authProvider.isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Buat Akun Baru')),
+      appBar: AppBar(title: Text(l10n.authAppBarRegister)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -65,24 +77,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Daftar Farlean LMS',
+                  l10n.authRegisterTitle,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Gunakan email kampus untuk mendapatkan tipe MAHASISWA / DOSEN otomatis.',
+                  l10n.authRegisterSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _nameController,
                   enabled: !isLoading,
-                  decoration: const InputDecoration(
-                    labelText: 'Nama Lengkap',
-                    prefixIcon: Icon(Icons.person_outline, size: 20),
+                  decoration: InputDecoration(
+                    labelText: l10n.authFieldName,
+                    prefixIcon: const Icon(Icons.person_outline, size: 20),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Nama wajib diisi';
+                    if (v == null || v.trim().isEmpty) return l10n.validNameRequired;
                     return null;
                   },
                 ),
@@ -91,13 +103,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   enabled: !isLoading,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined, size: 20),
+                  decoration: InputDecoration(
+                    labelText: l10n.authFieldEmailPlain,
+                    prefixIcon: const Icon(Icons.email_outlined, size: 20),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Email wajib diisi';
-                    if (!v.contains('@')) return 'Format email tidak valid';
+                    if (v == null || v.trim().isEmpty) return l10n.validEmailRequired;
+                    if (!v.contains('@')) return l10n.validEmailFormat;
                     return null;
                   },
                 ),
@@ -107,7 +119,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscureText: _obscurePassword,
                   enabled: !isLoading,
                   decoration: InputDecoration(
-                    labelText: 'Kata Sandi (min. 6 karakter)',
+                    labelText: l10n.authFieldPasswordMin(_passwordMinLength),
                     prefixIcon: const Icon(Icons.lock_outline, size: 20),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -121,8 +133,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Kata sandi wajib diisi';
-                    if (v.length < 6) return 'Minimal 6 karakter';
+                    if (v == null || v.isEmpty) return l10n.validPasswordRequired;
+                    if (v.length < _passwordMinLength) return l10n.validPasswordMin(_passwordMinLength);
                     return null;
                   },
                 ),
@@ -131,13 +143,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _confirmPasswordController,
                   obscureText: _obscurePassword,
                   enabled: !isLoading,
-                  decoration: const InputDecoration(
-                    labelText: 'Konfirmasi Kata Sandi',
-                    prefixIcon: Icon(Icons.lock_reset_outlined, size: 20),
+                  decoration: InputDecoration(
+                    labelText: l10n.authFieldPasswordConfirm,
+                    prefixIcon: const Icon(Icons.lock_reset_outlined, size: 20),
                   ),
                   validator: (v) {
                     if (v != _passwordController.text) {
-                      return 'Konfirmasi kata sandi tidak cocok';
+                      return l10n.validPasswordMismatch;
                     }
                     return null;
                   },
@@ -154,7 +166,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Daftar'),
+                      : Text(l10n.authBtnRegisterSubmit),
                 ),
               ],
             ),

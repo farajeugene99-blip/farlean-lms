@@ -27,6 +27,9 @@ class AuthProvider extends ChangeNotifier {
   AppUser? _appUser;
   bool _isLoading = false;
   String? _errorMessage;
+  // Kode error Firebase Auth terakhir — dipakai layer UI untuk lokalisasi pesan.
+  // Dibersihkan bersama _errorMessage di _clearError() dan saat operasi baru dimulai.
+  String? _authErrorCode;
 
   int _sessionGeneration = 0;
   ProfileStatus _profileStatus = ProfileStatus.initial;
@@ -42,6 +45,8 @@ class AuthProvider extends ChangeNotifier {
   AppUser? get appUser => _appUser;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  // Kode error Firebase Auth terakhir (null jika tidak ada error atau bukan FirebaseAuthException).
+  String? get authErrorCode => _authErrorCode;
 
   ProfileStatus get profileStatus => _profileStatus;
   ProfileErrorReason get profileErrorReason => _profileErrorReason;
@@ -66,6 +71,8 @@ class AuthProvider extends ChangeNotifier {
         _profileStatus = ProfileStatus.initial;
         _profileErrorReason = ProfileErrorReason.none;
         _profileErrorMessage = null;
+        _errorMessage = null;     // bersihkan error saat sesi berakhir
+        _authErrorCode = null;    // bersihkan kode agar tidak bocor ke login berikutnya
         notifyListeners();
       } else {
         if (_firebaseUser?.uid != user.uid || _profileStatus == ProfileStatus.initial) {
@@ -208,7 +215,7 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return _profileStatus == ProfileStatus.loaded;
     } catch (e) {
-      _setError(AuthService.translateError(e));
+      _setError(AuthService.translateError(e), code: _extractCode(e));
       _setLoading(false);
       return false;
     }
@@ -235,7 +242,7 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError(AuthService.translateError(e));
+      _setError(AuthService.translateError(e), code: _extractCode(e));
       _setLoading(false);
       return false;
     }
@@ -255,7 +262,7 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return isVerified;
     } catch (e) {
-      _setError(AuthService.translateError(e));
+      _setError(AuthService.translateError(e), code: _extractCode(e));
       _setLoading(false);
       return false;
     }
@@ -277,7 +284,7 @@ class AuthProvider extends ChangeNotifier {
       await _authService.sendEmailVerification();
       return true;
     } catch (e) {
-      _setError(AuthService.translateError(e));
+      _setError(AuthService.translateError(e), code: _extractCode(e));
       return false;
     }
   }
@@ -293,7 +300,7 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError(AuthService.translateError(e));
+      _setError(AuthService.translateError(e), code: _extractCode(e));
       _setLoading(false);
       return false;
     }
@@ -314,6 +321,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> signOut() async {
     _sessionGeneration++;
     _setLoading(true);
+    _clearError(); // bersihkan error lama agar tidak bocor ke layar berikutnya
     try {
       await _authService.signOut();
       _firebaseUser = null;
@@ -331,13 +339,28 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _setError(String msg) {
+  void _setError(String msg, {String? code}) {
     _errorMessage = msg;
+    _authErrorCode = code;
     notifyListeners();
   }
 
   void _clearError() {
     _errorMessage = null;
+    _authErrorCode = null;
+  }
+
+  /// Mengekstrak kode error dari FirebaseAuthException/FirebaseException secara aman.
+  /// Mengembalikan null untuk error lain (misalnya SocketException, generic Exception).
+  static String? _extractCode(dynamic error) {
+    try {
+      // FirebaseAuthException dan FirebaseException keduanya punya field `code`.
+      // Cek via dynamic agar helper ini tidak bergantung pada import firebase_auth.
+      // ignore: avoid_dynamic_calls
+      return (error as dynamic).code as String?;
+    } catch (_) {
+      return null;
+    }
   }
 
   @override

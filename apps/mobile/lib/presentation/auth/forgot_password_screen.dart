@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/auth_provider.dart';
+import 'auth_error_localization.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -29,17 +31,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     if (!mounted) return;
 
+    final l10n = AppLocalizations.of(context);
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Tautan reset kata sandi telah dikirim ke email Anda.'),
+        SnackBar(
+          content: Text(l10n.authResetSentMsg),
           backgroundColor: AppTheme.success,
         ),
       );
     } else if (authProvider.errorMessage != null) {
+      final msg = AuthErrorLocalization.fromCode(
+        l10n,
+        authProvider.authErrorCode,
+        fallbackMessage: authProvider.errorMessage,
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.errorMessage!),
+          content: Text(msg),
           backgroundColor: AppTheme.error,
         ),
       );
@@ -48,11 +56,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authProvider = context.watch<AuthProvider>();
     final isLoading = authProvider.isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Lupa Kata Sandi')),
+      appBar: AppBar(title: Text(l10n.authForgotAppBar)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -62,12 +71,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Atur Ulang Kata Sandi',
+                  l10n.authForgotHeading,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Masukkan alamat email terdaftar Anda untuk menerima tautan pemulihan kata sandi.',
+                  l10n.authForgotBody,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 24),
@@ -75,13 +84,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   enabled: !isLoading,
-                  decoration: const InputDecoration(
-                    labelText: 'Alamat Email',
-                    prefixIcon: Icon(Icons.email_outlined, size: 20),
+                  decoration: InputDecoration(
+                    labelText: l10n.authFieldEmailAddress,
+                    prefixIcon: const Icon(Icons.email_outlined, size: 20),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Email wajib diisi';
-                    if (!v.contains('@')) return 'Format email tidak valid';
+                    if (v == null || v.trim().isEmpty) return l10n.validEmailRequired;
+                    if (!v.contains('@')) return l10n.validEmailFormat;
                     return null;
                   },
                 ),
@@ -97,7 +106,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Kirim Tautan Pemulihan'),
+                      : Text(l10n.authBtnSendReset),
                 ),
               ],
             ),

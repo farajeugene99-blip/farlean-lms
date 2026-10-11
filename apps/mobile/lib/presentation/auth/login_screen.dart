@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/auth_provider.dart';
+import 'auth_error_localization.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -37,9 +39,15 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (!success && authProvider.errorMessage != null) {
+      final l10n = AppLocalizations.of(context);
+      final msg = AuthErrorLocalization.fromCode(
+        l10n,
+        authProvider.authErrorCode,
+        fallbackMessage: authProvider.errorMessage,
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.errorMessage!),
+          content: Text(msg),
           backgroundColor: AppTheme.error,
         ),
       );
@@ -48,6 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authProvider = context.watch<AuthProvider>();
     final isLoading = authProvider.isLoading;
 
@@ -77,13 +86,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Masuk ke Farlean LMS',
+                    l10n.authLoginTitle,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Platform Pembelajaran dan Manajemen Kelas',
+                    l10n.authLoginSubtitle,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
@@ -92,13 +101,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     enabled: !isLoading,
-                    decoration: const InputDecoration(
-                      labelText: 'Email Kampus / Umum',
-                      prefixIcon: Icon(Icons.email_outlined, size: 20),
+                    decoration: InputDecoration(
+                      labelText: l10n.authFieldEmail,
+                      prefixIcon: const Icon(Icons.email_outlined, size: 20),
                     ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Email wajib diisi';
-                      if (!v.contains('@')) return 'Format email tidak valid';
+                      if (v == null || v.trim().isEmpty) return l10n.validEmailRequired;
+                      if (!v.contains('@')) return l10n.validEmailFormat;
                       return null;
                     },
                   ),
@@ -108,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _obscurePassword,
                     enabled: !isLoading,
                     decoration: InputDecoration(
-                      labelText: 'Kata Sandi',
+                      labelText: l10n.authFieldPassword,
                       prefixIcon: const Icon(Icons.lock_outline, size: 20),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -122,8 +131,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Kata sandi wajib diisi';
-                      if (v.length < 6) return 'Minimal 6 karakter';
+                      if (v == null || v.isEmpty) return l10n.validPasswordRequired;
+                      if (v.length < 6) return l10n.validPasswordMin(6);
                       return null;
                     },
                   ),
@@ -134,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: isLoading
                           ? null
                           : () => context.push(AppConstants.forgotPasswordRoute),
-                      child: const Text('Lupa Kata Sandi?'),
+                      child: Text(l10n.authForgotPasswordLink),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -149,18 +158,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text('Masuk'),
+                        : Text(l10n.authBtnLogin),
                   ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('Belum memiliki akun? '),
+                      Text(l10n.authNoAccount),
                       TextButton(
                         onPressed: isLoading
                             ? null
                             : () => context.push(AppConstants.registerRoute),
-                        child: const Text('Daftar Sekarang'),
+                        child: Text(l10n.authBtnRegisterLink),
                       ),
                     ],
                   ),
@@ -173,4 +182,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/auth_provider.dart';
 import '../../services/class_provider.dart';
 import '../main/main_shell.dart';
@@ -12,11 +13,13 @@ class VerifyEmailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authProvider = context.watch<AuthProvider>();
     final isLoading = authProvider.isLoading;
+    final email = authProvider.firebaseUser?.email ?? '';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Verifikasi Email')),
+      appBar: AppBar(title: Text(l10n.authVerifyAppBar)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -37,13 +40,13 @@ class VerifyEmailScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'Periksa Email Anda',
+                l10n.authVerifyHeading,
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
               Text(
-                'Kami telah mengirimkan tautan verifikasi ke email Anda (${authProvider.firebaseUser?.email ?? ''}). Akun belum dapat mengakses kelas sebelum email terverifikasi.',
+                l10n.authVerifyBody(email),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
@@ -58,9 +61,9 @@ class VerifyEmailScreen extends StatelessWidget {
 
                         if (!isVerified) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text(
-                                'Email belum terverifikasi. Silakan klik tautan di email Anda terlebih dahulu.',
+                                AppLocalizations.of(context).authVerifyNotYet,
                               ),
                               backgroundColor: AppTheme.warning,
                             ),
@@ -77,7 +80,7 @@ class VerifyEmailScreen extends StatelessWidget {
                         ),
                       )
                     : const Icon(Icons.check_rounded, size: 20),
-                label: const Text('Saya Sudah Verifikasi'),
+                label: Text(l10n.authBtnVerifyCheck),
               ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
@@ -90,9 +93,9 @@ class VerifyEmailScreen extends StatelessWidget {
 
                         if (sent) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text(
-                                'Tautan verifikasi telah dikirim ulang ke email Anda.',
+                                AppLocalizations.of(context).authVerifyResent,
                               ),
                               backgroundColor: AppTheme.success,
                             ),
@@ -100,7 +103,7 @@ class VerifyEmailScreen extends StatelessWidget {
                         }
                       },
                 icon: const Icon(Icons.send_rounded, size: 18),
-                label: const Text('Kirim Ulang Email'),
+                label: Text(l10n.authBtnResendEmail),
               ),
               const SizedBox(height: 16),
               TextButton(
@@ -114,7 +117,7 @@ class VerifyEmailScreen extends StatelessWidget {
                     context.go(AppConstants.loginRoute);
                   }
                 },
-                child: const Text('Keluar / Ganti Akun'),
+                child: Text(l10n.authBtnSwitchAccount),
               ),
             ],
           ),
@@ -123,4 +126,3 @@ class VerifyEmailScreen extends StatelessWidget {
     );
   }
 }
-
