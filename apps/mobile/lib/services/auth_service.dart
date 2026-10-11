@@ -172,6 +172,45 @@ class AuthService {
     await auth.sendPasswordResetEmail(email: email.trim());
   }
 
+  /// Memeriksa apakah pengguna saat ini menggunakan penyedia autentikasi password (email/password)
+  bool get hasPasswordProvider {
+    final user = _auth?.currentUser;
+    if (user == null) return false;
+    if (user.providerData.isEmpty) return user.email != null && user.email!.isNotEmpty;
+    return user.providerData.any((info) => info.providerId == 'password');
+  }
+
+  /// Mengubah kata sandi pengguna terautentikasi dengan re-autentikasi kredensial lama
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final auth = _auth;
+    final user = auth?.currentUser;
+    if (auth == null || user == null) {
+      throw FirebaseAuthException(
+        code: 'not-initialized',
+        message: 'Pengguna belum terautentikasi.',
+      );
+    }
+
+    final email = user.email;
+    if (email == null || email.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'invalid-email',
+        message: 'Pengguna tidak memiliki alamat email valid.',
+      );
+    }
+
+    final credential = EmailAuthProvider.credential(
+      email: email,
+      password: currentPassword,
+    );
+
+    await user.reauthenticateWithCredential(credential);
+    await user.updatePassword(newPassword);
+  }
+
   /// Keluar dari sesi aplikasi
   Future<void> signOut() async {
     await _auth?.signOut();
@@ -243,6 +282,8 @@ class AuthService {
           return 'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat lagi.';
         case 'network-request-failed':
           return 'Koneksi ke emulator/server Firebase gagal. Pastikan Firebase Emulator aktif dan dapat dijangkau dari perangkat Anda.';
+        case 'requires-recent-login':
+          return 'Sesi Anda telah kedaluwarsa. Harap keluar dan masuk kembali sebelum mengubah kata sandi.';
         case 'user-disabled':
           return 'Akun ini telah dinonaktifkan oleh administrator.';
         default:

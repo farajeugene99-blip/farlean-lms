@@ -48,6 +48,7 @@ class AuthProvider extends ChangeNotifier {
   String? get profileErrorMessage => _profileErrorMessage;
   int get sessionGeneration => _sessionGeneration;
   bool get isRoleOutOfSync => _appUser?.isRoleOutOfSync ?? false;
+  bool get hasPasswordProvider => _authService.hasPasswordProvider;
 
   bool get isAuthenticated => _firebaseUser != null;
   bool get isEmailVerified => _firebaseUser?.emailVerified ?? false;
@@ -296,6 +297,17 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return false;
     }
+  }
+
+  /// Mengubah kata sandi pengguna terautentikasi
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _authService.changePassword(
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+    );
   }
 
   /// Keluar dari akun dengan pembatalan generasi sesi

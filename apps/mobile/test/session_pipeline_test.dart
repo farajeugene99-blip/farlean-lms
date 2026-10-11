@@ -91,6 +91,28 @@ class MockAuthService extends AuthService {
     mockCurrentUser = null;
     _authController.add(null);
   }
+
+  bool mockHasPasswordProvider = true;
+  Exception? mockChangePasswordException;
+  int changePasswordCallCount = 0;
+  String? lastCurrentPassword;
+  String? lastNewPassword;
+
+  @override
+  bool get hasPasswordProvider => mockHasPasswordProvider;
+
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    changePasswordCallCount++;
+    lastCurrentPassword = currentPassword;
+    lastNewPassword = newPassword;
+    if (mockChangePasswordException != null) {
+      throw mockChangePasswordException!;
+    }
+  }
 }
 
 void main() {

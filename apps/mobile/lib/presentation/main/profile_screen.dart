@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -6,6 +6,7 @@ import '../../models/app_user.dart';
 import '../../repositories/attempt_repository.dart';
 import '../../repositories/user_repository.dart';
 import '../../services/auth_provider.dart';
+import '../../services/auth_service.dart';
 import '../../services/class_provider.dart';
 import 'main_shell.dart';
 
@@ -202,6 +203,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('$label berhasil disimpan di private identity.'),
+          backgroundColor: AppTheme.success,
+        ),
+      );
+    }
+  }
+
+  Future<void> _showChangePasswordDialog() async {
+    final updated = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => _ChangePasswordDialog(
+        userEmail: context.read<AuthProvider>().firebaseUser?.email,
+        onSave: ({required currentPassword, required newPassword}) {
+          return context.read<AuthProvider>().changePassword(
+                currentPassword: currentPassword,
+                newPassword: newPassword,
+              );
+        },
+        onResetPassword: (email) {
+          return context.read<AuthProvider>().sendPasswordReset(email);
+        },
+      ),
+    );
+
+    if (updated == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kata sandi berhasil diperbarui untuk akun ini.'),
           backgroundColor: AppTheme.success,
         ),
       );
@@ -441,6 +470,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const Divider(height: 1),
                 ],
+                if (authProvider.hasPasswordProvider) ...[
+                  ListTile(
+                    leading: const Icon(Icons.lock_outline_rounded),
+                    title: const Text('Keamanan & Kata Sandi'),
+                    subtitle: const Text('Ubah kata sandi akun untuk perangkat ini'),
+                    trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                    onTap: _showChangePasswordDialog,
+                  ),
+                  const Divider(height: 1),
+                ],
                 ListTile(
                   leading: const Icon(Icons.security_rounded),
                   title: const Text('Status Verifikasi Email'),
@@ -527,6 +566,223 @@ class _ProfileScreenState extends State<ProfileScreen> {
           fontWeight: FontWeight.w600,
           color: color,
         ),
+      ),
+    );
+  }
+}
+
+class _ChangePasswordDialog extends StatefulWidget {
+  final Future<void> Function({required String currentPassword, required String newPassword}) onSave;
+  final Future<void> Function(String email) onResetPassword;
+  final String? userEmail;
+
+  const _ChangePasswordDialog({
+    required this.onSave,
+    required this.onResetPassword,
+    this.userEmail,
+  });
+
+  @override
+  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+  final _currentPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  bool _obscureCurrent = true;
+  bool _obscureNew = true;
+  bool _obscureConfirm = true;
+  bool _isSubmitting = false;
+  String? _serverError;
+
+  @override
+  void dispose() {
+    _currentPasswordController.clear();
+    _newPasswordController.clear();
+    _confirmPasswordController.clear();
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: !_isSubmitting,
+      child: AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.lock_reset_rounded, color: AppTheme.primary),
+            SizedBox(width: 8),
+            Text('Ubah Kata Sandi'),
+          ],
+        ),
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Untuk keamanan akun Anda, masukkan kata sandi saat ini lalu buat kata sandi baru minimal 8 karakter.',
+                    style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4),
+                  ),
+                  const SizedBox(height: 16),
+                  if (_serverError != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.error.withAlpha(20),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppTheme.error.withAlpha(50)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline_rounded, size: 16, color: AppTheme.error),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _serverError!,
+                              style: const TextStyle(fontSize: 12, color: AppTheme.error),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  TextFormField(
+                    controller: _currentPasswordController,
+                    obscureText: _obscureCurrent,
+                    enabled: !_isSubmitting,
+                    decoration: InputDecoration(
+                      labelText: 'Kata Sandi Saat Ini',
+                      prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                      suffixIcon: IconButton(
+                        icon: Icon(_obscureCurrent ? Icons.visibility_off : Icons.visibility, size: 18),
+                        onPressed: () => setState(() => _obscureCurrent = !_obscureCurrent),
+                      ),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Kata sandi saat ini wajib diisi';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _newPasswordController,
+                    obscureText: _obscureNew,
+                    enabled: !_isSubmitting,
+                    decoration: InputDecoration(
+                      labelText: 'Kata Sandi Baru (Min. 8 Karakter)',
+                      prefixIcon: const Icon(Icons.password_rounded, size: 20),
+                      suffixIcon: IconButton(
+                        icon: Icon(_obscureNew ? Icons.visibility_off : Icons.visibility, size: 18),
+                        onPressed: () => setState(() => _obscureNew = !_obscureNew),
+                      ),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Kata sandi baru wajib diisi';
+                      if (v.length < 8) return 'Kata sandi baru minimal 8 karakter.';
+                      if (v == _currentPasswordController.text) {
+                        return 'Kata sandi baru tidak boleh sama dengan kata sandi saat ini.';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _confirmPasswordController,
+                    obscureText: _obscureConfirm,
+                    enabled: !_isSubmitting,
+                    decoration: InputDecoration(
+                      labelText: 'Konfirmasi Kata Sandi Baru',
+                      prefixIcon: const Icon(Icons.check_circle_outline_rounded, size: 20),
+                      suffixIcon: IconButton(
+                        icon: Icon(_obscureConfirm ? Icons.visibility_off : Icons.visibility, size: 18),
+                        onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                      ),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Konfirmasi kata sandi wajib diisi';
+                      if (v != _newPasswordController.text) return 'Konfirmasi kata sandi tidak cocok.';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  if (widget.userEmail != null && widget.userEmail!.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _isSubmitting
+                            ? null
+                            : () async {
+                                final email = widget.userEmail!;
+                                await widget.onResetPassword(email);
+                                if (context.mounted) Navigator.pop(context, false);
+                              },
+                        child: const Text('Lupa kata sandi saat ini?', style: TextStyle(fontSize: 12)),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _isSubmitting ? null : () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: _isSubmitting
+                ? null
+                : () async {
+                    if (!_formKey.currentState!.validate()) return;
+                    setState(() {
+                      _isSubmitting = true;
+                      _serverError = null;
+                    });
+
+                    try {
+                      await widget.onSave(
+                        currentPassword: _currentPasswordController.text,
+                        newPassword: _newPasswordController.text,
+                      );
+                      if (context.mounted) Navigator.pop(context, true);
+                    } catch (e) {
+                      if (mounted) {
+                        setState(() {
+                          _isSubmitting = false;
+                          if (e is FirebaseAuthException) {
+                            if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+                              _serverError = 'Kata sandi saat ini yang Anda masukkan salah.';
+                            } else {
+                              _serverError = AuthService.translateError(e);
+                            }
+                          } else {
+                            _serverError = 'Gagal memperbarui kata sandi: $e';
+                          }
+                        });
+                      }
+                    }
+                  },
+            child: _isSubmitting
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Text('Simpan Sandi'),
+          ),
+        ],
       ),
     );
   }
