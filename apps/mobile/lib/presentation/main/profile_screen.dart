@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/app_user.dart';
 import '../../repositories/attempt_repository.dart';
@@ -235,6 +237,247 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _showCacheManagementDialog() async {
+    final classProvider = context.read<ClassProvider>();
+    final selectedClass = classProvider.selectedClass;
+    final selectedClassId = classProvider.selectedClassId;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            final cacheBytes = PaintingBinding.instance.imageCache.currentSizeBytes;
+            final cacheCount = PaintingBinding.instance.imageCache.currentSize;
+            final cacheText = cacheBytes == 0
+                ? '0 KB (belum ada gambar dimuat di memori)'
+                : '${(cacheBytes / 1024).toStringAsFixed(1)} KB ($cacheCount gambar aktif di memori)';
+
+            final activeClassText = selectedClass != null
+                ? '${selectedClass.name} (${selectedClass.code})'
+                : (selectedClassId != null && selectedClassId.isNotEmpty
+                    ? 'ID: $selectedClassId'
+                    : 'Belum ada kelas aktif yang dipilih');
+
+            return AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.storage_rounded, color: AppTheme.primary),
+                  SizedBox(width: 8),
+                  Text('Penyimpanan & Cache'),
+                ],
+              ),
+              content: SizedBox(
+                width: 440,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Kelola memori sementara gambar dan preferensi kelas aktif di perangkat ini secara aman.',
+                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4),
+                      ),
+                      const SizedBox(height: 16),
+                      // Bagian 1: Cache Gambar RAM
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surface,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppTheme.border),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.image_outlined, size: 16, color: AppTheme.secondary),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Cache Gambar di Memori (RAM)',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              cacheText,
+                              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Catatan: Cache memori menampung gambar materi yang sedang dibuka. Mengosongkannya aman dan gambar akan diunduh kembali saat dibuka.',
+                              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.3),
+                            ),
+                            const SizedBox(height: 10),
+                            OutlinedButton.icon(
+                              onPressed: cacheBytes == 0
+                                  ? null
+                                  : () {
+                                      PaintingBinding.instance.imageCache.clear();
+                                      PaintingBinding.instance.imageCache.clearLiveImages();
+                                      setDialogState(() {});
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Cache memori gambar berhasil dikosongkan.'),
+                                          backgroundColor: AppTheme.success,
+                                        ),
+                                      );
+                                    },
+                              icon: const Icon(Icons.cleaning_services_outlined, size: 16),
+                              label: const Text('Kosongkan Cache Gambar RAM', style: TextStyle(fontSize: 12)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Bagian 2: Pilihan Kelas Aktif
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surface,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppTheme.border),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.class_outlined, size: 16, color: AppTheme.primary),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Pilihan Kelas Aktif Tersimpan',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              activeClassText,
+                              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Mereset kelas aktif akan mengarahkan Anda ke Beranda untuk memilih kembali kelas pembelajaran.',
+                              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.3),
+                            ),
+                            const SizedBox(height: 10),
+                            OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(foregroundColor: AppTheme.error),
+                              onPressed: (selectedClassId == null || selectedClassId.isEmpty)
+                                  ? null
+                                  : () async {
+                                      // Guard Kuis Aktif: Periksa attempt aktif terlebih dahulu
+                                      final authProvider = context.read<AuthProvider>();
+                                      final uid = authProvider.firebaseUser?.uid;
+                                      if (uid != null && uid.isNotEmpty) {
+                                        try {
+                                          final hasActive = await _attemptRepository.hasActiveOngoingAttempt(userId: uid);
+                                          if (hasActive) {
+                                            if (dialogCtx.mounted) {
+                                              await showDialog<void>(
+                                                context: dialogCtx,
+                                                builder: (c) => AlertDialog(
+                                                  title: const Row(
+                                                    children: [
+                                                      Icon(Icons.warning_amber_rounded, color: AppTheme.error),
+                                                      SizedBox(width: 8),
+                                                      Text('Kuis Sedang Dikerjakan'),
+                                                    ],
+                                                  ),
+                                                  content: const Text(
+                                                    'Tidak dapat mereset kelas aktif: Anda sedang memiliki kuis yang sedang dikerjakan. Selesaikan atau kumpulkan kuis terlebih dahulu sebelum mereset kelas.',
+                                                  ),
+                                                  actions: [
+                                                    TextButton(onPressed: () => Navigator.pop(c), child: const Text('Mengerti')),
+                                                  ],
+                                                ),
+                                              );
+                                            }
+                                            return;
+                                          }
+                                        } catch (_) {
+                                          // Jika pemeriksaan gagal / offline, blokir reset kelas demi keselamatan pengerjaan kuis
+                                          if (dialogCtx.mounted) {
+                                            await showDialog<void>(
+                                              context: dialogCtx,
+                                              builder: (c) => AlertDialog(
+                                                title: const Row(
+                                                  children: [
+                                                    Icon(Icons.wifi_off_rounded, color: AppTheme.warning),
+                                                    SizedBox(width: 8),
+                                                    Text('Perangkat Offline'),
+                                                  ],
+                                                ),
+                                                content: const Text(
+                                                  'Tidak dapat memverifikasi status kuis karena perangkat sedang offline. Untuk keamanan jawaban kuis Anda, reset kelas aktif ditunda hingga perangkat terhubung kembali.',
+                                                ),
+                                                actions: [
+                                                  TextButton(onPressed: () => Navigator.pop(c), child: const Text('Mengerti')),
+                                                ],
+                                              ),
+                                            );
+                                          }
+                                          return;
+                                        }
+                                      }
+
+                                      // Konfirmasi reset kelas aktif
+                                      if (!dialogCtx.mounted) return;
+                                      final confirm = await showDialog<bool>(
+                                        context: dialogCtx,
+                                        builder: (c) => AlertDialog(
+                                          title: const Text('Reset Pilihan Kelas?'),
+                                          content: const Text('Anda akan diarahkan kembali ke Beranda untuk memilih kelas pembelajaran.'),
+                                          actions: [
+                                            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Batal')),
+                                            ElevatedButton(onPressed: () => Navigator.pop(c, true), child: const Text('Reset')),
+                                          ],
+                                        ),
+                                      );
+
+                                      if (confirm == true) {
+                                        await classProvider.selectClass(null);
+                                        MainShell.activeClassId = null;
+                                        if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                                        if (mounted) {
+                                          try {
+                                            context.go(AppConstants.dashboardRoute);
+                                          } catch (_) {}
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Pilihan kelas aktif berhasil direset.'),
+                                              backgroundColor: AppTheme.success,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                              icon: const Icon(Icons.restart_alt_rounded, size: 16),
+                              label: const Text('Reset Pilihan Kelas Aktif', style: TextStyle(fontSize: 12)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogCtx),
+                  child: const Text('Tutup'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _confirmAndSignOut() async {
@@ -480,6 +723,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const Divider(height: 1),
                 ],
+                ListTile(
+                  leading: const Icon(Icons.storage_rounded),
+                  title: const Text('Penyimpanan & Cache'),
+                  subtitle: const Text('Kelola memori sementara dan pilihan kelas aktif'),
+                  trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                  onTap: _showCacheManagementDialog,
+                ),
+                const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.security_rounded),
                   title: const Text('Status Verifikasi Email'),
