@@ -19,6 +19,7 @@ service-account*.json
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+emulator-run.log
 .firebase/
 emulator-data/
 **/emulator-data/
