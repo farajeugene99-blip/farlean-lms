@@ -11,6 +11,8 @@ import '../../services/auth_provider.dart';
 import '../../services/class_provider.dart';
 import '../common/loading_indicator.dart';
 
+import 'main_shell.dart';
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -188,7 +190,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   runSpacing: 12,
                   children: [
                     OutlinedButton(
-                      onPressed: () => authProvider.signOut(),
+                      onPressed: () async {
+                        try {
+                          await context.read<ClassProvider>().clear();
+                        } catch (_) {}
+                        MainShell.activeClassId = null;
+                        await authProvider.signOut();
+                      },
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(110, 44),
                       ),

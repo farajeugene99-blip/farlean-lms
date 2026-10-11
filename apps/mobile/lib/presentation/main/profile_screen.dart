@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../repositories/attempt_repository.dart';
 import '../../repositories/user_repository.dart';
 import '../../services/auth_provider.dart';
 import '../../services/class_provider.dart';
@@ -8,8 +10,13 @@ import 'main_shell.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserRepository? userRepository;
+  final AttemptRepository? attemptRepository;
 
-  const ProfileScreen({super.key, this.userRepository});
+  const ProfileScreen({
+    super.key,
+    this.userRepository,
+    this.attemptRepository,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -17,13 +24,16 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late final UserRepository _userRepository;
+  late final AttemptRepository _attemptRepository;
   String? _nimNip;
   bool _isLoadingIdentity = false;
+  bool _isLoggingOut = false;
 
   @override
   void initState() {
     super.initState();
     _userRepository = widget.userRepository ?? UserRepository();
+    _attemptRepository = widget.attemptRepository ?? AttemptRepository();
     _loadPrivateIdentity();
   }
 
@@ -197,6 +207,128 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _confirmAndSignOut() async {
+    if (_isLoggingOut) return;
+
+    final authProvider = context.read<AuthProvider>();
+    final uid = authProvider.firebaseUser?.uid;
+
+    String? quizWarning;
+
+    if (uid != null && uid.isNotEmpty) {
+      try {
+        final hasActive = await _attemptRepository.hasActiveOngoingAttempt(userId: uid);
+        if (hasActive) {
+          quizWarning =
+              'Perhatian: Anda memiliki kuis yang sedang dikerjakan. Jika Anda keluar sekarang, pengerjaan kuis dapat terganggu dan jawaban yang belum tersimpan dapat hilang.';
+        }
+      } catch (e) {
+        if (e is FirebaseException && e.code == 'permission-denied') {
+          // Aturan rules menolak pemeriksaan, jangan tampilkan peringatan offline palsu
+        } else {
+          quizWarning =
+              'Tidak dapat memverifikasi status kuis karena perangkat sedang offline. Jika Anda sedang mengerjakan kuis, jawaban yang belum tersinkronisasi ke server mungkin hilang.';
+        }
+      }
+    }
+
+    if (!mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        bool isDialogLoggingOut = false;
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return PopScope(
+              canPop: !isDialogLoggingOut,
+              child: AlertDialog(
+                title: Row(
+                  children: [
+                    Icon(
+                      quizWarning != null ? Icons.warning_amber_rounded : Icons.logout_rounded,
+                      color: quizWarning != null ? AppTheme.warning : AppTheme.error,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text('Keluar dari Akun?'),
+                  ],
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (quizWarning != null) ...[
+                      Text(
+                        quizWarning,
+                        style: const TextStyle(
+                          color: AppTheme.error,
+                          fontWeight: FontWeight.w500,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    const Text(
+                      'Apakah Anda yakin ingin keluar dari sesi Farlean LMS di perangkat ini?',
+                      style: TextStyle(color: AppTheme.textSecondary, height: 1.4),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: isDialogLoggingOut ? null : () => Navigator.pop(dialogContext, false),
+                    child: const Text('Batal'),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+                    onPressed: isDialogLoggingOut
+                        ? null
+                        : () {
+                            setDialogState(() => isDialogLoggingOut = true);
+                            Navigator.pop(dialogContext, true);
+                          },
+                    child: isDialogLoggingOut
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Text('Keluar'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isLoggingOut = true);
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      try {
+        await context.read<ClassProvider>().clear();
+      } catch (_) {}
+      MainShell.activeClassId = null;
+      await authProvider.signOut();
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Gagal keluar akun: $e'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoggingOut = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
@@ -216,19 +348,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           IconButton(
             icon: const Icon(Icons.logout_rounded),
             tooltip: 'Keluar',
-            onPressed: () async {
-              try {
-                await context.read<ClassProvider>().clear();
-              } catch (_) {}
-              MainShell.activeClassId = null;
-              await authProvider.signOut();
-            },
+            onPressed: _isLoggingOut ? null : _confirmAndSignOut,
           ),
           const SizedBox(width: 8),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
         children: [
           Card(
             child: Padding(
@@ -340,6 +466,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _isLoggingOut ? null : _confirmAndSignOut,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.error,
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            icon: _isLoggingOut
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Icon(Icons.logout_rounded, size: 20),
+            label: Text(
+              _isLoggingOut ? 'Sedang Keluar...' : 'Keluar dari Akun',
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 32),
         ],
       ),
     );

@@ -1077,6 +1077,26 @@ async function runTests() {
     );
   });
 
+  await test('Skenario 62: Siswa DAPAT query attempt in_progress miliknya sendiri (Active Quiz Guard Query)', async () => {
+    await assertSucceeds(
+      verifiedUserDb
+        .collection('attempts')
+        .where('user_id', '==', userVerifiedUid)
+        .where('status', '==', 'in_progress')
+        .get()
+    );
+  });
+
+  await test('Skenario 63: Siswa DIBLOKIR query attempt milik pengguna lain', async () => {
+    await assertFails(
+      verifiedUserDb
+        .collection('attempts')
+        .where('user_id', '==', otherUserUid)
+        .where('status', '==', 'in_progress')
+        .get()
+    );
+  });
+
   // Cleanup
   await testEnv.cleanup();
 

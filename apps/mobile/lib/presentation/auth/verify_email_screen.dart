@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_provider.dart';
+import '../../services/class_provider.dart';
+import '../main/main_shell.dart';
 
 class VerifyEmailScreen extends StatelessWidget {
   const VerifyEmailScreen({super.key});
@@ -103,6 +105,10 @@ class VerifyEmailScreen extends StatelessWidget {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () async {
+                  try {
+                    await context.read<ClassProvider>().clear();
+                  } catch (_) {}
+                  MainShell.activeClassId = null;
                   await authProvider.signOut();
                   if (context.mounted) {
                     context.go(AppConstants.loginRoute);

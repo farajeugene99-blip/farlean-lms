@@ -36,6 +36,49 @@ class AttemptRepository {
     return null;
   }
 
+  /// Memeriksa apakah pengguna memiliki attempt kuis aktif yang sedang berlangsung (non-stale).
+  /// Attempt yang lebih lama dari [maxAge] (default 3 jam) diabaikan agar attempt basi tidak memicu peringatan palsu.
+  Future<bool> hasActiveOngoingAttempt({
+    required String userId,
+    Duration maxAge = const Duration(hours: 3),
+  }) async {
+    final firestore = _firestore;
+    if (firestore == null) return false;
+
+    try {
+      final snapshot = await firestore
+          .collection('attempts')
+          .where('user_id', isEqualTo: userId)
+          .where('status', isEqualTo: AttemptStatus.inProgress.value)
+          .get();
+
+      final now = DateTime.now();
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final startedAtRaw = data['started_at'];
+        DateTime? startedAt;
+        if (startedAtRaw is Timestamp) {
+          startedAt = startedAtRaw.toDate();
+        } else if (startedAtRaw is DateTime) {
+          startedAt = startedAtRaw;
+        }
+
+        if (startedAt != null) {
+          final elapsed = now.difference(startedAt);
+          if (elapsed < maxAge) {
+            return true;
+          }
+        } else {
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Catatan cek active ongoing attempt: $e');
+      rethrow;
+    }
+  }
+
   /// Menghitung jumlah attempt yang telah dilakukan pengguna pada test ini
   Future<int> getAttemptCount({
     required String userId,
