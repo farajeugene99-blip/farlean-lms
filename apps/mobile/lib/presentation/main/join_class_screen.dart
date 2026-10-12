@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/class_provider.dart';
 import '../../services/join_class_service.dart';
 
@@ -59,6 +60,7 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
   }
 
   Future<void> _showResultDialog(JoinClassResult result) async {
+    final l10n = AppLocalizations.of(context);
     final isActive = result.isActive;
 
     await showDialog<void>(
@@ -72,7 +74,7 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
               color: isActive ? AppTheme.success : AppTheme.warning,
             ),
             const SizedBox(width: 8),
-            Text(isActive ? 'Berhasil Bergabung' : 'Menunggu Persetujuan'),
+            Text(isActive ? l10n.joinClassSuccessTitle : l10n.joinClassPendingTitle),
           ],
         ),
         content: Column(
@@ -93,7 +95,7 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                'Status: ${result.status.value.toUpperCase()}',
+                l10n.joinClassStatusPrefix(result.status.value.toUpperCase()),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -125,7 +127,7 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Gagal sinkronisasi data kelas: $e'),
+                        content: Text(l10n.joinClassSyncFailed(e.toString())),
                         backgroundColor: AppTheme.error,
                       ),
                     );
@@ -136,7 +138,7 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
                 Navigator.pop(context);
               }
             },
-            child: Text(isActive ? 'Buka Kelas' : 'Kembali ke Beranda'),
+            child: Text(isActive ? l10n.joinClassOpenBtn : l10n.joinClassBackHomeBtn),
           ),
         ],
       ),
@@ -145,8 +147,10 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Gabung Kelas')),
+      appBar: AppBar(title: Text(l10n.joinClassAppBarTitle)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -156,12 +160,12 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Masukkan Kode Kelas',
+                  l10n.joinClassHeading,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Kode kelas terdiri dari 6-12 karakter alfanumerik. Mahasiswa/Dosen otomatis aktif, sedangkan akun Umum berstatus pending.',
+                  l10n.joinClassDescription,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 24),
@@ -169,9 +173,9 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
                   controller: _codeController,
                   textCapitalization: TextCapitalization.characters,
                   enabled: !_isLoading,
-                  decoration: const InputDecoration(
-                    labelText: 'Kode Kelas (misal: FARLEAN1)',
-                    prefixIcon: Icon(Icons.pin_outlined, size: 20),
+                  decoration: InputDecoration(
+                    labelText: l10n.joinClassCodeLabel,
+                    prefixIcon: const Icon(Icons.pin_outlined, size: 20),
                   ),
                   validator: JoinClassService.validateCodeFormat,
                 ),
@@ -187,7 +191,7 @@ class _JoinClassScreenState extends State<JoinClassScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Gabung Sekarang'),
+                      : Text(l10n.joinClassSubmitBtn),
                 ),
               ],
             ),

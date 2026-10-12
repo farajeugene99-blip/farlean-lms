@@ -1987,6 +1987,354 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Tuliskan materi pembelajaran terstruktur di sini...'**
   String get materialEditorPlaceholder;
+
+  /// Pesan error gagal memuat detail kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memuat detail kelas: {detail}'**
+  String classDetailLoadFailed(String detail);
+
+  /// Tombol simpan pertemuan pada dialog buat pertemuan kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Simpan Pertemuan'**
+  String get classSaveMeetingBtn;
+
+  /// Judul konfirmasi arsipkan kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Arsipkan Kelas?'**
+  String get classArchiveConfirmTitle;
+
+  /// Isi konfirmasi arsipkan kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Kelas yang diarsipkan akan terkunci untuk pengeditan dan tidak lagi menerima anggota baru. Anggota lama tetap dapat membaca materi.'**
+  String get classArchiveConfirmBody;
+
+  /// Tombol konfirmasi arsipkan kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Arsipkan'**
+  String get classArchiveBtn;
+
+  /// Snackbar sukses arsipkan kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Kelas berhasil diarsipkan.'**
+  String get classArchiveSuccess;
+
+  /// Snackbar gagal arsipkan kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal mengarsipkan: {detail}'**
+  String classArchiveFailed(String detail);
+
+  /// Judul konfirmasi aktifkan kembali kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Aktifkan Kembali Kelas?'**
+  String get classReactivateConfirmTitle;
+
+  /// Isi konfirmasi aktifkan kembali kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Kelas yang diaktifkan kembali akan dapat menerima anggota baru serta mengizinkan pengelolaan pertemuan dan kuis seperti semula.'**
+  String get classReactivateConfirmBody;
+
+  /// Tombol konfirmasi aktifkan kembali kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Aktifkan'**
+  String get classReactivateBtn;
+
+  /// Snackbar sukses aktifkan kembali kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Kelas berhasil diaktifkan kembali.'**
+  String get classReactivateSuccess;
+
+  /// Snackbar gagal aktifkan kembali kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal mengaktifkan kembali kelas: {detail}'**
+  String classReactivateFailed(String detail);
+
+  /// Teks loading detail kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Memuat detail kelas...'**
+  String get classDetailLoading;
+
+  /// Judul AppBar detail kelas saat fallback
+  ///
+  /// In id, this message translates to:
+  /// **'Detail Kelas'**
+  String get classDetailTitle;
+
+  /// Pesan kelas tidak ditemukan
+  ///
+  /// In id, this message translates to:
+  /// **'Kelas tidak ditemukan.'**
+  String get classNotFound;
+
+  /// Tooltip ikon arsipkan kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Arsipkan Kelas'**
+  String get classArchiveTooltip;
+
+  /// Tooltip ikon aktifkan kembali kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Aktifkan Kembali Kelas'**
+  String get classReactivateTooltip;
+
+  /// Snackbar kode kelas berhasil disalin
+  ///
+  /// In id, this message translates to:
+  /// **'Kode kelas {code} disalin ke clipboard.'**
+  String classCodeCopied(String code);
+
+  /// Jumlah anggota kelas pada header
+  ///
+  /// In id, this message translates to:
+  /// **'{count, plural, other{{count} Anggota}}'**
+  String classMemberCount(int count);
+
+  /// Jumlah pertemuan kelas pada header
+  ///
+  /// In id, this message translates to:
+  /// **'{count, plural, other{•  {count} Pertemuan}}'**
+  String classMeetingCount(int count);
+
+  /// Tab pertemuan kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Pertemuan'**
+  String get classTabMeetings;
+
+  /// Tab rekap nilai kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Rekap Nilai'**
+  String get classTabGrades;
+
+  /// Tab anggota kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Anggota Kelas'**
+  String get classTabMembers;
+
+  /// Deskripsi belum ada pertemuan untuk pengajar
+  ///
+  /// In id, this message translates to:
+  /// **'Buat pertemuan baru untuk mulai mengisi materi, pretest, dan video pembelajaran.'**
+  String get classEmptyMeetingOwnerDesc;
+
+  /// Deskripsi belum ada pertemuan untuk siswa
+  ///
+  /// In id, this message translates to:
+  /// **'Pengajar belum mempublikasikan pertemuan di kelas ini.'**
+  String get classEmptyMeetingStudentDesc;
+
+  /// Tombol buat pertemuan pada tab pertemuan kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Pertemuan'**
+  String get classCreateMeetingBtn;
+
+  /// Judul banner pembatasan akses rekap nilai
+  ///
+  /// In id, this message translates to:
+  /// **'Akses Rekap Nilai Terbatas'**
+  String get classGradebookRestrictedTitle;
+
+  /// Deskripsi pembatasan akses rekap nilai
+  ///
+  /// In id, this message translates to:
+  /// **'Sesuai kebijakan perlindungan data akademik Farlean LMS, hanya Pengajar Pemilik Kelas dan Admin yang memiliki wewenang untuk mengakses rekapitulasi nilai mahasiswa di kelas ini.'**
+  String get classGradebookRestrictedBody;
+
+  /// Teks status kosong rekap nilai saat belum ada siswa
+  ///
+  /// In id, this message translates to:
+  /// **'Belum ada mahasiswa di kelas ini.'**
+  String get classGradebookNoStudents;
+
+  /// Opsi dropdown rekap nilai semua pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Semua Pertemuan (Ringkasan)'**
+  String get classGradebookAllMeetingsHint;
+
+  /// Format judul pertemuan dengan nomor dan nama
+  ///
+  /// In id, this message translates to:
+  /// **'Pertemuan {number}: {title}'**
+  String classMeetingNumberTitle(int number, String title);
+
+  /// Judul KPI rata-rata pretest
+  ///
+  /// In id, this message translates to:
+  /// **'Rata-rata Pretest'**
+  String get classKpiPretestAvg;
+
+  /// Subjudul KPI jumlah pengumpulan nilai
+  ///
+  /// In id, this message translates to:
+  /// **'{submitted} dari {total} mahasiswa'**
+  String classKpiSubCount(int submitted, int total);
+
+  /// Judul KPI rata-rata post test
+  ///
+  /// In id, this message translates to:
+  /// **'Rata-rata Post Test'**
+  String get classKpiPosttestAvg;
+
+  /// Judul KPI total pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Total Pertemuan'**
+  String get classKpiTotalMeetings;
+
+  /// Subjudul KPI jumlah pertemuan bermodul kuis
+  ///
+  /// In id, this message translates to:
+  /// **'{count} ber-modul kuis'**
+  String classKpiQuizModulesCount(int count);
+
+  /// Judul KPI total mahasiswa
+  ///
+  /// In id, this message translates to:
+  /// **'Total Mahasiswa'**
+  String get classKpiTotalStudents;
+
+  /// Subjudul KPI mahasiswa terdaftar
+  ///
+  /// In id, this message translates to:
+  /// **'Terdaftar di kelas ini'**
+  String get classKpiEnrolledDesc;
+
+  /// Teks informasi paginasi rekap nilai
+  ///
+  /// In id, this message translates to:
+  /// **'Menampilkan {start}-{end} dari {total} mahasiswa'**
+  String classPaginationInfo(int start, int end, int total);
+
+  /// Status progres kuis ringkasan siswa
+  ///
+  /// In id, this message translates to:
+  /// **'Progres Kuis: {done} dari {total} diselesaikan'**
+  String classQuizProgress(int done, int total);
+
+  /// Keterangan saat siswa belum mengerjakan kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Belum ada kuis yang dikerjakan pada pertemuan mana pun.'**
+  String get classQuizNoneDone;
+
+  /// Label saat nilai kuis belum ada
+  ///
+  /// In id, this message translates to:
+  /// **'Belum Ada'**
+  String get classScoreNotAvailable;
+
+  /// Teks status kosong capaian belajar siswa
+  ///
+  /// In id, this message translates to:
+  /// **'Belum ada pertemuan di kelas ini.'**
+  String get classNoMeetings;
+
+  /// Judul banner hasil capaian belajar siswa
+  ///
+  /// In id, this message translates to:
+  /// **'Hasil Capaian Belajar Anda'**
+  String get classStudentProgressTitle;
+
+  /// Deskripsi banner hasil capaian belajar siswa
+  ///
+  /// In id, this message translates to:
+  /// **'Menampilkan nilai resmi pretest & post test Anda pada kelas {className}.'**
+  String classStudentProgressBody(String className);
+
+  /// Teks status kosong tab anggota kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Belum ada anggota terdaftar di kelas ini.'**
+  String get classNoMembers;
+
+  /// Subjudul kartu anggota kelas dengan tipe dan status mentah
+  ///
+  /// In id, this message translates to:
+  /// **'Tipe: {type} • Status: {status}'**
+  String classMemberTypeStatus(String type, String status);
+
+  /// Judul dialog hasil berhasil bergabung kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Berhasil Bergabung'**
+  String get joinClassSuccessTitle;
+
+  /// Judul dialog hasil menunggu persetujuan bergabung kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Menunggu Persetujuan'**
+  String get joinClassPendingTitle;
+
+  /// Badge status keanggotaan pada dialog hasil gabung kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Status: {status}'**
+  String joinClassStatusPrefix(String status);
+
+  /// Tombol buka kelas pada dialog sukses gabung kelas aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Buka Kelas'**
+  String get joinClassOpenBtn;
+
+  /// Tombol kembali ke beranda pada dialog status pending
+  ///
+  /// In id, this message translates to:
+  /// **'Kembali ke Beranda'**
+  String get joinClassBackHomeBtn;
+
+  /// Snackbar gagal sinkronisasi data kelas setelah gabung
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal sinkronisasi data kelas: {detail}'**
+  String joinClassSyncFailed(String detail);
+
+  /// Judul AppBar layar gabung kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Gabung Kelas'**
+  String get joinClassAppBarTitle;
+
+  /// Judul besar form gabung kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Masukkan Kode Kelas'**
+  String get joinClassHeading;
+
+  /// Instruksi format dan aturan kode kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Kode kelas terdiri dari 6-12 karakter alfanumerik. Mahasiswa/Dosen otomatis aktif, sedangkan akun Umum berstatus pending.'**
+  String get joinClassDescription;
+
+  /// Label field input kode kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Kode Kelas (misal: FARLEAN1)'**
+  String get joinClassCodeLabel;
+
+  /// Tombol submit formulir gabung kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Gabung Sekarang'**
+  String get joinClassSubmitBtn;
 }
 
 class _AppLocalizationsDelegate

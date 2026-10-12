@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth/role_guard.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/app_user.dart';
 import '../../models/class_member.dart';
 import '../../models/classroom.dart';
@@ -108,8 +109,9 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
-          _errorMessage = 'Gagal memuat detail kelas: $e';
+          _errorMessage = l10n.classDetailLoadFailed(e.toString());
           _isLoading = false;
         });
       }
@@ -117,6 +119,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Future<void> _showCreateMeetingDialog() async {
+    final l10n = AppLocalizations.of(context);
     final titleController = TextEditingController();
     final numberController = TextEditingController(text: '${_meetings.length + 1}');
     final formKey = GlobalKey<FormState>();
@@ -124,7 +127,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     final created = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Buat Pertemuan Baru'),
+        title: Text(l10n.meetingCreateTitle),
         content: SizedBox(
           width: 440,
           child: Form(
@@ -135,20 +138,20 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                 TextFormField(
                   controller: numberController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Nomor Pertemuan'),
+                  decoration: InputDecoration(labelText: l10n.meetingNumberLabel),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Nomor wajib diisi';
+                    if (v == null || v.trim().isEmpty) return l10n.meetingNumberRequired;
                     final num = int.tryParse(v.trim());
-                    if (num == null || num <= 0) return 'Nomor harus angka > 0';
+                    if (num == null || num <= 0) return l10n.meetingNumberMustBePositive;
                     return null;
                   },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Judul Pertemuan'),
+                  decoration: InputDecoration(labelText: l10n.meetingTitleLabel),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Judul wajib diisi';
+                    if (v == null || v.trim().isEmpty) return l10n.meetingTitleRequired;
                     return null;
                   },
                 ),
@@ -159,7 +162,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -178,12 +181,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               } catch (e) {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+                    SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
                   );
                 }
               }
             },
-            child: const Text('Simpan Pertemuan'),
+            child: Text(l10n.classSaveMeetingBtn),
           ),
         ],
       ),
@@ -198,22 +201,23 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Future<void> _confirmArchiveClass() async {
+    final l10n = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Arsipkan Kelas?'),
-        content: const Text(
-          'Kelas yang diarsipkan akan terkunci untuk pengeditan dan tidak lagi menerima anggota baru. Anggota lama tetap dapat membaca materi.',
+        title: Text(l10n.classArchiveConfirmTitle),
+        content: Text(
+          l10n.classArchiveConfirmBody,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.warning),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Arsipkan'),
+            child: Text(l10n.classArchiveBtn),
           ),
         ],
       ),
@@ -228,8 +232,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Kelas berhasil diarsipkan.'),
+            SnackBar(
+              content: Text(l10n.classArchiveSuccess),
               backgroundColor: AppTheme.success,
             ),
           );
@@ -237,7 +241,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal mengarsipkan: $e'), backgroundColor: AppTheme.error),
+            SnackBar(content: Text(l10n.classArchiveFailed(e.toString())), backgroundColor: AppTheme.error),
           );
         }
       }
@@ -245,22 +249,23 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Future<void> _confirmReactivateClass() async {
+    final l10n = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Aktifkan Kembali Kelas?'),
-        content: const Text(
-          'Kelas yang diaktifkan kembali akan dapat menerima anggota baru serta mengizinkan pengelolaan pertemuan dan kuis seperti semula.',
+        title: Text(l10n.classReactivateConfirmTitle),
+        content: Text(
+          l10n.classReactivateConfirmBody,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.success),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Aktifkan'),
+            child: Text(l10n.classReactivateBtn),
           ),
         ],
       ),
@@ -275,8 +280,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Kelas berhasil diaktifkan kembali.'),
+            SnackBar(
+              content: Text(l10n.classReactivateSuccess),
               backgroundColor: AppTheme.success,
             ),
           );
@@ -284,7 +289,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal mengaktifkan kembali kelas: $e'), backgroundColor: AppTheme.error),
+            SnackBar(content: Text(l10n.classReactivateFailed(e.toString())), backgroundColor: AppTheme.error),
           );
         }
       }
@@ -293,17 +298,19 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (_isLoading) {
-      return const Scaffold(
-        body: LoadingIndicator(message: 'Memuat detail kelas...'),
+      return Scaffold(
+        body: LoadingIndicator(message: l10n.classDetailLoading),
       );
     }
 
     if (_errorMessage != null || _classroom == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Detail Kelas')),
+        appBar: AppBar(title: Text(l10n.classDetailTitle)),
         body: ErrorView(
-          message: _errorMessage ?? 'Kelas tidak ditemukan.',
+          message: _errorMessage ?? l10n.classNotFound,
           onRetry: _loadAllData,
         ),
       );
@@ -321,18 +328,18 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           if (isOwner && classroom.isActive)
             IconButton(
               icon: const Icon(Icons.archive_outlined),
-              tooltip: 'Arsipkan Kelas',
+              tooltip: l10n.classArchiveTooltip,
               onPressed: _confirmArchiveClass,
             ),
           if (isOwner && !classroom.isActive)
             IconButton(
               icon: const Icon(Icons.unarchive_outlined),
-              tooltip: 'Aktifkan Kembali Kelas',
+              tooltip: l10n.classReactivateTooltip,
               onPressed: _confirmReactivateClass,
             ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Segarkan',
+            tooltip: l10n.meetingRefreshTooltip,
             onPressed: _loadAllData,
           ),
           const SizedBox(width: 8),
@@ -342,7 +349,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           ? FloatingActionButton.extended(
               onPressed: _showCreateMeetingDialog,
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Tambah Pertemuan'),
+              label: Text(l10n.meetingAddFab),
               backgroundColor: AppTheme.primary,
               foregroundColor: Colors.white,
             )
@@ -375,14 +382,18 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                   ),
                 ],
                 const SizedBox(height: 12),
-                Row(
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 12,
+                  runSpacing: 8,
                   children: [
                     InkWell(
                       onTap: () {
                         Clipboard.setData(ClipboardData(text: classroom.code));
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Kode kelas ${classroom.code} disalin ke clipboard.'),
+                            content: Text(l10n.classCodeCopied(classroom.code)),
                             duration: const Duration(seconds: 2),
                           ),
                         );
@@ -415,15 +426,20 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                         ),
                       ),
                     ),
-                    const Spacer(),
-                    Text(
-                      '${_members.length} Anggota',
-                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '•  ${_meetings.length} Pertemuan',
-                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          l10n.classMemberCount(_members.length),
+                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        ),
+                        Text(
+                          l10n.classMeetingCount(_meetings.length),
+                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -434,10 +450,10 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           // Tab Bar
           TabBar(
             controller: _tabController,
-            tabs: const [
-              Tab(icon: Icon(Icons.calendar_month_rounded), text: 'Pertemuan'),
-              Tab(icon: Icon(Icons.analytics_outlined), text: 'Rekap Nilai'),
-              Tab(icon: Icon(Icons.people_alt_rounded), text: 'Anggota Kelas'),
+            tabs: [
+              Tab(icon: const Icon(Icons.calendar_month_rounded), text: l10n.classTabMeetings),
+              Tab(icon: const Icon(Icons.analytics_outlined), text: l10n.classTabGrades),
+              Tab(icon: const Icon(Icons.people_alt_rounded), text: l10n.classTabMembers),
             ],
           ),
 
@@ -458,6 +474,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Widget _buildMeetingsTab(bool isOwner) {
+    final l10n = AppLocalizations.of(context);
     if (_meetings.isEmpty) {
       return Center(
         child: Padding(
@@ -467,12 +484,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             children: [
               Icon(Icons.calendar_month_outlined, size: 48, color: AppTheme.textSecondary.withAlpha(128)),
               const SizedBox(height: 12),
-              Text('Belum Ada Pertemuan', style: Theme.of(context).textTheme.titleMedium),
+              Text(l10n.meetingEmptyTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 6),
               Text(
                 isOwner
-                    ? 'Buat pertemuan baru untuk mulai mengisi materi, pretest, dan video pembelajaran.'
-                    : 'Pengajar belum mempublikasikan pertemuan di kelas ini.',
+                    ? l10n.classEmptyMeetingOwnerDesc
+                    : l10n.classEmptyMeetingStudentDesc,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
@@ -481,7 +498,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                 ElevatedButton.icon(
                   onPressed: _showCreateMeetingDialog,
                   icon: const Icon(Icons.add_rounded),
-                  label: const Text('Buat Pertemuan'),
+                  label: Text(l10n.classCreateMeetingBtn),
                 ),
               ],
             ],
@@ -527,6 +544,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Widget _buildGradebookTab(bool isOwner, bool isStaff) {
+    final l10n = AppLocalizations.of(context);
     if (!isOwner && isStaff) {
       return Center(
         child: Padding(
@@ -544,14 +562,14 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                'Akses Rekap Nilai Terbatas',
+                l10n.classGradebookRestrictedTitle,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Sesuai kebijakan perlindungan data akademik Farlean LMS, hanya Pengajar Pemilik Kelas dan Admin yang memiliki wewenang untuk mengakses rekapitulasi nilai mahasiswa di kelas ini.',
+              Text(
+                l10n.classGradebookRestrictedBody,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textSecondary, height: 1.4),
+                style: const TextStyle(color: AppTheme.textSecondary, height: 1.4),
               ),
             ],
           ),
@@ -565,6 +583,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Widget _buildTeacherGradebook() {
+    final l10n = AppLocalizations.of(context);
     if (_members.isEmpty) {
       return Center(
         child: Padding(
@@ -574,7 +593,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             children: [
               Icon(Icons.analytics_outlined, size: 48, color: AppTheme.textSecondary.withAlpha(128)),
               const SizedBox(height: 12),
-              const Text('Belum ada mahasiswa di kelas ini.', style: TextStyle(color: AppTheme.textSecondary)),
+              Text(l10n.classGradebookNoStudents, style: const TextStyle(color: AppTheme.textSecondary)),
             ],
           ),
         ),
@@ -639,15 +658,15 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             child: DropdownButton<String?>(
               value: _selectedMeetingId,
               isExpanded: true,
-              hint: const Text('Semua Pertemuan (Ringkasan)', style: TextStyle(fontSize: 13)),
+              hint: Text(l10n.classGradebookAllMeetingsHint, style: const TextStyle(fontSize: 13)),
               items: [
-                const DropdownMenuItem<String?>(
+                DropdownMenuItem<String?>(
                   value: null,
-                  child: Text('Semua Pertemuan (Ringkasan)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  child: Text(l10n.classGradebookAllMeetingsHint, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                 ),
                 ..._meetings.map((m) => DropdownMenuItem<String?>(
                       value: m.id,
-                      child: Text('Pertemuan ${m.number}: ${m.title}', style: const TextStyle(fontSize: 13)),
+                      child: Text(l10n.classMeetingNumberTitle(m.number, m.title), style: const TextStyle(fontSize: 13)),
                     )),
               ],
               onChanged: (val) {
@@ -666,18 +685,18 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             children: [
               Expanded(
                 child: _buildKpiCard(
-                  title: 'Rata-rata Pretest',
+                  title: l10n.classKpiPretestAvg,
                   value: preAvg,
-                  subtitle: '$preSubmittedCount dari $totalStudents mahasiswa',
+                  subtitle: l10n.classKpiSubCount(preSubmittedCount, totalStudents),
                   color: AppTheme.secondary,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _buildKpiCard(
-                  title: 'Rata-rata Post Test',
+                  title: l10n.classKpiPosttestAvg,
                   value: postAvg,
-                  subtitle: '$postSubmittedCount dari $totalStudents mahasiswa',
+                  subtitle: l10n.classKpiSubCount(postSubmittedCount, totalStudents),
                   color: Colors.deepPurple,
                 ),
               ),
@@ -689,18 +708,18 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             children: [
               Expanded(
                 child: _buildKpiCard(
-                  title: 'Total Pertemuan',
+                  title: l10n.classKpiTotalMeetings,
                   value: '${_meetings.length}',
-                  subtitle: '${_meetings.where((m) => m.pretestId != null || m.posttestId != null).length} ber-modul kuis',
+                  subtitle: l10n.classKpiQuizModulesCount(_meetings.where((m) => m.pretestId != null || m.posttestId != null).length),
                   color: AppTheme.primary,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _buildKpiCard(
-                  title: 'Total Mahasiswa',
+                  title: l10n.classKpiTotalStudents,
                   value: '$totalStudents',
-                  subtitle: 'Terdaftar di kelas ini',
+                  subtitle: l10n.classKpiEnrolledDesc,
                   color: AppTheme.success,
                 ),
               ),
@@ -719,7 +738,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           child: Row(
             children: [
               Text(
-                'Menampilkan ${totalStudents > 0 ? startIndex + 1 : 0}-$endIndex dari $totalStudents mahasiswa',
+                l10n.classPaginationInfo(totalStudents > 0 ? startIndex + 1 : 0, endIndex, totalStudents),
                 style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
               const Spacer(),
@@ -807,7 +826,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       children: [
                         Expanded(
                           child: _buildScoreChip(
-                            label: 'Pretest',
+                            label: l10n.meetingModulePretest,
                             hasModule: selectedMeeting.pretestId != null,
                             score: preScore,
                             accentColor: AppTheme.secondary,
@@ -816,7 +835,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                         const SizedBox(width: 8),
                         Expanded(
                           child: _buildScoreChip(
-                            label: 'Post Test',
+                            label: l10n.meetingModulePosttest,
                             hasModule: selectedMeeting.posttestId != null,
                             score: postScore,
                             accentColor: Colors.deepPurple,
@@ -858,7 +877,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                                 const Icon(Icons.assignment_turned_in_outlined, size: 14, color: AppTheme.primary),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Progres Kuis: $doneCount dari $totalModules diselesaikan',
+                                  l10n.classQuizProgress(doneCount, totalModules),
                                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                                 ),
                               ],
@@ -872,9 +891,9 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                               ),
                             ] else if (totalModules > 0) ...[
                               const SizedBox(height: 4),
-                              const Text(
-                                'Belum ada kuis yang dikerjakan pada pertemuan mana pun.',
-                                style: TextStyle(fontSize: 11, color: AppTheme.warning),
+                              Text(
+                                l10n.classQuizNoneDone,
+                                style: const TextStyle(fontSize: 11, color: AppTheme.warning),
                               ),
                             ],
                           ],
@@ -927,6 +946,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Widget _buildScoreChip({required String label, required bool hasModule, required double? score, required Color accentColor}) {
+    final l10n = AppLocalizations.of(context);
     if (!hasModule) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -951,7 +971,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           Icon(isDone ? Icons.check_circle_outline_rounded : Icons.pending_outlined, size: 12, color: isDone ? accentColor : AppTheme.warning),
           const SizedBox(width: 4),
           Text(
-            isDone ? '$label: ${score.toStringAsFixed(1)}' : '$label: Belum Ada',
+            isDone ? '$label: ${score.toStringAsFixed(1)}' : '$label: ${l10n.classScoreNotAvailable}',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -964,9 +984,10 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Widget _buildStudentPersonalGradebook() {
+    final l10n = AppLocalizations.of(context);
     if (_meetings.isEmpty) {
-      return const Center(
-        child: Text('Belum ada pertemuan di kelas ini.', style: TextStyle(color: AppTheme.textSecondary)),
+      return Center(
+        child: Text(l10n.classNoMeetings, style: const TextStyle(color: AppTheme.textSecondary)),
       );
     }
 
@@ -988,8 +1009,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Hasil Capaian Belajar Anda', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.primary)),
-                    Text('Menampilkan nilai resmi pretest & post test Anda pada kelas ${_classroom?.name ?? ""}.', style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                    Text(l10n.classStudentProgressTitle, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.primary)),
+                    Text(l10n.classStudentProgressBody(_classroom?.name ?? ''), style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
                   ],
                 ),
               ),
@@ -1013,13 +1034,13 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Pertemuan ${meeting.number}: ${meeting.title}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text(l10n.classMeetingNumberTitle(meeting.number, meeting.title), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                   const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
                         child: _buildScoreChip(
-                          label: 'Pretest',
+                          label: l10n.meetingModulePretest,
                           hasModule: meeting.pretestId != null,
                           score: preScore,
                           accentColor: AppTheme.secondary,
@@ -1028,7 +1049,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       const SizedBox(width: 8),
                       Expanded(
                         child: _buildScoreChip(
-                          label: 'Post Test',
+                          label: l10n.meetingModulePosttest,
                           hasModule: meeting.posttestId != null,
                           score: postScore,
                           accentColor: Colors.deepPurple,
@@ -1046,12 +1067,13 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Widget _buildMembersTab(bool isStaff) {
+    final l10n = AppLocalizations.of(context);
     if (_members.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Text(
-            'Belum ada anggota terdaftar di kelas ini.',
+            l10n.classNoMembers,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
@@ -1091,7 +1113,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Tipe: ${member.accountType} • Status: ${member.status.value}'),
+                    Text(l10n.classMemberTypeStatus(member.accountType.name, member.status.value)),
                     if (showIdentity)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),

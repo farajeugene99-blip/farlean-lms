@@ -1139,4 +1139,225 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get materialEditorPlaceholder =>
       'Tuliskan materi pembelajaran terstruktur di sini...';
+
+  @override
+  String classDetailLoadFailed(String detail) {
+    return 'Gagal memuat detail kelas: $detail';
+  }
+
+  @override
+  String get classSaveMeetingBtn => 'Simpan Pertemuan';
+
+  @override
+  String get classArchiveConfirmTitle => 'Arsipkan Kelas?';
+
+  @override
+  String get classArchiveConfirmBody =>
+      'Kelas yang diarsipkan akan terkunci untuk pengeditan dan tidak lagi menerima anggota baru. Anggota lama tetap dapat membaca materi.';
+
+  @override
+  String get classArchiveBtn => 'Arsipkan';
+
+  @override
+  String get classArchiveSuccess => 'Kelas berhasil diarsipkan.';
+
+  @override
+  String classArchiveFailed(String detail) {
+    return 'Gagal mengarsipkan: $detail';
+  }
+
+  @override
+  String get classReactivateConfirmTitle => 'Aktifkan Kembali Kelas?';
+
+  @override
+  String get classReactivateConfirmBody =>
+      'Kelas yang diaktifkan kembali akan dapat menerima anggota baru serta mengizinkan pengelolaan pertemuan dan kuis seperti semula.';
+
+  @override
+  String get classReactivateBtn => 'Aktifkan';
+
+  @override
+  String get classReactivateSuccess => 'Kelas berhasil diaktifkan kembali.';
+
+  @override
+  String classReactivateFailed(String detail) {
+    return 'Gagal mengaktifkan kembali kelas: $detail';
+  }
+
+  @override
+  String get classDetailLoading => 'Memuat detail kelas...';
+
+  @override
+  String get classDetailTitle => 'Detail Kelas';
+
+  @override
+  String get classNotFound => 'Kelas tidak ditemukan.';
+
+  @override
+  String get classArchiveTooltip => 'Arsipkan Kelas';
+
+  @override
+  String get classReactivateTooltip => 'Aktifkan Kembali Kelas';
+
+  @override
+  String classCodeCopied(String code) {
+    return 'Kode kelas $code disalin ke clipboard.';
+  }
+
+  @override
+  String classMemberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Anggota',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String classMeetingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '•  $count Pertemuan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get classTabMeetings => 'Pertemuan';
+
+  @override
+  String get classTabGrades => 'Rekap Nilai';
+
+  @override
+  String get classTabMembers => 'Anggota Kelas';
+
+  @override
+  String get classEmptyMeetingOwnerDesc =>
+      'Buat pertemuan baru untuk mulai mengisi materi, pretest, dan video pembelajaran.';
+
+  @override
+  String get classEmptyMeetingStudentDesc =>
+      'Pengajar belum mempublikasikan pertemuan di kelas ini.';
+
+  @override
+  String get classCreateMeetingBtn => 'Buat Pertemuan';
+
+  @override
+  String get classGradebookRestrictedTitle => 'Akses Rekap Nilai Terbatas';
+
+  @override
+  String get classGradebookRestrictedBody =>
+      'Sesuai kebijakan perlindungan data akademik Farlean LMS, hanya Pengajar Pemilik Kelas dan Admin yang memiliki wewenang untuk mengakses rekapitulasi nilai mahasiswa di kelas ini.';
+
+  @override
+  String get classGradebookNoStudents => 'Belum ada mahasiswa di kelas ini.';
+
+  @override
+  String get classGradebookAllMeetingsHint => 'Semua Pertemuan (Ringkasan)';
+
+  @override
+  String classMeetingNumberTitle(int number, String title) {
+    return 'Pertemuan $number: $title';
+  }
+
+  @override
+  String get classKpiPretestAvg => 'Rata-rata Pretest';
+
+  @override
+  String classKpiSubCount(int submitted, int total) {
+    return '$submitted dari $total mahasiswa';
+  }
+
+  @override
+  String get classKpiPosttestAvg => 'Rata-rata Post Test';
+
+  @override
+  String get classKpiTotalMeetings => 'Total Pertemuan';
+
+  @override
+  String classKpiQuizModulesCount(int count) {
+    return '$count ber-modul kuis';
+  }
+
+  @override
+  String get classKpiTotalStudents => 'Total Mahasiswa';
+
+  @override
+  String get classKpiEnrolledDesc => 'Terdaftar di kelas ini';
+
+  @override
+  String classPaginationInfo(int start, int end, int total) {
+    return 'Menampilkan $start-$end dari $total mahasiswa';
+  }
+
+  @override
+  String classQuizProgress(int done, int total) {
+    return 'Progres Kuis: $done dari $total diselesaikan';
+  }
+
+  @override
+  String get classQuizNoneDone =>
+      'Belum ada kuis yang dikerjakan pada pertemuan mana pun.';
+
+  @override
+  String get classScoreNotAvailable => 'Belum Ada';
+
+  @override
+  String get classNoMeetings => 'Belum ada pertemuan di kelas ini.';
+
+  @override
+  String get classStudentProgressTitle => 'Hasil Capaian Belajar Anda';
+
+  @override
+  String classStudentProgressBody(String className) {
+    return 'Menampilkan nilai resmi pretest & post test Anda pada kelas $className.';
+  }
+
+  @override
+  String get classNoMembers => 'Belum ada anggota terdaftar di kelas ini.';
+
+  @override
+  String classMemberTypeStatus(String type, String status) {
+    return 'Tipe: $type • Status: $status';
+  }
+
+  @override
+  String get joinClassSuccessTitle => 'Berhasil Bergabung';
+
+  @override
+  String get joinClassPendingTitle => 'Menunggu Persetujuan';
+
+  @override
+  String joinClassStatusPrefix(String status) {
+    return 'Status: $status';
+  }
+
+  @override
+  String get joinClassOpenBtn => 'Buka Kelas';
+
+  @override
+  String get joinClassBackHomeBtn => 'Kembali ke Beranda';
+
+  @override
+  String joinClassSyncFailed(String detail) {
+    return 'Gagal sinkronisasi data kelas: $detail';
+  }
+
+  @override
+  String get joinClassAppBarTitle => 'Gabung Kelas';
+
+  @override
+  String get joinClassHeading => 'Masukkan Kode Kelas';
+
+  @override
+  String get joinClassDescription =>
+      'Kode kelas terdiri dari 6-12 karakter alfanumerik. Mahasiswa/Dosen otomatis aktif, sedangkan akun Umum berstatus pending.';
+
+  @override
+  String get joinClassCodeLabel => 'Kode Kelas (misal: FARLEAN1)';
+
+  @override
+  String get joinClassSubmitBtn => 'Gabung Sekarang';
 }

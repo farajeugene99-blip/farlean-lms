@@ -95,6 +95,9 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
+          locale: const Locale('id'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: ChangeNotifierProvider<AuthProvider>.value(
             value: authProvider,
             child: ClassDetailScreen(

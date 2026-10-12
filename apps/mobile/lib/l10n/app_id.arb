@@ -1197,5 +1197,260 @@
   "@materialEmptyWarning": { "description": "Banner peringatan editor materi masih 0 karakter" },
 
   "materialEditorPlaceholder": "Tuliskan materi pembelajaran terstruktur di sini...",
-  "@materialEditorPlaceholder": { "description": "Placeholder editor Quill saat kosong" }
+  "@materialEditorPlaceholder": { "description": "Placeholder editor Quill saat kosong" },
+
+  "classDetailLoadFailed": "Gagal memuat detail kelas: {detail}",
+  "@classDetailLoadFailed": {
+    "description": "Pesan error gagal memuat detail kelas",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "classSaveMeetingBtn": "Simpan Pertemuan",
+  "@classSaveMeetingBtn": { "description": "Tombol simpan pertemuan pada dialog buat pertemuan kelas" },
+
+  "classArchiveConfirmTitle": "Arsipkan Kelas?",
+  "@classArchiveConfirmTitle": { "description": "Judul konfirmasi arsipkan kelas" },
+
+  "classArchiveConfirmBody": "Kelas yang diarsipkan akan terkunci untuk pengeditan dan tidak lagi menerima anggota baru. Anggota lama tetap dapat membaca materi.",
+  "@classArchiveConfirmBody": { "description": "Isi konfirmasi arsipkan kelas" },
+
+  "classArchiveBtn": "Arsipkan",
+  "@classArchiveBtn": { "description": "Tombol konfirmasi arsipkan kelas" },
+
+  "classArchiveSuccess": "Kelas berhasil diarsipkan.",
+  "@classArchiveSuccess": { "description": "Snackbar sukses arsipkan kelas" },
+
+  "classArchiveFailed": "Gagal mengarsipkan: {detail}",
+  "@classArchiveFailed": {
+    "description": "Snackbar gagal arsipkan kelas",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "classReactivateConfirmTitle": "Aktifkan Kembali Kelas?",
+  "@classReactivateConfirmTitle": { "description": "Judul konfirmasi aktifkan kembali kelas" },
+
+  "classReactivateConfirmBody": "Kelas yang diaktifkan kembali akan dapat menerima anggota baru serta mengizinkan pengelolaan pertemuan dan kuis seperti semula.",
+  "@classReactivateConfirmBody": { "description": "Isi konfirmasi aktifkan kembali kelas" },
+
+  "classReactivateBtn": "Aktifkan",
+  "@classReactivateBtn": { "description": "Tombol konfirmasi aktifkan kembali kelas" },
+
+  "classReactivateSuccess": "Kelas berhasil diaktifkan kembali.",
+  "@classReactivateSuccess": { "description": "Snackbar sukses aktifkan kembali kelas" },
+
+  "classReactivateFailed": "Gagal mengaktifkan kembali kelas: {detail}",
+  "@classReactivateFailed": {
+    "description": "Snackbar gagal aktifkan kembali kelas",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "classDetailLoading": "Memuat detail kelas...",
+  "@classDetailLoading": { "description": "Teks loading detail kelas" },
+
+  "classDetailTitle": "Detail Kelas",
+  "@classDetailTitle": { "description": "Judul AppBar detail kelas saat fallback" },
+
+  "classNotFound": "Kelas tidak ditemukan.",
+  "@classNotFound": { "description": "Pesan kelas tidak ditemukan" },
+
+  "classArchiveTooltip": "Arsipkan Kelas",
+  "@classArchiveTooltip": { "description": "Tooltip ikon arsipkan kelas" },
+
+  "classReactivateTooltip": "Aktifkan Kembali Kelas",
+  "@classReactivateTooltip": { "description": "Tooltip ikon aktifkan kembali kelas" },
+
+  "classCodeCopied": "Kode kelas {code} disalin ke clipboard.",
+  "@classCodeCopied": {
+    "description": "Snackbar kode kelas berhasil disalin",
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+
+  "classMemberCount": "{count, plural, other{{count} Anggota}}",
+  "@classMemberCount": {
+    "description": "Jumlah anggota kelas pada header",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "classMeetingCount": "{count, plural, other{•  {count} Pertemuan}}",
+  "@classMeetingCount": {
+    "description": "Jumlah pertemuan kelas pada header",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "classTabMeetings": "Pertemuan",
+  "@classTabMeetings": { "description": "Tab pertemuan kelas" },
+
+  "classTabGrades": "Rekap Nilai",
+  "@classTabGrades": { "description": "Tab rekap nilai kelas" },
+
+  "classTabMembers": "Anggota Kelas",
+  "@classTabMembers": { "description": "Tab anggota kelas" },
+
+  "classEmptyMeetingOwnerDesc": "Buat pertemuan baru untuk mulai mengisi materi, pretest, dan video pembelajaran.",
+  "@classEmptyMeetingOwnerDesc": { "description": "Deskripsi belum ada pertemuan untuk pengajar" },
+
+  "classEmptyMeetingStudentDesc": "Pengajar belum mempublikasikan pertemuan di kelas ini.",
+  "@classEmptyMeetingStudentDesc": { "description": "Deskripsi belum ada pertemuan untuk siswa" },
+
+  "classCreateMeetingBtn": "Buat Pertemuan",
+  "@classCreateMeetingBtn": { "description": "Tombol buat pertemuan pada tab pertemuan kosong" },
+
+  "classGradebookRestrictedTitle": "Akses Rekap Nilai Terbatas",
+  "@classGradebookRestrictedTitle": { "description": "Judul banner pembatasan akses rekap nilai" },
+
+  "classGradebookRestrictedBody": "Sesuai kebijakan perlindungan data akademik Farlean LMS, hanya Pengajar Pemilik Kelas dan Admin yang memiliki wewenang untuk mengakses rekapitulasi nilai mahasiswa di kelas ini.",
+  "@classGradebookRestrictedBody": { "description": "Deskripsi pembatasan akses rekap nilai" },
+
+  "classGradebookNoStudents": "Belum ada mahasiswa di kelas ini.",
+  "@classGradebookNoStudents": { "description": "Teks status kosong rekap nilai saat belum ada siswa" },
+
+  "classGradebookAllMeetingsHint": "Semua Pertemuan (Ringkasan)",
+  "@classGradebookAllMeetingsHint": { "description": "Opsi dropdown rekap nilai semua pertemuan" },
+
+  "classMeetingNumberTitle": "Pertemuan {number}: {title}",
+  "@classMeetingNumberTitle": {
+    "description": "Format judul pertemuan dengan nomor dan nama",
+    "placeholders": {
+      "number": { "type": "int" },
+      "title": { "type": "String" }
+    }
+  },
+
+  "classKpiPretestAvg": "Rata-rata Pretest",
+  "@classKpiPretestAvg": { "description": "Judul KPI rata-rata pretest" },
+
+  "classKpiSubCount": "{submitted} dari {total} mahasiswa",
+  "@classKpiSubCount": {
+    "description": "Subjudul KPI jumlah pengumpulan nilai",
+    "placeholders": {
+      "submitted": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "classKpiPosttestAvg": "Rata-rata Post Test",
+  "@classKpiPosttestAvg": { "description": "Judul KPI rata-rata post test" },
+
+  "classKpiTotalMeetings": "Total Pertemuan",
+  "@classKpiTotalMeetings": { "description": "Judul KPI total pertemuan" },
+
+  "classKpiQuizModulesCount": "{count} ber-modul kuis",
+  "@classKpiQuizModulesCount": {
+    "description": "Subjudul KPI jumlah pertemuan bermodul kuis",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "classKpiTotalStudents": "Total Mahasiswa",
+  "@classKpiTotalStudents": { "description": "Judul KPI total mahasiswa" },
+
+  "classKpiEnrolledDesc": "Terdaftar di kelas ini",
+  "@classKpiEnrolledDesc": { "description": "Subjudul KPI mahasiswa terdaftar" },
+
+  "classPaginationInfo": "Menampilkan {start}-{end} dari {total} mahasiswa",
+  "@classPaginationInfo": {
+    "description": "Teks informasi paginasi rekap nilai",
+    "placeholders": {
+      "start": { "type": "int" },
+      "end": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "classQuizProgress": "Progres Kuis: {done} dari {total} diselesaikan",
+  "@classQuizProgress": {
+    "description": "Status progres kuis ringkasan siswa",
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "classQuizNoneDone": "Belum ada kuis yang dikerjakan pada pertemuan mana pun.",
+  "@classQuizNoneDone": { "description": "Keterangan saat siswa belum mengerjakan kuis" },
+
+  "classScoreNotAvailable": "Belum Ada",
+  "@classScoreNotAvailable": { "description": "Label saat nilai kuis belum ada" },
+
+  "classNoMeetings": "Belum ada pertemuan di kelas ini.",
+  "@classNoMeetings": { "description": "Teks status kosong capaian belajar siswa" },
+
+  "classStudentProgressTitle": "Hasil Capaian Belajar Anda",
+  "@classStudentProgressTitle": { "description": "Judul banner hasil capaian belajar siswa" },
+
+  "classStudentProgressBody": "Menampilkan nilai resmi pretest & post test Anda pada kelas {className}.",
+  "@classStudentProgressBody": {
+    "description": "Deskripsi banner hasil capaian belajar siswa",
+    "placeholders": {
+      "className": { "type": "String" }
+    }
+  },
+
+  "classNoMembers": "Belum ada anggota terdaftar di kelas ini.",
+  "@classNoMembers": { "description": "Teks status kosong tab anggota kelas" },
+
+  "classMemberTypeStatus": "Tipe: {type} • Status: {status}",
+  "@classMemberTypeStatus": {
+    "description": "Subjudul kartu anggota kelas dengan tipe dan status mentah",
+    "placeholders": {
+      "type": { "type": "String" },
+      "status": { "type": "String" }
+    }
+  },
+
+  "joinClassSuccessTitle": "Berhasil Bergabung",
+  "@joinClassSuccessTitle": { "description": "Judul dialog hasil berhasil bergabung kelas" },
+
+  "joinClassPendingTitle": "Menunggu Persetujuan",
+  "@joinClassPendingTitle": { "description": "Judul dialog hasil menunggu persetujuan bergabung kelas" },
+
+  "joinClassStatusPrefix": "Status: {status}",
+  "@joinClassStatusPrefix": {
+    "description": "Badge status keanggotaan pada dialog hasil gabung kelas",
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+
+  "joinClassOpenBtn": "Buka Kelas",
+  "@joinClassOpenBtn": { "description": "Tombol buka kelas pada dialog sukses gabung kelas aktif" },
+
+  "joinClassBackHomeBtn": "Kembali ke Beranda",
+  "@joinClassBackHomeBtn": { "description": "Tombol kembali ke beranda pada dialog status pending" },
+
+  "joinClassSyncFailed": "Gagal sinkronisasi data kelas: {detail}",
+  "@joinClassSyncFailed": {
+    "description": "Snackbar gagal sinkronisasi data kelas setelah gabung",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "joinClassAppBarTitle": "Gabung Kelas",
+  "@joinClassAppBarTitle": { "description": "Judul AppBar layar gabung kelas" },
+
+  "joinClassHeading": "Masukkan Kode Kelas",
+  "@joinClassHeading": { "description": "Judul besar form gabung kelas" },
+
+  "joinClassDescription": "Kode kelas terdiri dari 6-12 karakter alfanumerik. Mahasiswa/Dosen otomatis aktif, sedangkan akun Umum berstatus pending.",
+  "@joinClassDescription": { "description": "Instruksi format dan aturan kode kelas" },
+
+  "joinClassCodeLabel": "Kode Kelas (misal: FARLEAN1)",
+  "@joinClassCodeLabel": { "description": "Label field input kode kelas" },
+
+  "joinClassSubmitBtn": "Gabung Sekarang",
+  "@joinClassSubmitBtn": { "description": "Tombol submit formulir gabung kelas" }
 }

@@ -1137,4 +1137,227 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get materialEditorPlaceholder =>
       'Write structured learning material here...';
+
+  @override
+  String classDetailLoadFailed(String detail) {
+    return 'Failed to load class details: $detail';
+  }
+
+  @override
+  String get classSaveMeetingBtn => 'Save Meeting';
+
+  @override
+  String get classArchiveConfirmTitle => 'Archive Class?';
+
+  @override
+  String get classArchiveConfirmBody =>
+      'Archived classes will be locked from editing and will no longer accept new members. Existing members can still read materials.';
+
+  @override
+  String get classArchiveBtn => 'Archive';
+
+  @override
+  String get classArchiveSuccess => 'Class successfully archived.';
+
+  @override
+  String classArchiveFailed(String detail) {
+    return 'Failed to archive: $detail';
+  }
+
+  @override
+  String get classReactivateConfirmTitle => 'Reactivate Class?';
+
+  @override
+  String get classReactivateConfirmBody =>
+      'Reactivated classes will be able to accept new members and allow management of meetings and quizzes as before.';
+
+  @override
+  String get classReactivateBtn => 'Reactivate';
+
+  @override
+  String get classReactivateSuccess => 'Class successfully reactivated.';
+
+  @override
+  String classReactivateFailed(String detail) {
+    return 'Failed to reactivate class: $detail';
+  }
+
+  @override
+  String get classDetailLoading => 'Loading class details...';
+
+  @override
+  String get classDetailTitle => 'Class Details';
+
+  @override
+  String get classNotFound => 'Class not found.';
+
+  @override
+  String get classArchiveTooltip => 'Archive Class';
+
+  @override
+  String get classReactivateTooltip => 'Reactivate Class';
+
+  @override
+  String classCodeCopied(String code) {
+    return 'Class code $code copied to clipboard.';
+  }
+
+  @override
+  String classMemberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Members',
+      one: '1 Member',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String classMeetingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '•  $count Meetings',
+      one: '•  1 Meeting',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get classTabMeetings => 'Meetings';
+
+  @override
+  String get classTabGrades => 'Gradebook';
+
+  @override
+  String get classTabMembers => 'Class Members';
+
+  @override
+  String get classEmptyMeetingOwnerDesc =>
+      'Create a new meeting to start adding materials, pretests, and learning videos.';
+
+  @override
+  String get classEmptyMeetingStudentDesc =>
+      'The instructor has not published any meetings in this class yet.';
+
+  @override
+  String get classCreateMeetingBtn => 'Create Meeting';
+
+  @override
+  String get classGradebookRestrictedTitle => 'Restricted Gradebook Access';
+
+  @override
+  String get classGradebookRestrictedBody =>
+      'Per Farlean LMS academic data protection policy, only the Class Owner Instructor and Admins are authorized to access student grade summaries in this class.';
+
+  @override
+  String get classGradebookNoStudents => 'No students in this class yet.';
+
+  @override
+  String get classGradebookAllMeetingsHint => 'All Meetings (Summary)';
+
+  @override
+  String classMeetingNumberTitle(int number, String title) {
+    return 'Meeting $number: $title';
+  }
+
+  @override
+  String get classKpiPretestAvg => 'Pretest Average';
+
+  @override
+  String classKpiSubCount(int submitted, int total) {
+    return '$submitted of $total students';
+  }
+
+  @override
+  String get classKpiPosttestAvg => 'Post Test Average';
+
+  @override
+  String get classKpiTotalMeetings => 'Total Meetings';
+
+  @override
+  String classKpiQuizModulesCount(int count) {
+    return '$count with quiz modules';
+  }
+
+  @override
+  String get classKpiTotalStudents => 'Total Students';
+
+  @override
+  String get classKpiEnrolledDesc => 'Enrolled in this class';
+
+  @override
+  String classPaginationInfo(int start, int end, int total) {
+    return 'Showing $start-$end of $total students';
+  }
+
+  @override
+  String classQuizProgress(int done, int total) {
+    return 'Quiz Progress: $done of $total completed';
+  }
+
+  @override
+  String get classQuizNoneDone =>
+      'No quizzes have been completed in any meeting yet.';
+
+  @override
+  String get classScoreNotAvailable => 'None Yet';
+
+  @override
+  String get classNoMeetings => 'No meetings in this class yet.';
+
+  @override
+  String get classStudentProgressTitle => 'Your Learning Achievements';
+
+  @override
+  String classStudentProgressBody(String className) {
+    return 'Showing your official pretest & post test scores for class $className.';
+  }
+
+  @override
+  String get classNoMembers => 'No members enrolled in this class yet.';
+
+  @override
+  String classMemberTypeStatus(String type, String status) {
+    return 'Type: $type • Status: $status';
+  }
+
+  @override
+  String get joinClassSuccessTitle => 'Joined Successfully';
+
+  @override
+  String get joinClassPendingTitle => 'Pending Approval';
+
+  @override
+  String joinClassStatusPrefix(String status) {
+    return 'Status: $status';
+  }
+
+  @override
+  String get joinClassOpenBtn => 'Open Class';
+
+  @override
+  String get joinClassBackHomeBtn => 'Back to Home';
+
+  @override
+  String joinClassSyncFailed(String detail) {
+    return 'Failed to sync class data: $detail';
+  }
+
+  @override
+  String get joinClassAppBarTitle => 'Join Class';
+
+  @override
+  String get joinClassHeading => 'Enter Class Code';
+
+  @override
+  String get joinClassDescription =>
+      'Class code consists of 6-12 alphanumeric characters. Students/Lecturers are automatically active, while General accounts are pending.';
+
+  @override
+  String get joinClassCodeLabel => 'Class Code (e.g., FARLEAN1)';
+
+  @override
+  String get joinClassSubmitBtn => 'Join Now';
 }
