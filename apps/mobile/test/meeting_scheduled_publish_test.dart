@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/core/theme/app_theme.dart';
+import 'package:mobile/l10n/generated/app_localizations.dart';
 import 'package:mobile/models/app_user.dart';
 import 'package:mobile/models/content_status.dart';
 import 'package:mobile/models/meeting.dart';
@@ -98,6 +99,9 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
+          locale: const Locale('id'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: ChangeNotifierProvider<AuthProvider>.value(
             value: _studentAuthProvider(),
             child: MeetingDetailScreen(
@@ -128,6 +132,9 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
+          locale: const Locale('id'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: ChangeNotifierProvider<AuthProvider>.value(
             value: _studentAuthProvider(),
             child: MeetingDetailScreen(
@@ -173,6 +180,9 @@ void main() {
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
+            locale: const Locale('id'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: MeetingListScreen(
               classId: 'c1',
               meetingRepository: repo,

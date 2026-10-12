@@ -479,4 +479,526 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get profileResetClassDone => 'Pilihan kelas aktif berhasil direset.';
+
+  @override
+  String get meetingStatusDraft => 'Draf';
+
+  @override
+  String get meetingStatusScheduled => 'Terjadwal';
+
+  @override
+  String get meetingStatusPublished => 'Dipublikasikan';
+
+  @override
+  String get meetingStatusArchived => 'Diarsipkan';
+
+  @override
+  String get meetingListTitle => 'Materi & Pertemuan';
+
+  @override
+  String get meetingSyncTooltip => 'Sinkronkan Jadwal Publikasi';
+
+  @override
+  String get meetingRefreshTooltip => 'Segarkan';
+
+  @override
+  String get meetingAddFab => 'Tambah Pertemuan';
+
+  @override
+  String get meetingErrorPermissionStaff =>
+      'Akses ditolak: Anda tidak memiliki wewenang untuk mengelola kelas ini.';
+
+  @override
+  String get meetingErrorPermissionStudent =>
+      'Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini. Pastikan Anda telah bergabung dan disetujui.';
+
+  @override
+  String get meetingErrorNetwork =>
+      'Koneksi ke server bermasalah. Periksa jaringan internet atau emulator Anda.';
+
+  @override
+  String meetingErrorLoadFailed(String detail) {
+    return 'Gagal memuat daftar pertemuan: $detail';
+  }
+
+  @override
+  String get meetingSelectClassFirst =>
+      'Pilih kelas yang valid terlebih dahulu untuk membuat pertemuan.';
+
+  @override
+  String get meetingCreateTitle => 'Buat Pertemuan Baru';
+
+  @override
+  String get meetingNumberLabel => 'Nomor Pertemuan';
+
+  @override
+  String get meetingNumberRequired => 'Nomor wajib diisi';
+
+  @override
+  String get meetingNumberMustBePositive => 'Nomor harus angka > 0';
+
+  @override
+  String get meetingTitleLabel => 'Judul Pertemuan';
+
+  @override
+  String get meetingTitleRequired => 'Judul wajib diisi';
+
+  @override
+  String get meetingSaveDraftBtn => 'Simpan Draft';
+
+  @override
+  String meetingCreateFailed(String detail) {
+    return 'Gagal: $detail';
+  }
+
+  @override
+  String meetingActionFailed(String detail) {
+    return 'Gagal: $detail';
+  }
+
+  @override
+  String meetingSyncScheduleSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count pertemuan terjadwal yang jatuh tempo berhasil dipublikasikan.',
+      zero: 'Tidak ada pertemuan terjadwal yang jatuh tempo saat ini.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingSyncFailed(String detail) {
+    return 'Gagal menyinkronkan jadwal: $detail';
+  }
+
+  @override
+  String get meetingNoClassTitle => 'Pilih Kelas Pembelajaran';
+
+  @override
+  String get meetingNoClassBody =>
+      'Anda belum memilih kelas. Silakan bergabung menggunakan kode kelas atau pilih kelas dari Beranda untuk melihat pertemuan.';
+
+  @override
+  String get meetingJoinClassBtn => 'Gabung Kelas';
+
+  @override
+  String get meetingClassLabel => 'Kelas:';
+
+  @override
+  String get meetingLoading => 'Memuat pertemuan...';
+
+  @override
+  String get meetingEmptyTitle => 'Belum Ada Pertemuan';
+
+  @override
+  String get meetingEmptyStaffDesc =>
+      'Buat pertemuan baru untuk mulai mengunggah materi, kuis pretest, dan video pembelajaran.';
+
+  @override
+  String get meetingEmptyStudentDesc =>
+      'Pengajar belum mempublikasikan pertemuan pembelajaran di kelas ini.';
+
+  @override
+  String get meetingCreateFirstBtn => 'Buat Pertemuan Pertama';
+
+  @override
+  String meetingCardNumber(int number) {
+    return 'Pertemuan $number';
+  }
+
+  @override
+  String meetingPublishAtLabel(String when) {
+    return 'Terbit: $when';
+  }
+
+  @override
+  String get meetingModulePretest => 'Pretest';
+
+  @override
+  String get meetingModuleMateri => 'Materi';
+
+  @override
+  String get meetingModuleVideo => 'Video';
+
+  @override
+  String get meetingModulePosttest => 'Post Test';
+
+  @override
+  String get meetingDetailLoading => 'Memuat hub pertemuan...';
+
+  @override
+  String get meetingDetailTitle => 'Detail Pertemuan';
+
+  @override
+  String get meetingNotFound => 'Pertemuan tidak ditemukan.';
+
+  @override
+  String meetingLoadDetailFailed(String detail) {
+    return 'Gagal memuat detail pertemuan: $detail';
+  }
+
+  @override
+  String meetingScheduledLockedNotice(String when) {
+    return 'Pertemuan ini masih berstatus Terjadwal. Konten akan dibuka pada $when.';
+  }
+
+  @override
+  String get meetingScheduledFutureFallback => 'waktu jadwal mendatang';
+
+  @override
+  String get meetingPickScheduleDateTitle =>
+      'Pilih Tanggal Publikasi Pertemuan';
+
+  @override
+  String get meetingPickScheduleTimeTitle => 'Pilih Jam Publikasi (WIB)';
+
+  @override
+  String get meetingScheduleMustBeFuture =>
+      'Waktu publikasi terjadwal harus di waktu mendatang.';
+
+  @override
+  String meetingScheduledSuccess(String when) {
+    return 'Pertemuan berhasil dijadwalkan terbit pada $when.';
+  }
+
+  @override
+  String meetingScheduleFailed(String detail) {
+    return 'Gagal menjadwalkan pertemuan: $detail';
+  }
+
+  @override
+  String meetingChangeStatusConfirmTitle(String status) {
+    return 'Ubah Status ke $status?';
+  }
+
+  @override
+  String get meetingChangeStatusPublishBody =>
+      'Pertemuan ini akan dapat diakses oleh seluruh anggota kelas yang aktif.';
+
+  @override
+  String get meetingChangeStatusArchiveBody =>
+      'Pertemuan ini akan diarsipkan dan tidak lagi muncul sebagai sesi aktif.';
+
+  @override
+  String meetingStatusChangedSuccess(String status) {
+    return 'Status berhasil diubah menjadi $status';
+  }
+
+  @override
+  String get meetingEditDialogTitle => 'Edit Informasi Pertemuan';
+
+  @override
+  String get meetingDescriptionLabel => 'Deskripsi / Ringkasan';
+
+  @override
+  String get meetingEditTooltip => 'Edit Info Pertemuan';
+
+  @override
+  String get meetingDeleteTooltip => 'Hapus Pertemuan';
+
+  @override
+  String get meetingManageStatusTooltip => 'Kelola Status';
+
+  @override
+  String get meetingMenuPublishNow => 'Publikasikan Sekarang (Published)';
+
+  @override
+  String get meetingMenuSchedule => 'Jadwalkan Publikasi (Scheduled)';
+
+  @override
+  String get meetingMenuDraft => 'Jadikan Draft / Batalkan Jadwal';
+
+  @override
+  String get meetingMenuArchive => 'Arsipkan (Archived)';
+
+  @override
+  String get meetingDeleteConfirmTitle => 'Hapus Pertemuan Ini?';
+
+  @override
+  String get meetingDeleteConfirmBody =>
+      'Tindakan ini akan menghapus pertemuan dari daftar kelas.';
+
+  @override
+  String get meetingDeleteAction => 'Hapus';
+
+  @override
+  String get meetingDeletedSuccess => 'Pertemuan berhasil dihapus.';
+
+  @override
+  String meetingDeleteFailed(String detail) {
+    return 'Gagal menghapus: $detail';
+  }
+
+  @override
+  String get meetingDefaultDescription =>
+      'Satu pertemuan menghubungkan kuis pretest, materi bacaan terstruktur, video pembelajaran, dan post test evaluasi.';
+
+  @override
+  String get meetingScheduledBannerTitle => 'Pertemuan Terjadwal';
+
+  @override
+  String meetingScheduledBanner(String when) {
+    return 'Dijadwalkan terbit pada $when. Publikasi berjalan saat cron/sinkronisasi berikutnya (dalam kisaran jadwal), bukan tepat-menit otomatis.';
+  }
+
+  @override
+  String get meetingScheduledBannerFallback =>
+      'Pertemuan disiapkan untuk jadwal publikasi mendatang.';
+
+  @override
+  String get meetingModulesTitle => 'Modul Pembelajaran';
+
+  @override
+  String get meetingModuleMaterialTitle => 'Materi Pembelajaran';
+
+  @override
+  String get meetingModuleMaterialSubActive =>
+      'Materi bacaan terstruktur format Quill Delta';
+
+  @override
+  String get meetingModuleMaterialSubStaffEmpty =>
+      'Materi belum dibuat. Klik untuk membuat materi baru.';
+
+  @override
+  String get meetingModuleMaterialSubStudentEmpty =>
+      'Materi belum diunggah oleh pengajar';
+
+  @override
+  String get meetingModuleMaterialActionOpen => 'Buka Materi';
+
+  @override
+  String get meetingModuleMaterialActionCreate => 'Buat Materi';
+
+  @override
+  String get meetingModulePretestTitle => 'Kuis Pretest';
+
+  @override
+  String get meetingModulePretestSubActive =>
+      'Uji pemahaman awal sebelum memulai materi inti';
+
+  @override
+  String get meetingModulePretestSubStaffEmpty =>
+      'Pretest belum diaktifkan. Klik untuk membuat pretest.';
+
+  @override
+  String get meetingModulePretestSubStudentEmpty =>
+      'Pretest belum diaktifkan untuk pertemuan ini';
+
+  @override
+  String get meetingModulePretestActionStart => 'Mulai Pretest';
+
+  @override
+  String get meetingModulePretestActionCreate => 'Buat Pretest';
+
+  @override
+  String get meetingModulePretestManageQuestions => 'Kelola Soal';
+
+  @override
+  String get meetingModulePretestBadgeNotice => 'Wajib pernah buka materi';
+
+  @override
+  String get meetingModuleVideoTitle => 'Video Pembelajaran';
+
+  @override
+  String get meetingModuleVideoSubActive =>
+      'Video tutorial & demonstrasi interaktif';
+
+  @override
+  String get meetingModuleVideoSubStaffEmpty =>
+      'Video belum ditautkan. Klik untuk menambahkan link video.';
+
+  @override
+  String get meetingModuleVideoSubStudentEmpty =>
+      'Video belum ditautkan ke pertemuan ini';
+
+  @override
+  String get meetingModuleVideoActionWatch => 'Tonton Video';
+
+  @override
+  String get meetingModuleVideoActionAdd => 'Tambah Video';
+
+  @override
+  String get meetingModulePosttestTitle => 'Kuis Post Test';
+
+  @override
+  String get meetingModulePosttestSubActive =>
+      'Evaluasi akhir capaian pembelajaran setelah memahami materi';
+
+  @override
+  String get meetingModulePosttestSubStaffEmpty =>
+      'Post test belum dibuat. Klik untuk membuat post test.';
+
+  @override
+  String get meetingModulePosttestSubStudentEmpty =>
+      'Post test belum diaktifkan untuk pertemuan ini';
+
+  @override
+  String get meetingModulePosttestActionStart => 'Mulai Post Test';
+
+  @override
+  String get meetingModulePosttestActionCreate => 'Buat Post Test';
+
+  @override
+  String get meetingModuleNotAvailable => 'Belum Tersedia';
+
+  @override
+  String get meetingCreatePretestTitle => 'Buat Kuis Pretest';
+
+  @override
+  String meetingPretestDefaultTitle(int number) {
+    return 'Pretest Pertemuan $number';
+  }
+
+  @override
+  String get meetingPretestTitleLabel => 'Judul Pretest';
+
+  @override
+  String get meetingDurationLabel => 'Durasi (Menit)';
+
+  @override
+  String get meetingDurationMustBePositive => 'Durasi harus > 0 menit';
+
+  @override
+  String get meetingSaveAndManageQuestionsBtn => 'Simpan & Kelola Soal';
+
+  @override
+  String get meetingCreatePosttestTitle => 'Buat Kuis Post Test';
+
+  @override
+  String meetingPosttestDefaultTitle(int number) {
+    return 'Post Test Pertemuan $number';
+  }
+
+  @override
+  String get meetingPosttestTitleLabel => 'Judul Post Test';
+
+  @override
+  String get meetingAddVideoTitle => 'Tambah Video Pembelajaran';
+
+  @override
+  String get meetingVideoProviderLabel => 'Penyedia Video';
+
+  @override
+  String get meetingVideoUrlLabel => 'URL Video';
+
+  @override
+  String get meetingVideoUrlRequired => 'URL wajib diisi';
+
+  @override
+  String get meetingVideoUrlInvalid =>
+      'URL harus diawali http:// atau https://';
+
+  @override
+  String get meetingSaveVideoBtn => 'Simpan Video';
+
+  @override
+  String meetingManageQuestionsTitle(String testTitle) {
+    return 'Kelola Soal $testTitle';
+  }
+
+  @override
+  String meetingQuestionCountActive(int count) {
+    return 'Jumlah Soal: $count soal aktif';
+  }
+
+  @override
+  String get meetingAddQuestionBtn => 'Tambah Soal';
+
+  @override
+  String get meetingPublishQuizBtn => 'Publikasikan Kuis';
+
+  @override
+  String get meetingPublishMinOneQuestion =>
+      'Tambahkan minimal 1 soal sebelum mempublikasikan kuis.';
+
+  @override
+  String meetingPublishFailed(String detail) {
+    return 'Gagal publikasi: $detail';
+  }
+
+  @override
+  String get meetingQuizPublishedSuccess =>
+      'Kuis berhasil dipublikasikan! Mahasiswa sekarang dapat mengakses kuis ini.';
+
+  @override
+  String get meetingDraftNoQuestionsTitle => 'Draft, belum ada soal aktif.';
+
+  @override
+  String get meetingDraftNoQuestionsBody =>
+      'Klik tombol \"Tambah Soal\" untuk membuat soal kuis pertama.';
+
+  @override
+  String meetingPointsLabel(int points) {
+    return '$points poin';
+  }
+
+  @override
+  String get meetingEditAction => 'Edit';
+
+  @override
+  String get meetingCannotDeleteLastPublished =>
+      'Tidak dapat menghapus soal aktif terakhir pada kuis yang berstatus Published. Silakan arsipkan kuis terlebih dahulu jika ingin menonaktifkannya.';
+
+  @override
+  String get meetingDeleteQuestionConfirmTitle => 'Konfirmasi Hapus Soal';
+
+  @override
+  String meetingDeleteQuestionConfirmBody(int number) {
+    return 'Apakah Anda yakin ingin menghapus Soal $number? Jika kuis sudah pernah dikerjakan siswa, soal akan diarsipkan (soft-delete) dan riwayat nilai siswa terdahulu tetap aman.';
+  }
+
+  @override
+  String get meetingDeleteQuestionBtn => 'Hapus Soal';
+
+  @override
+  String get meetingAddQuestionDialogTitle => 'Tambah Soal Baru';
+
+  @override
+  String get meetingEditQuestionDialogTitle => 'Edit Soal';
+
+  @override
+  String get meetingQuestionTextLabel => 'Teks Pertanyaan *';
+
+  @override
+  String get meetingQuestionTextHint => 'Masukkan pertanyaan...';
+
+  @override
+  String get meetingQuestionTextRequired => 'Teks pertanyaan wajib diisi';
+
+  @override
+  String get meetingQuestionPointsLabel => 'Poin Soal (1 - 100) *';
+
+  @override
+  String get meetingQuestionPointsRequired => 'Poin wajib diisi';
+
+  @override
+  String get meetingQuestionPointsInvalid => 'Poin harus antara 1 - 100';
+
+  @override
+  String get meetingOptionsSectionTitle => 'Pilihan Jawaban & Kunci (A - E) *';
+
+  @override
+  String get meetingOptionsSectionSubtitle =>
+      'Tentukan 5 pilihan jawaban (A sampai E) dan pilih satu radio sebagai kunci jawaban benar.';
+
+  @override
+  String meetingOptionLabelKey(String letter) {
+    return 'Pilihan $letter (★ KUNCI BENAR)';
+  }
+
+  @override
+  String meetingOptionLabelRegular(String letter) {
+    return 'Pilihan $letter';
+  }
+
+  @override
+  String meetingOptionRequired(String letter) {
+    return 'Pilihan $letter tidak boleh kosong';
+  }
+
+  @override
+  String get meetingLegacyOptionsTitle =>
+      'Pilihan Tambahan Terarsip (Legacy - Read Only):';
 }

@@ -889,6 +889,870 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Pilihan kelas aktif berhasil direset.'**
   String get profileResetClassDone;
+
+  /// Label status draf
+  ///
+  /// In id, this message translates to:
+  /// **'Draf'**
+  String get meetingStatusDraft;
+
+  /// Label status terjadwal
+  ///
+  /// In id, this message translates to:
+  /// **'Terjadwal'**
+  String get meetingStatusScheduled;
+
+  /// Label status dipublikasikan
+  ///
+  /// In id, this message translates to:
+  /// **'Dipublikasikan'**
+  String get meetingStatusPublished;
+
+  /// Label status diarsipkan
+  ///
+  /// In id, this message translates to:
+  /// **'Diarsipkan'**
+  String get meetingStatusArchived;
+
+  /// Judul AppBar daftar pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Materi & Pertemuan'**
+  String get meetingListTitle;
+
+  /// Tooltip ikon sinkronkan jadwal
+  ///
+  /// In id, this message translates to:
+  /// **'Sinkronkan Jadwal Publikasi'**
+  String get meetingSyncTooltip;
+
+  /// Tooltip ikon segarkan data
+  ///
+  /// In id, this message translates to:
+  /// **'Segarkan'**
+  String get meetingRefreshTooltip;
+
+  /// Tombol aksi terapung tambah pertemuan baru
+  ///
+  /// In id, this message translates to:
+  /// **'Tambah Pertemuan'**
+  String get meetingAddFab;
+
+  /// Pesan error permission-denied untuk staf/pengajar
+  ///
+  /// In id, this message translates to:
+  /// **'Akses ditolak: Anda tidak memiliki wewenang untuk mengelola kelas ini.'**
+  String get meetingErrorPermissionStaff;
+
+  /// Pesan error permission-denied untuk mahasiswa
+  ///
+  /// In id, this message translates to:
+  /// **'Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini. Pastikan Anda telah bergabung dan disetujui.'**
+  String get meetingErrorPermissionStudent;
+
+  /// Pesan error jaringan pada daftar pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Koneksi ke server bermasalah. Periksa jaringan internet atau emulator Anda.'**
+  String get meetingErrorNetwork;
+
+  /// Pesan error umum gagal memuat pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memuat daftar pertemuan: {detail}'**
+  String meetingErrorLoadFailed(String detail);
+
+  /// Snackbar peringatan belum memilih kelas saat buat pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Pilih kelas yang valid terlebih dahulu untuk membuat pertemuan.'**
+  String get meetingSelectClassFirst;
+
+  /// Judul dialog buat pertemuan baru
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Pertemuan Baru'**
+  String get meetingCreateTitle;
+
+  /// Label input nomor pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Nomor Pertemuan'**
+  String get meetingNumberLabel;
+
+  /// Validasi nomor pertemuan kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Nomor wajib diisi'**
+  String get meetingNumberRequired;
+
+  /// Validasi nomor pertemuan harus angka positif
+  ///
+  /// In id, this message translates to:
+  /// **'Nomor harus angka > 0'**
+  String get meetingNumberMustBePositive;
+
+  /// Label input judul pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Judul Pertemuan'**
+  String get meetingTitleLabel;
+
+  /// Validasi judul pertemuan kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Judul wajib diisi'**
+  String get meetingTitleRequired;
+
+  /// Tombol simpan draf pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Simpan Draft'**
+  String get meetingSaveDraftBtn;
+
+  /// Snackbar gagal aksi pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal: {detail}'**
+  String meetingCreateFailed(String detail);
+
+  /// Snackbar generik gagal operasi pada pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal: {detail}'**
+  String meetingActionFailed(String detail);
+
+  /// Snackbar hasil sinkronisasi jadwal publikasi
+  ///
+  /// In id, this message translates to:
+  /// **'{count, plural, =0{Tidak ada pertemuan terjadwal yang jatuh tempo saat ini.} other{{count} pertemuan terjadwal yang jatuh tempo berhasil dipublikasikan.}}'**
+  String meetingSyncScheduleSuccess(int count);
+
+  /// Snackbar gagal sinkronisasi jadwal
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal menyinkronkan jadwal: {detail}'**
+  String meetingSyncFailed(String detail);
+
+  /// Judul tampilan saat belum memilih kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Pilih Kelas Pembelajaran'**
+  String get meetingNoClassTitle;
+
+  /// Instruksi saat belum memilih kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Anda belum memilih kelas. Silakan bergabung menggunakan kode kelas atau pilih kelas dari Beranda untuk melihat pertemuan.'**
+  String get meetingNoClassBody;
+
+  /// Tombol menuju layar gabung kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Gabung Kelas'**
+  String get meetingJoinClassBtn;
+
+  /// Label bar pemilih kelas aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Kelas:'**
+  String get meetingClassLabel;
+
+  /// Teks indikator memuat daftar pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Memuat pertemuan...'**
+  String get meetingLoading;
+
+  /// Judul status kosong daftar pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Belum Ada Pertemuan'**
+  String get meetingEmptyTitle;
+
+  /// Deskripsi status kosong untuk staf/pengajar
+  ///
+  /// In id, this message translates to:
+  /// **'Buat pertemuan baru untuk mulai mengunggah materi, kuis pretest, dan video pembelajaran.'**
+  String get meetingEmptyStaffDesc;
+
+  /// Deskripsi status kosong untuk mahasiswa
+  ///
+  /// In id, this message translates to:
+  /// **'Pengajar belum mempublikasikan pertemuan pembelajaran di kelas ini.'**
+  String get meetingEmptyStudentDesc;
+
+  /// Tombol buat pertemuan pertama pada status kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Pertemuan Pertama'**
+  String get meetingCreateFirstBtn;
+
+  /// Nomor pertemuan pada kartu atau header
+  ///
+  /// In id, this message translates to:
+  /// **'Pertemuan {number}'**
+  String meetingCardNumber(int number);
+
+  /// Label jadwal terbit pertemuan pada kartu
+  ///
+  /// In id, this message translates to:
+  /// **'Terbit: {when}'**
+  String meetingPublishAtLabel(String when);
+
+  /// Label chip modul pretest
+  ///
+  /// In id, this message translates to:
+  /// **'Pretest'**
+  String get meetingModulePretest;
+
+  /// Label chip modul materi
+  ///
+  /// In id, this message translates to:
+  /// **'Materi'**
+  String get meetingModuleMateri;
+
+  /// Label chip modul video
+  ///
+  /// In id, this message translates to:
+  /// **'Video'**
+  String get meetingModuleVideo;
+
+  /// Label chip modul post test
+  ///
+  /// In id, this message translates to:
+  /// **'Post Test'**
+  String get meetingModulePosttest;
+
+  /// Teks indikator memuat detail pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Memuat hub pertemuan...'**
+  String get meetingDetailLoading;
+
+  /// Judul AppBar detail pertemuan saat fallback
+  ///
+  /// In id, this message translates to:
+  /// **'Detail Pertemuan'**
+  String get meetingDetailTitle;
+
+  /// Pesan error pertemuan tidak ditemukan
+  ///
+  /// In id, this message translates to:
+  /// **'Pertemuan tidak ditemukan.'**
+  String get meetingNotFound;
+
+  /// Pesan error gagal memuat detail pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memuat detail pertemuan: {detail}'**
+  String meetingLoadDetailFailed(String detail);
+
+  /// Snackbar kunci pertemuan terjadwal bagi mahasiswa
+  ///
+  /// In id, this message translates to:
+  /// **'Pertemuan ini masih berstatus Terjadwal. Konten akan dibuka pada {when}.'**
+  String meetingScheduledLockedNotice(String when);
+
+  /// Teks fallback waktu jadwal mendatang saat tanggal kosong
+  ///
+  /// In id, this message translates to:
+  /// **'waktu jadwal mendatang'**
+  String get meetingScheduledFutureFallback;
+
+  /// Judul pemilih tanggal publikasi
+  ///
+  /// In id, this message translates to:
+  /// **'Pilih Tanggal Publikasi Pertemuan'**
+  String get meetingPickScheduleDateTitle;
+
+  /// Judul pemilih jam publikasi
+  ///
+  /// In id, this message translates to:
+  /// **'Pilih Jam Publikasi (WIB)'**
+  String get meetingPickScheduleTimeTitle;
+
+  /// Validasi waktu jadwal publikasi harus masa depan
+  ///
+  /// In id, this message translates to:
+  /// **'Waktu publikasi terjadwal harus di waktu mendatang.'**
+  String get meetingScheduleMustBeFuture;
+
+  /// Snackbar sukses menjadwalkan pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Pertemuan berhasil dijadwalkan terbit pada {when}.'**
+  String meetingScheduledSuccess(String when);
+
+  /// Snackbar gagal menjadwalkan pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal menjadwalkan pertemuan: {detail}'**
+  String meetingScheduleFailed(String detail);
+
+  /// Judul konfirmasi ubah status pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Ubah Status ke {status}?'**
+  String meetingChangeStatusConfirmTitle(String status);
+
+  /// Deskripsi konfirmasi publikasikan pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Pertemuan ini akan dapat diakses oleh seluruh anggota kelas yang aktif.'**
+  String get meetingChangeStatusPublishBody;
+
+  /// Deskripsi konfirmasi arsipkan pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Pertemuan ini akan diarsipkan dan tidak lagi muncul sebagai sesi aktif.'**
+  String get meetingChangeStatusArchiveBody;
+
+  /// Snackbar sukses ubah status pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Status berhasil diubah menjadi {status}'**
+  String meetingStatusChangedSuccess(String status);
+
+  /// Judul dialog edit informasi pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Edit Informasi Pertemuan'**
+  String get meetingEditDialogTitle;
+
+  /// Label field deskripsi pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Deskripsi / Ringkasan'**
+  String get meetingDescriptionLabel;
+
+  /// Tooltip ikon edit pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Edit Info Pertemuan'**
+  String get meetingEditTooltip;
+
+  /// Tooltip ikon hapus pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Hapus Pertemuan'**
+  String get meetingDeleteTooltip;
+
+  /// Tooltip ikon popup menu kelola status
+  ///
+  /// In id, this message translates to:
+  /// **'Kelola Status'**
+  String get meetingManageStatusTooltip;
+
+  /// Menu publikasikan sekarang
+  ///
+  /// In id, this message translates to:
+  /// **'Publikasikan Sekarang (Published)'**
+  String get meetingMenuPublishNow;
+
+  /// Menu jadwalkan publikasi
+  ///
+  /// In id, this message translates to:
+  /// **'Jadwalkan Publikasi (Scheduled)'**
+  String get meetingMenuSchedule;
+
+  /// Menu jadikan draf
+  ///
+  /// In id, this message translates to:
+  /// **'Jadikan Draft / Batalkan Jadwal'**
+  String get meetingMenuDraft;
+
+  /// Menu arsipkan pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Arsipkan (Archived)'**
+  String get meetingMenuArchive;
+
+  /// Judul dialog konfirmasi hapus pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Hapus Pertemuan Ini?'**
+  String get meetingDeleteConfirmTitle;
+
+  /// Deskripsi dialog konfirmasi hapus pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Tindakan ini akan menghapus pertemuan dari daftar kelas.'**
+  String get meetingDeleteConfirmBody;
+
+  /// Tombol aksi hapus pada dialog konfirmasi
+  ///
+  /// In id, this message translates to:
+  /// **'Hapus'**
+  String get meetingDeleteAction;
+
+  /// Snackbar sukses hapus pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Pertemuan berhasil dihapus.'**
+  String get meetingDeletedSuccess;
+
+  /// Snackbar gagal hapus pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal menghapus: {detail}'**
+  String meetingDeleteFailed(String detail);
+
+  /// Deskripsi default pertemuan jika tidak diisi pengajar
+  ///
+  /// In id, this message translates to:
+  /// **'Satu pertemuan menghubungkan kuis pretest, materi bacaan terstruktur, video pembelajaran, dan post test evaluasi.'**
+  String get meetingDefaultDescription;
+
+  /// Judul kartu banner pertemuan terjadwal
+  ///
+  /// In id, this message translates to:
+  /// **'Pertemuan Terjadwal'**
+  String get meetingScheduledBannerTitle;
+
+  /// Deskripsi banner jadwal terbit pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Dijadwalkan terbit pada {when}. Publikasi berjalan saat cron/sinkronisasi berikutnya (dalam kisaran jadwal), bukan tepat-menit otomatis.'**
+  String meetingScheduledBanner(String when);
+
+  /// Deskripsi banner jadwal jika tanggal belum ditetapkan
+  ///
+  /// In id, this message translates to:
+  /// **'Pertemuan disiapkan untuk jadwal publikasi mendatang.'**
+  String get meetingScheduledBannerFallback;
+
+  /// Judul bagian daftar modul pembelajaran
+  ///
+  /// In id, this message translates to:
+  /// **'Modul Pembelajaran'**
+  String get meetingModulesTitle;
+
+  /// Judul kartu modul materi
+  ///
+  /// In id, this message translates to:
+  /// **'Materi Pembelajaran'**
+  String get meetingModuleMaterialTitle;
+
+  /// Subjudul materi jika sudah tersedia
+  ///
+  /// In id, this message translates to:
+  /// **'Materi bacaan terstruktur format Quill Delta'**
+  String get meetingModuleMaterialSubActive;
+
+  /// Subjudul materi kosong untuk pengajar
+  ///
+  /// In id, this message translates to:
+  /// **'Materi belum dibuat. Klik untuk membuat materi baru.'**
+  String get meetingModuleMaterialSubStaffEmpty;
+
+  /// Subjudul materi kosong untuk mahasiswa
+  ///
+  /// In id, this message translates to:
+  /// **'Materi belum diunggah oleh pengajar'**
+  String get meetingModuleMaterialSubStudentEmpty;
+
+  /// Tombol buka materi
+  ///
+  /// In id, this message translates to:
+  /// **'Buka Materi'**
+  String get meetingModuleMaterialActionOpen;
+
+  /// Tombol buat materi baru
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Materi'**
+  String get meetingModuleMaterialActionCreate;
+
+  /// Judul kartu modul pretest
+  ///
+  /// In id, this message translates to:
+  /// **'Kuis Pretest'**
+  String get meetingModulePretestTitle;
+
+  /// Subjudul kuis pretest jika sudah aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Uji pemahaman awal sebelum memulai materi inti'**
+  String get meetingModulePretestSubActive;
+
+  /// Subjudul kuis pretest kosong untuk pengajar
+  ///
+  /// In id, this message translates to:
+  /// **'Pretest belum diaktifkan. Klik untuk membuat pretest.'**
+  String get meetingModulePretestSubStaffEmpty;
+
+  /// Subjudul kuis pretest kosong untuk mahasiswa
+  ///
+  /// In id, this message translates to:
+  /// **'Pretest belum diaktifkan untuk pertemuan ini'**
+  String get meetingModulePretestSubStudentEmpty;
+
+  /// Tombol mulai kuis pretest
+  ///
+  /// In id, this message translates to:
+  /// **'Mulai Pretest'**
+  String get meetingModulePretestActionStart;
+
+  /// Tombol buat kuis pretest baru
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Pretest'**
+  String get meetingModulePretestActionCreate;
+
+  /// Tombol kelola butir soal kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Kelola Soal'**
+  String get meetingModulePretestManageQuestions;
+
+  /// Badge prasyarat pembukaan kuis pretest
+  ///
+  /// In id, this message translates to:
+  /// **'Wajib pernah buka materi'**
+  String get meetingModulePretestBadgeNotice;
+
+  /// Judul kartu modul video
+  ///
+  /// In id, this message translates to:
+  /// **'Video Pembelajaran'**
+  String get meetingModuleVideoTitle;
+
+  /// Subjudul video jika sudah ditautkan
+  ///
+  /// In id, this message translates to:
+  /// **'Video tutorial & demonstrasi interaktif'**
+  String get meetingModuleVideoSubActive;
+
+  /// Subjudul video kosong untuk pengajar
+  ///
+  /// In id, this message translates to:
+  /// **'Video belum ditautkan. Klik untuk menambahkan link video.'**
+  String get meetingModuleVideoSubStaffEmpty;
+
+  /// Subjudul video kosong untuk mahasiswa
+  ///
+  /// In id, this message translates to:
+  /// **'Video belum ditautkan ke pertemuan ini'**
+  String get meetingModuleVideoSubStudentEmpty;
+
+  /// Tombol tonton video pembelajaran
+  ///
+  /// In id, this message translates to:
+  /// **'Tonton Video'**
+  String get meetingModuleVideoActionWatch;
+
+  /// Tombol tambah tautan video baru
+  ///
+  /// In id, this message translates to:
+  /// **'Tambah Video'**
+  String get meetingModuleVideoActionAdd;
+
+  /// Judul kartu modul post test
+  ///
+  /// In id, this message translates to:
+  /// **'Kuis Post Test'**
+  String get meetingModulePosttestTitle;
+
+  /// Subjudul kuis post test jika sudah aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Evaluasi akhir capaian pembelajaran setelah memahami materi'**
+  String get meetingModulePosttestSubActive;
+
+  /// Subjudul kuis post test kosong untuk pengajar
+  ///
+  /// In id, this message translates to:
+  /// **'Post test belum dibuat. Klik untuk membuat post test.'**
+  String get meetingModulePosttestSubStaffEmpty;
+
+  /// Subjudul kuis post test kosong untuk mahasiswa
+  ///
+  /// In id, this message translates to:
+  /// **'Post test belum diaktifkan untuk pertemuan ini'**
+  String get meetingModulePosttestSubStudentEmpty;
+
+  /// Tombol mulai kuis post test
+  ///
+  /// In id, this message translates to:
+  /// **'Mulai Post Test'**
+  String get meetingModulePosttestActionStart;
+
+  /// Tombol buat kuis post test baru
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Post Test'**
+  String get meetingModulePosttestActionCreate;
+
+  /// Label tombol modul yang belum aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Belum Tersedia'**
+  String get meetingModuleNotAvailable;
+
+  /// Judul dialog pembuatan kuis pretest
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Kuis Pretest'**
+  String get meetingCreatePretestTitle;
+
+  /// Judul bawaan kuis pretest
+  ///
+  /// In id, this message translates to:
+  /// **'Pretest Pertemuan {number}'**
+  String meetingPretestDefaultTitle(int number);
+
+  /// Label field judul pretest
+  ///
+  /// In id, this message translates to:
+  /// **'Judul Pretest'**
+  String get meetingPretestTitleLabel;
+
+  /// Label durasi kuis dalam menit
+  ///
+  /// In id, this message translates to:
+  /// **'Durasi (Menit)'**
+  String get meetingDurationLabel;
+
+  /// Validasi durasi kuis harus angka positif
+  ///
+  /// In id, this message translates to:
+  /// **'Durasi harus > 0 menit'**
+  String get meetingDurationMustBePositive;
+
+  /// Tombol simpan kuis dan lanjut mengelola soal
+  ///
+  /// In id, this message translates to:
+  /// **'Simpan & Kelola Soal'**
+  String get meetingSaveAndManageQuestionsBtn;
+
+  /// Judul dialog pembuatan kuis post test
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Kuis Post Test'**
+  String get meetingCreatePosttestTitle;
+
+  /// Judul bawaan kuis post test
+  ///
+  /// In id, this message translates to:
+  /// **'Post Test Pertemuan {number}'**
+  String meetingPosttestDefaultTitle(int number);
+
+  /// Label field judul post test
+  ///
+  /// In id, this message translates to:
+  /// **'Judul Post Test'**
+  String get meetingPosttestTitleLabel;
+
+  /// Judul dialog tambah video pembelajaran
+  ///
+  /// In id, this message translates to:
+  /// **'Tambah Video Pembelajaran'**
+  String get meetingAddVideoTitle;
+
+  /// Label dropdown penyedia video
+  ///
+  /// In id, this message translates to:
+  /// **'Penyedia Video'**
+  String get meetingVideoProviderLabel;
+
+  /// Label input URL video
+  ///
+  /// In id, this message translates to:
+  /// **'URL Video'**
+  String get meetingVideoUrlLabel;
+
+  /// Validasi URL video kosong
+  ///
+  /// In id, this message translates to:
+  /// **'URL wajib diisi'**
+  String get meetingVideoUrlRequired;
+
+  /// Validasi protokol URL video
+  ///
+  /// In id, this message translates to:
+  /// **'URL harus diawali http:// atau https://'**
+  String get meetingVideoUrlInvalid;
+
+  /// Tombol simpan video
+  ///
+  /// In id, this message translates to:
+  /// **'Simpan Video'**
+  String get meetingSaveVideoBtn;
+
+  /// Judul sheet kelola soal kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Kelola Soal {testTitle}'**
+  String meetingManageQuestionsTitle(String testTitle);
+
+  /// Keterangan jumlah butir soal aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Jumlah Soal: {count} soal aktif'**
+  String meetingQuestionCountActive(int count);
+
+  /// Tombol tambah soal baru
+  ///
+  /// In id, this message translates to:
+  /// **'Tambah Soal'**
+  String get meetingAddQuestionBtn;
+
+  /// Tombol publikasikan kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Publikasikan Kuis'**
+  String get meetingPublishQuizBtn;
+
+  /// Peringatan kuis kosong sebelum dipublikasikan
+  ///
+  /// In id, this message translates to:
+  /// **'Tambahkan minimal 1 soal sebelum mempublikasikan kuis.'**
+  String get meetingPublishMinOneQuestion;
+
+  /// Snackbar gagal publikasi kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal publikasi: {detail}'**
+  String meetingPublishFailed(String detail);
+
+  /// Snackbar sukses publikasikan kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Kuis berhasil dipublikasikan! Mahasiswa sekarang dapat mengakses kuis ini.'**
+  String get meetingQuizPublishedSuccess;
+
+  /// Judul status kosong sheet soal kuis draf
+  ///
+  /// In id, this message translates to:
+  /// **'Draft, belum ada soal aktif.'**
+  String get meetingDraftNoQuestionsTitle;
+
+  /// Instruksi status kosong sheet soal kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Klik tombol \"Tambah Soal\" untuk membuat soal kuis pertama.'**
+  String get meetingDraftNoQuestionsBody;
+
+  /// Label jumlah poin soal
+  ///
+  /// In id, this message translates to:
+  /// **'{points} poin'**
+  String meetingPointsLabel(int points);
+
+  /// Tombol edit soal atau item
+  ///
+  /// In id, this message translates to:
+  /// **'Edit'**
+  String get meetingEditAction;
+
+  /// Peringatan dilarang menghapus soal terakhir pada kuis terbit
+  ///
+  /// In id, this message translates to:
+  /// **'Tidak dapat menghapus soal aktif terakhir pada kuis yang berstatus Published. Silakan arsipkan kuis terlebih dahulu jika ingin menonaktifkannya.'**
+  String get meetingCannotDeleteLastPublished;
+
+  /// Judul dialog konfirmasi hapus butir soal
+  ///
+  /// In id, this message translates to:
+  /// **'Konfirmasi Hapus Soal'**
+  String get meetingDeleteQuestionConfirmTitle;
+
+  /// Deskripsi konfirmasi hapus butir soal
+  ///
+  /// In id, this message translates to:
+  /// **'Apakah Anda yakin ingin menghapus Soal {number}? Jika kuis sudah pernah dikerjakan siswa, soal akan diarsipkan (soft-delete) dan riwayat nilai siswa terdahulu tetap aman.'**
+  String meetingDeleteQuestionConfirmBody(int number);
+
+  /// Tombol hapus soal pada dialog konfirmasi
+  ///
+  /// In id, this message translates to:
+  /// **'Hapus Soal'**
+  String get meetingDeleteQuestionBtn;
+
+  /// Judul dialog tambah butir soal baru
+  ///
+  /// In id, this message translates to:
+  /// **'Tambah Soal Baru'**
+  String get meetingAddQuestionDialogTitle;
+
+  /// Judul dialog edit butir soal
+  ///
+  /// In id, this message translates to:
+  /// **'Edit Soal'**
+  String get meetingEditQuestionDialogTitle;
+
+  /// Label input teks pertanyaan
+  ///
+  /// In id, this message translates to:
+  /// **'Teks Pertanyaan *'**
+  String get meetingQuestionTextLabel;
+
+  /// Hint input teks pertanyaan
+  ///
+  /// In id, this message translates to:
+  /// **'Masukkan pertanyaan...'**
+  String get meetingQuestionTextHint;
+
+  /// Validasi teks pertanyaan kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Teks pertanyaan wajib diisi'**
+  String get meetingQuestionTextRequired;
+
+  /// Label input poin soal
+  ///
+  /// In id, this message translates to:
+  /// **'Poin Soal (1 - 100) *'**
+  String get meetingQuestionPointsLabel;
+
+  /// Validasi poin soal kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Poin wajib diisi'**
+  String get meetingQuestionPointsRequired;
+
+  /// Validasi rentang poin soal
+  ///
+  /// In id, this message translates to:
+  /// **'Poin harus antara 1 - 100'**
+  String get meetingQuestionPointsInvalid;
+
+  /// Judul seksi 5 pilihan jawaban
+  ///
+  /// In id, this message translates to:
+  /// **'Pilihan Jawaban & Kunci (A - E) *'**
+  String get meetingOptionsSectionTitle;
+
+  /// Petunjuk seksi 5 pilihan jawaban
+  ///
+  /// In id, this message translates to:
+  /// **'Tentukan 5 pilihan jawaban (A sampai E) dan pilih satu radio sebagai kunci jawaban benar.'**
+  String get meetingOptionsSectionSubtitle;
+
+  /// Label field pilihan jawaban yang menjadi kunci benar
+  ///
+  /// In id, this message translates to:
+  /// **'Pilihan {letter} (★ KUNCI BENAR)'**
+  String meetingOptionLabelKey(String letter);
+
+  /// Label field pilihan jawaban biasa
+  ///
+  /// In id, this message translates to:
+  /// **'Pilihan {letter}'**
+  String meetingOptionLabelRegular(String letter);
+
+  /// Validasi pilihan jawaban kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Pilihan {letter} tidak boleh kosong'**
+  String meetingOptionRequired(String letter);
+
+  /// Judul seksi pilihan jawaban warisan tambahan
+  ///
+  /// In id, this message translates to:
+  /// **'Pilihan Tambahan Terarsip (Legacy - Read Only):'**
+  String get meetingLegacyOptionsTitle;
 }
 
 class _AppLocalizationsDelegate

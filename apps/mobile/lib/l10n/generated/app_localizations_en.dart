@@ -478,4 +478,525 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get profileResetClassDone =>
       'Active class selection successfully reset.';
+
+  @override
+  String get meetingStatusDraft => 'Draft';
+
+  @override
+  String get meetingStatusScheduled => 'Scheduled';
+
+  @override
+  String get meetingStatusPublished => 'Published';
+
+  @override
+  String get meetingStatusArchived => 'Archived';
+
+  @override
+  String get meetingListTitle => 'Materials & Meetings';
+
+  @override
+  String get meetingSyncTooltip => 'Sync Publication Schedule';
+
+  @override
+  String get meetingRefreshTooltip => 'Refresh';
+
+  @override
+  String get meetingAddFab => 'Add Meeting';
+
+  @override
+  String get meetingErrorPermissionStaff =>
+      'Access denied: You are not authorized to manage this class.';
+
+  @override
+  String get meetingErrorPermissionStudent =>
+      'Access denied: You are not enrolled as an active member in this class. Please ensure you have joined and been approved.';
+
+  @override
+  String get meetingErrorNetwork =>
+      'Server connection issue. Check your network connection or emulator.';
+
+  @override
+  String meetingErrorLoadFailed(String detail) {
+    return 'Failed to load meetings list: $detail';
+  }
+
+  @override
+  String get meetingSelectClassFirst =>
+      'Select a valid class first to create a meeting.';
+
+  @override
+  String get meetingCreateTitle => 'Create New Meeting';
+
+  @override
+  String get meetingNumberLabel => 'Meeting Number';
+
+  @override
+  String get meetingNumberRequired => 'Meeting number is required';
+
+  @override
+  String get meetingNumberMustBePositive => 'Number must be > 0';
+
+  @override
+  String get meetingTitleLabel => 'Meeting Title';
+
+  @override
+  String get meetingTitleRequired => 'Meeting title is required';
+
+  @override
+  String get meetingSaveDraftBtn => 'Save Draft';
+
+  @override
+  String meetingCreateFailed(String detail) {
+    return 'Failed: $detail';
+  }
+
+  @override
+  String meetingActionFailed(String detail) {
+    return 'Failed: $detail';
+  }
+
+  @override
+  String meetingSyncScheduleSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count due scheduled meetings were successfully published.',
+      one: '1 due scheduled meeting was successfully published.',
+      zero: 'No due scheduled meetings at this time.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingSyncFailed(String detail) {
+    return 'Failed to sync schedule: $detail';
+  }
+
+  @override
+  String get meetingNoClassTitle => 'Select Learning Class';
+
+  @override
+  String get meetingNoClassBody =>
+      'You haven\'t selected a class. Please join with a class code or select a class from Home to view meetings.';
+
+  @override
+  String get meetingJoinClassBtn => 'Join Class';
+
+  @override
+  String get meetingClassLabel => 'Class:';
+
+  @override
+  String get meetingLoading => 'Loading meetings...';
+
+  @override
+  String get meetingEmptyTitle => 'No Meetings Yet';
+
+  @override
+  String get meetingEmptyStaffDesc =>
+      'Create a new meeting to start uploading materials, pretest quizzes, and learning videos.';
+
+  @override
+  String get meetingEmptyStudentDesc =>
+      'Instructor has not published any learning meetings for this class yet.';
+
+  @override
+  String get meetingCreateFirstBtn => 'Create First Meeting';
+
+  @override
+  String meetingCardNumber(int number) {
+    return 'Meeting $number';
+  }
+
+  @override
+  String meetingPublishAtLabel(String when) {
+    return 'Published: $when';
+  }
+
+  @override
+  String get meetingModulePretest => 'Pretest';
+
+  @override
+  String get meetingModuleMateri => 'Material';
+
+  @override
+  String get meetingModuleVideo => 'Video';
+
+  @override
+  String get meetingModulePosttest => 'Post Test';
+
+  @override
+  String get meetingDetailLoading => 'Loading meeting hub...';
+
+  @override
+  String get meetingDetailTitle => 'Meeting Details';
+
+  @override
+  String get meetingNotFound => 'Meeting not found.';
+
+  @override
+  String meetingLoadDetailFailed(String detail) {
+    return 'Failed to load meeting details: $detail';
+  }
+
+  @override
+  String meetingScheduledLockedNotice(String when) {
+    return 'This meeting is still Scheduled. Content will be opened at $when.';
+  }
+
+  @override
+  String get meetingScheduledFutureFallback => 'upcoming scheduled time';
+
+  @override
+  String get meetingPickScheduleDateTitle => 'Select Meeting Publication Date';
+
+  @override
+  String get meetingPickScheduleTimeTitle => 'Select Publication Time (WIB)';
+
+  @override
+  String get meetingScheduleMustBeFuture =>
+      'Scheduled publication time must be in the future.';
+
+  @override
+  String meetingScheduledSuccess(String when) {
+    return 'Meeting successfully scheduled to be published at $when.';
+  }
+
+  @override
+  String meetingScheduleFailed(String detail) {
+    return 'Failed to schedule meeting: $detail';
+  }
+
+  @override
+  String meetingChangeStatusConfirmTitle(String status) {
+    return 'Change Status to $status?';
+  }
+
+  @override
+  String get meetingChangeStatusPublishBody =>
+      'This meeting will be accessible to all active class members.';
+
+  @override
+  String get meetingChangeStatusArchiveBody =>
+      'This meeting will be archived and will no longer appear as an active session.';
+
+  @override
+  String meetingStatusChangedSuccess(String status) {
+    return 'Status successfully changed to $status';
+  }
+
+  @override
+  String get meetingEditDialogTitle => 'Edit Meeting Information';
+
+  @override
+  String get meetingDescriptionLabel => 'Description / Summary';
+
+  @override
+  String get meetingEditTooltip => 'Edit Meeting Info';
+
+  @override
+  String get meetingDeleteTooltip => 'Delete Meeting';
+
+  @override
+  String get meetingManageStatusTooltip => 'Manage Status';
+
+  @override
+  String get meetingMenuPublishNow => 'Publish Now (Published)';
+
+  @override
+  String get meetingMenuSchedule => 'Schedule Publication (Scheduled)';
+
+  @override
+  String get meetingMenuDraft => 'Make Draft / Cancel Schedule';
+
+  @override
+  String get meetingMenuArchive => 'Archive (Archived)';
+
+  @override
+  String get meetingDeleteConfirmTitle => 'Delete This Meeting?';
+
+  @override
+  String get meetingDeleteConfirmBody =>
+      'This action will remove the meeting from the class list.';
+
+  @override
+  String get meetingDeleteAction => 'Delete';
+
+  @override
+  String get meetingDeletedSuccess => 'Meeting successfully deleted.';
+
+  @override
+  String meetingDeleteFailed(String detail) {
+    return 'Failed to delete: $detail';
+  }
+
+  @override
+  String get meetingDefaultDescription =>
+      'One meeting connects pretest quizzes, structured reading materials, learning videos, and evaluation post tests.';
+
+  @override
+  String get meetingScheduledBannerTitle => 'Scheduled Meeting';
+
+  @override
+  String meetingScheduledBanner(String when) {
+    return 'Scheduled to be published at $when. Publication runs during the next cron/sync (within scheduled range), not exact-minute automated.';
+  }
+
+  @override
+  String get meetingScheduledBannerFallback =>
+      'Meeting is prepared for future publication schedule.';
+
+  @override
+  String get meetingModulesTitle => 'Learning Modules';
+
+  @override
+  String get meetingModuleMaterialTitle => 'Learning Material';
+
+  @override
+  String get meetingModuleMaterialSubActive =>
+      'Structured reading material in Quill Delta format';
+
+  @override
+  String get meetingModuleMaterialSubStaffEmpty =>
+      'Material not yet created. Click to create new material.';
+
+  @override
+  String get meetingModuleMaterialSubStudentEmpty =>
+      'Material not yet uploaded by the instructor';
+
+  @override
+  String get meetingModuleMaterialActionOpen => 'Open Material';
+
+  @override
+  String get meetingModuleMaterialActionCreate => 'Create Material';
+
+  @override
+  String get meetingModulePretestTitle => 'Pretest Quiz';
+
+  @override
+  String get meetingModulePretestSubActive =>
+      'Initial understanding test before starting core material';
+
+  @override
+  String get meetingModulePretestSubStaffEmpty =>
+      'Pretest not yet enabled. Click to create pretest.';
+
+  @override
+  String get meetingModulePretestSubStudentEmpty =>
+      'Pretest is not enabled for this meeting';
+
+  @override
+  String get meetingModulePretestActionStart => 'Start Pretest';
+
+  @override
+  String get meetingModulePretestActionCreate => 'Create Pretest';
+
+  @override
+  String get meetingModulePretestManageQuestions => 'Manage Questions';
+
+  @override
+  String get meetingModulePretestBadgeNotice => 'Must have opened material';
+
+  @override
+  String get meetingModuleVideoTitle => 'Learning Video';
+
+  @override
+  String get meetingModuleVideoSubActive =>
+      'Interactive tutorial & demonstration video';
+
+  @override
+  String get meetingModuleVideoSubStaffEmpty =>
+      'Video not yet linked. Click to add video link.';
+
+  @override
+  String get meetingModuleVideoSubStudentEmpty =>
+      'Video not linked to this meeting';
+
+  @override
+  String get meetingModuleVideoActionWatch => 'Watch Video';
+
+  @override
+  String get meetingModuleVideoActionAdd => 'Add Video';
+
+  @override
+  String get meetingModulePosttestTitle => 'Post Test Quiz';
+
+  @override
+  String get meetingModulePosttestSubActive =>
+      'Final evaluation of learning achievements after studying material';
+
+  @override
+  String get meetingModulePosttestSubStaffEmpty =>
+      'Post test not yet created. Click to create post test.';
+
+  @override
+  String get meetingModulePosttestSubStudentEmpty =>
+      'Post test is not enabled for this meeting';
+
+  @override
+  String get meetingModulePosttestActionStart => 'Start Post Test';
+
+  @override
+  String get meetingModulePosttestActionCreate => 'Create Post Test';
+
+  @override
+  String get meetingModuleNotAvailable => 'Not Available';
+
+  @override
+  String get meetingCreatePretestTitle => 'Create Pretest Quiz';
+
+  @override
+  String meetingPretestDefaultTitle(int number) {
+    return 'Meeting $number Pretest';
+  }
+
+  @override
+  String get meetingPretestTitleLabel => 'Pretest Title';
+
+  @override
+  String get meetingDurationLabel => 'Duration (Minutes)';
+
+  @override
+  String get meetingDurationMustBePositive => 'Duration must be > 0 minutes';
+
+  @override
+  String get meetingSaveAndManageQuestionsBtn => 'Save & Manage Questions';
+
+  @override
+  String get meetingCreatePosttestTitle => 'Create Post Test Quiz';
+
+  @override
+  String meetingPosttestDefaultTitle(int number) {
+    return 'Meeting $number Post Test';
+  }
+
+  @override
+  String get meetingPosttestTitleLabel => 'Post Test Title';
+
+  @override
+  String get meetingAddVideoTitle => 'Add Learning Video';
+
+  @override
+  String get meetingVideoProviderLabel => 'Video Provider';
+
+  @override
+  String get meetingVideoUrlLabel => 'Video URL';
+
+  @override
+  String get meetingVideoUrlRequired => 'URL is required';
+
+  @override
+  String get meetingVideoUrlInvalid =>
+      'URL must start with http:// or https://';
+
+  @override
+  String get meetingSaveVideoBtn => 'Save Video';
+
+  @override
+  String meetingManageQuestionsTitle(String testTitle) {
+    return 'Manage Questions $testTitle';
+  }
+
+  @override
+  String meetingQuestionCountActive(int count) {
+    return 'Total Questions: $count active questions';
+  }
+
+  @override
+  String get meetingAddQuestionBtn => 'Add Question';
+
+  @override
+  String get meetingPublishQuizBtn => 'Publish Quiz';
+
+  @override
+  String get meetingPublishMinOneQuestion =>
+      'Add at least 1 question before publishing quiz.';
+
+  @override
+  String meetingPublishFailed(String detail) {
+    return 'Failed to publish: $detail';
+  }
+
+  @override
+  String get meetingQuizPublishedSuccess =>
+      'Quiz successfully published! Students can now access this quiz.';
+
+  @override
+  String get meetingDraftNoQuestionsTitle => 'Draft, no active questions yet.';
+
+  @override
+  String get meetingDraftNoQuestionsBody =>
+      'Click \"Add Question\" button to create your first quiz question.';
+
+  @override
+  String meetingPointsLabel(int points) {
+    return '$points points';
+  }
+
+  @override
+  String get meetingEditAction => 'Edit';
+
+  @override
+  String get meetingCannotDeleteLastPublished =>
+      'Cannot delete the last active question of a Published quiz. Please archive the quiz first if you want to deactivate it.';
+
+  @override
+  String get meetingDeleteQuestionConfirmTitle => 'Confirm Delete Question';
+
+  @override
+  String meetingDeleteQuestionConfirmBody(int number) {
+    return 'Are you sure you want to delete Question $number? If students have taken the quiz, questions will be archived (soft-deleted) and previous student scores remain safe.';
+  }
+
+  @override
+  String get meetingDeleteQuestionBtn => 'Delete Question';
+
+  @override
+  String get meetingAddQuestionDialogTitle => 'Add New Question';
+
+  @override
+  String get meetingEditQuestionDialogTitle => 'Edit Question';
+
+  @override
+  String get meetingQuestionTextLabel => 'Question Text *';
+
+  @override
+  String get meetingQuestionTextHint => 'Enter question...';
+
+  @override
+  String get meetingQuestionTextRequired => 'Question text is required';
+
+  @override
+  String get meetingQuestionPointsLabel => 'Question Points (1 - 100) *';
+
+  @override
+  String get meetingQuestionPointsRequired => 'Points are required';
+
+  @override
+  String get meetingQuestionPointsInvalid => 'Points must be between 1 - 100';
+
+  @override
+  String get meetingOptionsSectionTitle => 'Answer Options & Key (A - E) *';
+
+  @override
+  String get meetingOptionsSectionSubtitle =>
+      'Provide 5 answer options (A through E) and select one radio as the correct answer key.';
+
+  @override
+  String meetingOptionLabelKey(String letter) {
+    return 'Option $letter (★ CORRECT KEY)';
+  }
+
+  @override
+  String meetingOptionLabelRegular(String letter) {
+    return 'Option $letter';
+  }
+
+  @override
+  String meetingOptionRequired(String letter) {
+    return 'Option $letter cannot be empty';
+  }
+
+  @override
+  String get meetingLegacyOptionsTitle =>
+      'Archived Extra Options (Legacy - Read Only):';
 }

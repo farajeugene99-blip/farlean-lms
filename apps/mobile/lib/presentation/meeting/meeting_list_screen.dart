@@ -5,6 +5,7 @@ import '../../core/auth/role_guard.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/content_status.dart';
 import '../../models/meeting.dart';
 import '../../repositories/meeting_repository.dart';
@@ -12,6 +13,7 @@ import '../../services/auth_provider.dart';
 import '../../services/class_provider.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
+import 'meeting_status_localization.dart';
 
 class MeetingListScreen extends StatefulWidget {
   final String? classId;
@@ -93,16 +95,17 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         String friendlyMessage;
         final errorString = e.toString().toLowerCase();
         if (errorString.contains('permission-denied') || errorString.contains('evaluation error')) {
           friendlyMessage = isStaff
-              ? 'Akses ditolak: Anda tidak memiliki wewenang untuk mengelola kelas ini.'
-              : 'Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini. Pastikan Anda telah bergabung dan disetujui.';
+              ? l10n.meetingErrorPermissionStaff
+              : l10n.meetingErrorPermissionStudent;
         } else if (errorString.contains('network') || errorString.contains('unavailable')) {
-          friendlyMessage = 'Koneksi ke server bermasalah. Periksa jaringan internet atau emulator Anda.';
+          friendlyMessage = l10n.meetingErrorNetwork;
         } else {
-          friendlyMessage = 'Gagal memuat daftar pertemuan: $e';
+          friendlyMessage = l10n.meetingErrorLoadFailed(e.toString());
         }
 
         setState(() {
@@ -114,11 +117,12 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
   }
 
   Future<void> _showCreateMeetingDialog() async {
+    final l10n = AppLocalizations.of(context);
     final effectiveClassId = _getEffectiveClassId();
     if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pilih kelas yang valid terlebih dahulu untuk membuat pertemuan.'),
+        SnackBar(
+          content: Text(l10n.meetingSelectClassFirst),
           backgroundColor: AppTheme.error,
         ),
       );
@@ -132,7 +136,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
     final created = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Buat Pertemuan Baru'),
+        title: Text(l10n.meetingCreateTitle),
         content: SizedBox(
           width: 440,
           child: Form(
@@ -143,20 +147,20 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
                 TextFormField(
                   controller: numberController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Nomor Pertemuan'),
+                  decoration: InputDecoration(labelText: l10n.meetingNumberLabel),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Nomor wajib diisi';
+                    if (v == null || v.trim().isEmpty) return l10n.meetingNumberRequired;
                     final num = int.tryParse(v.trim());
-                    if (num == null || num <= 0) return 'Nomor harus angka > 0';
+                    if (num == null || num <= 0) return l10n.meetingNumberMustBePositive;
                     return null;
                   },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Judul Pertemuan'),
+                  decoration: InputDecoration(labelText: l10n.meetingTitleLabel),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Judul wajib diisi';
+                    if (v == null || v.trim().isEmpty) return l10n.meetingTitleRequired;
                     return null;
                   },
                 ),
@@ -167,7 +171,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -186,12 +190,12 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
               } catch (e) {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+                    SnackBar(content: Text(l10n.meetingCreateFailed(e.toString())), backgroundColor: AppTheme.error),
                   );
                 }
               }
             },
-            child: const Text('Simpan Draft'),
+            child: Text(l10n.meetingSaveDraftBtn),
           ),
         ],
       ),
@@ -210,6 +214,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
   Future<void> _syncScheduledMeetings() async {
     if (_isSyncingSchedule) return;
     setState(() => _isSyncingSchedule = true);
+    final l10n = AppLocalizations.of(context);
     try {
       final promoted = await _meetingRepository.syncScheduledMeetings(
         classId: _getEffectiveClassId().isEmpty ? null : _getEffectiveClassId(),
@@ -217,11 +222,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              promoted > 0
-                  ? '$promoted pertemuan terjadwal yang jatuh tempo berhasil dipublikasikan.'
-                  : 'Tidak ada pertemuan terjadwal yang jatuh tempo saat ini.',
-            ),
+            content: Text(l10n.meetingSyncScheduleSuccess(promoted)),
             backgroundColor: AppTheme.success,
           ),
         );
@@ -230,7 +231,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menyinkronkan jadwal: $e'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text(l10n.meetingSyncFailed(e.toString())), backgroundColor: AppTheme.error),
         );
       }
     } finally {
@@ -240,12 +241,13 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authProvider = context.watch<AuthProvider>();
     final isStaff = RoleGuard.isStaff(authProvider.appUser);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Materi & Pertemuan'),
+        title: Text(l10n.meetingListTitle),
         actions: [
           if (isStaff)
             IconButton(
@@ -256,12 +258,12 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.sync_rounded),
-              tooltip: 'Sinkronkan Jadwal Publikasi',
+              tooltip: l10n.meetingSyncTooltip,
               onPressed: _isSyncingSchedule ? null : _syncScheduledMeetings,
             ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Segarkan',
+            tooltip: l10n.meetingRefreshTooltip,
             onPressed: _loadMeetings,
           ),
           const SizedBox(width: 8),
@@ -271,7 +273,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
           ? FloatingActionButton.extended(
               onPressed: _showCreateMeetingDialog,
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Tambah Pertemuan'),
+              label: Text(l10n.meetingAddFab),
               backgroundColor: AppTheme.primary,
               foregroundColor: Colors.white,
             )
@@ -281,6 +283,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
   }
 
   Widget _buildBody(bool isStaff) {
+    final l10n = AppLocalizations.of(context);
     final classProvider = context.watch<ClassProvider>();
     final effectiveClassId = _getEffectiveClassId();
     if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
@@ -297,12 +300,12 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Pilih Kelas Pembelajaran',
+                l10n.meetingNoClassTitle,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
               Text(
-                'Anda belum memilih kelas. Silakan bergabung menggunakan kode kelas atau pilih kelas dari Beranda untuk melihat pertemuan.',
+                l10n.meetingNoClassBody,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
@@ -310,7 +313,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
               ElevatedButton.icon(
                 onPressed: () => context.push(AppConstants.joinClassRoute),
                 icon: const Icon(Icons.key_rounded),
-                label: const Text('Gabung Kelas'),
+                label: Text(l10n.meetingJoinClassBtn),
               ),
             ],
           ),
@@ -324,7 +327,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
           _buildClassSelectorBar(classProvider, effectiveClassId),
         Expanded(
           child: _isLoading
-              ? const LoadingIndicator(message: 'Memuat pertemuan...')
+              ? LoadingIndicator(message: l10n.meetingLoading)
               : _errorMessage != null
                   ? ErrorView(message: _errorMessage!, onRetry: _loadMeetings)
                   : _meetings.isEmpty
@@ -348,6 +351,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
 
   Widget _buildClassSelectorBar(ClassProvider classProvider, String effectiveClassId) {
     if (classProvider.allClasses.isEmpty) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -359,7 +363,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
         children: [
           const Icon(Icons.school_outlined, size: 20, color: AppTheme.primary),
           const SizedBox(width: 8),
-          const Text('Kelas:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(l10n.meetingClassLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           const SizedBox(width: 8),
           Expanded(
             child: DropdownButtonHideUnderline(
@@ -394,6 +398,8 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
   }
 
   Widget _buildEmptyMeetingsView(bool isStaff) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -407,32 +413,34 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Belum Ada Pertemuan',
+              l10n.meetingEmptyTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
               isStaff
-                  ? 'Buat pertemuan baru untuk mulai mengunggah materi, kuis pretest, dan video pembelajaran.'
-                  : 'Pengajar belum mempublikasikan pertemuan pembelajaran di kelas ini.',
+                  ? l10n.meetingEmptyStaffDesc
+                  : l10n.meetingEmptyStudentDesc,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-              if (isStaff) ...[
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: _showCreateMeetingDialog,
-                  icon: const Icon(Icons.add_rounded),
-                  label: const Text('Buat Pertemuan Pertama'),
-                ),
-              ],
+            if (isStaff) ...[
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: _showCreateMeetingDialog,
+                icon: const Icon(Icons.add_rounded),
+                label: Text(l10n.meetingCreateFirstBtn),
+              ),
             ],
-          ),
+          ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
   Widget _buildMeetingCard(Meeting meeting, bool isStaff) {
+    final l10n = AppLocalizations.of(context);
+
     return Card(
       child: InkWell(
         onTap: () async {
@@ -454,7 +462,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'Pertemuan ${meeting.number}',
+                      l10n.meetingCardNumber(meeting.number),
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -464,7 +472,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
                   ),
                   const Spacer(),
                   if (isStaff || meeting.status == ContentStatus.scheduled)
-                    _buildStatusBadge(meeting.status),
+                    _buildStatusBadge(meeting.status, l10n),
                 ],
               ),
               const SizedBox(height: 10),
@@ -479,7 +487,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
                     const Icon(Icons.schedule_rounded, size: 14, color: Colors.blue),
                     const SizedBox(width: 4),
                     Text(
-                      'Terbit: ${DateFormatter.formatWib(meeting.publishAt)}',
+                      l10n.meetingPublishAtLabel(DateFormatter.formatWib(meeting.publishAt)),
                       style: const TextStyle(fontSize: 11, color: Colors.blue, fontWeight: FontWeight.w500),
                     ),
                   ],
@@ -492,17 +500,17 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
                 children: [
                   _buildModuleChip(
                     Icons.quiz_outlined,
-                    'Pretest',
+                    l10n.meetingModulePretest,
                     meeting.pretestId != null,
                   ),
                   _buildModuleChip(
                     Icons.menu_book_rounded,
-                    'Materi',
+                    l10n.meetingModuleMateri,
                     meeting.materiId != null,
                   ),
                   _buildModuleChip(
                     Icons.play_circle_outline_rounded,
-                    'Video',
+                    l10n.meetingModuleVideo,
                     meeting.videoId != null,
                   ),
                 ],
@@ -514,7 +522,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
     );
   }
 
-  Widget _buildStatusBadge(ContentStatus status) {
+  Widget _buildStatusBadge(ContentStatus status, AppLocalizations l10n) {
     Color color;
     switch (status) {
       case ContentStatus.published:
@@ -539,7 +547,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
         border: Border.all(color: color.withAlpha(50)),
       ),
       child: Text(
-        status.value,
+        MeetingStatusLocalization.label(status, l10n),
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,

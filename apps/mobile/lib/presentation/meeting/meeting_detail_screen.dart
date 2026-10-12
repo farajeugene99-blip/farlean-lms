@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/auth/role_guard.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/content_status.dart';
 import '../../models/meeting.dart';
 import '../../models/posttest.dart';
@@ -17,6 +18,7 @@ import '../../repositories/video_repository.dart';
 import '../../services/auth_provider.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
+import 'meeting_status_localization.dart';
 
 class MeetingDetailScreen extends StatefulWidget {
   final String meetingId;
@@ -83,8 +85,9 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
-          _errorMessage = 'Gagal memuat detail pertemuan: $e';
+          _errorMessage = l10n.meetingLoadDetailFailed(e.toString());
           _isLoading = false;
         });
       }
@@ -105,18 +108,20 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
   }
 
   void _showScheduledLockNotice() {
+    final l10n = AppLocalizations.of(context);
     final publishText = _meeting?.publishAt != null
         ? DateFormatter.formatWib(_meeting!.publishAt)
-        : 'waktu jadwal mendatang';
+        : l10n.meetingScheduledFutureFallback;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Pertemuan ini masih berstatus Terjadwal. Konten akan dibuka pada $publishText.'),
+        content: Text(l10n.meetingScheduledLockedNotice(publishText)),
         backgroundColor: AppTheme.warning,
       ),
     );
   }
 
   Future<void> _showScheduleDialog() async {
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     DateTime pickedDate = now.add(const Duration(days: 1));
     TimeOfDay pickedTime = const TimeOfDay(hour: 8, minute: 0);
@@ -126,14 +131,14 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
       initialDate: pickedDate,
       firstDate: now,
       lastDate: now.add(const Duration(days: 365)),
-      helpText: 'Pilih Tanggal Publikasi Pertemuan',
+      helpText: l10n.meetingPickScheduleDateTitle,
     );
     if (selectedDate == null || !mounted) return;
 
     final selectedTime = await showTimePicker(
       context: context,
       initialTime: pickedTime,
-      helpText: 'Pilih Jam Publikasi (WIB)',
+      helpText: l10n.meetingPickScheduleTimeTitle,
     );
     if (selectedTime == null || !mounted) return;
 
@@ -146,9 +151,10 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     );
 
     if (scheduledDateTime.isBefore(DateTime.now())) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Waktu publikasi terjadwal harus di waktu mendatang.'),
+        SnackBar(
+          content: Text(l10n.meetingScheduleMustBeFuture),
           backgroundColor: AppTheme.error,
         ),
       );
@@ -171,7 +177,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Pertemuan berhasil dijadwalkan terbit pada ${DateFormatter.formatWib(scheduledDateTime)}.',
+              l10n.meetingScheduledSuccess(DateFormatter.formatWib(scheduledDateTime)),
             ),
             backgroundColor: AppTheme.success,
           ),
@@ -180,7 +186,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menjadwalkan pertemuan: $e'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text(l10n.meetingScheduleFailed(e.toString())), backgroundColor: AppTheme.error),
         );
       }
     }
@@ -191,6 +197,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
   Future<void> _syncScheduledMeetings() async {
     if (_isSyncingSchedule) return;
     setState(() => _isSyncingSchedule = true);
+    final l10n = AppLocalizations.of(context);
     try {
       final promoted = await _meetingRepository.syncScheduledMeetings(
         classId: _meeting?.classId,
@@ -198,11 +205,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              promoted > 0
-                  ? '$promoted pertemuan terjadwal yang jatuh tempo berhasil dipublikasikan.'
-                  : 'Tidak ada pertemuan terjadwal yang jatuh tempo saat ini.',
-            ),
+            content: Text(l10n.meetingSyncScheduleSuccess(promoted)),
             backgroundColor: AppTheme.success,
           ),
         );
@@ -211,7 +214,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menyinkronkan jadwal: $e'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text(l10n.meetingSyncFailed(e.toString())), backgroundColor: AppTheme.error),
         );
       }
     } finally {
@@ -220,23 +223,26 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
   }
 
   Future<void> _updateStatus(ContentStatus newStatus) async {
+    final l10n = AppLocalizations.of(context);
+    final statusLabel = MeetingStatusLocalization.label(newStatus, l10n);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Ubah Status ke ${newStatus.value}?'),
+        title: Text(l10n.meetingChangeStatusConfirmTitle(statusLabel)),
         content: Text(
           newStatus == ContentStatus.published
-              ? 'Pertemuan ini akan dapat diakses oleh seluruh anggota kelas yang aktif.'
-              : 'Pertemuan ini akan diarsipkan dan tidak lagi muncul sebagai sesi aktif.',
+              ? l10n.meetingChangeStatusPublishBody
+              : l10n.meetingChangeStatusArchiveBody,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Konfirmasi'),
+            child: Text(l10n.btnConfirm),
           ),
         ],
       ),
@@ -251,7 +257,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Status berhasil diubah menjadi ${newStatus.value}'),
+              content: Text(l10n.meetingStatusChangedSuccess(statusLabel)),
               backgroundColor: AppTheme.success,
             ),
           );
@@ -259,7 +265,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+            SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
           );
         }
       }
@@ -269,6 +275,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
   Future<void> _showEditMeetingDialog() async {
     final meeting = _meeting;
     if (meeting == null) return;
+    final l10n = AppLocalizations.of(context);
 
     final titleController = TextEditingController(text: meeting.title);
     final numberController = TextEditingController(text: '${meeting.number}');
@@ -278,7 +285,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     final updated = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Edit Informasi Pertemuan'),
+        title: Text(l10n.meetingEditDialogTitle),
         content: SizedBox(
           width: 440,
           child: Form(
@@ -289,27 +296,27 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                 TextFormField(
                   controller: numberController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Nomor Pertemuan'),
+                  decoration: InputDecoration(labelText: l10n.meetingNumberLabel),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Nomor wajib diisi';
+                    if (v == null || v.trim().isEmpty) return l10n.meetingNumberRequired;
                     final num = int.tryParse(v.trim());
-                    if (num == null || num <= 0) return 'Nomor harus angka > 0';
+                    if (num == null || num <= 0) return l10n.meetingNumberMustBePositive;
                     return null;
                   },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Judul Pertemuan'),
+                  decoration: InputDecoration(labelText: l10n.meetingTitleLabel),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Judul wajib diisi';
+                    if (v == null || v.trim().isEmpty) return l10n.meetingTitleRequired;
                     return null;
                   },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: descController,
-                  decoration: const InputDecoration(labelText: 'Deskripsi / Ringkasan'),
+                  decoration: InputDecoration(labelText: l10n.meetingDescriptionLabel),
                   maxLines: 2,
                 ),
               ],
@@ -319,7 +326,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -335,12 +342,12 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
               } catch (e) {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+                    SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
                   );
                 }
               }
             },
-            child: const Text('Simpan'),
+            child: Text(l10n.btnSave),
           ),
         ],
       ),
@@ -356,22 +363,24 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
   }
 
   Future<void> _showDeleteMeetingDialog() async {
+    final l10n = AppLocalizations.of(context);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Hapus Pertemuan Ini?'),
-        content: const Text(
-          'Tindakan ini akan menghapus pertemuan dari daftar kelas.',
+        title: Text(l10n.meetingDeleteConfirmTitle),
+        content: Text(
+          l10n.meetingDeleteConfirmBody,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Hapus'),
+            child: Text(l10n.meetingDeleteAction),
           ),
         ],
       ),
@@ -382,8 +391,8 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         await _meetingRepository.deleteMeeting(widget.meetingId);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Pertemuan berhasil dihapus.'),
+            SnackBar(
+              content: Text(l10n.meetingDeletedSuccess),
               backgroundColor: AppTheme.success,
             ),
           );
@@ -392,7 +401,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal menghapus: $e'), backgroundColor: AppTheme.error),
+            SnackBar(content: Text(l10n.meetingDeleteFailed(e.toString())), backgroundColor: AppTheme.error),
           );
         }
       }
@@ -434,8 +443,9 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
   Future<void> _showCreatePretestDialog() async {
     final meeting = _meeting;
     if (meeting == null) return;
+    final l10n = AppLocalizations.of(context);
 
-    final titleController = TextEditingController(text: 'Pretest Pertemuan ${meeting.number}');
+    final titleController = TextEditingController(text: l10n.meetingPretestDefaultTitle(meeting.number));
     final durationController = TextEditingController(text: '15');
     final formKey = GlobalKey<FormState>();
 
@@ -443,7 +453,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     final created = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Buat Kuis Pretest'),
+        title: Text(l10n.meetingCreatePretestTitle),
         content: SizedBox(
           width: 440,
           child: Form(
@@ -453,17 +463,17 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
               children: [
                 TextFormField(
                   controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Judul Pretest'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
+                  decoration: InputDecoration(labelText: l10n.meetingPretestTitleLabel),
+                  validator: (v) => v == null || v.trim().isEmpty ? l10n.meetingTitleRequired : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: durationController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
+                  decoration: InputDecoration(labelText: l10n.meetingDurationLabel),
                   validator: (v) {
                     final num = int.tryParse(v?.trim() ?? '');
-                    if (num == null || num <= 0) return 'Durasi harus > 0 menit';
+                    if (num == null || num <= 0) return l10n.meetingDurationMustBePositive;
                     return null;
                   },
                 ),
@@ -474,7 +484,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -495,12 +505,12 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
               } catch (e) {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+                    SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
                   );
                 }
               }
             },
-            child: const Text('Simpan & Kelola Soal'),
+            child: Text(l10n.meetingSaveAndManageQuestionsBtn),
           ),
         ],
       ),
@@ -520,8 +530,9 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
   Future<void> _showCreatePosttestDialog() async {
     final meeting = _meeting;
     if (meeting == null) return;
+    final l10n = AppLocalizations.of(context);
 
-    final titleController = TextEditingController(text: 'Post Test Pertemuan ${meeting.number}');
+    final titleController = TextEditingController(text: l10n.meetingPosttestDefaultTitle(meeting.number));
     final durationController = TextEditingController(text: '20');
     final formKey = GlobalKey<FormState>();
 
@@ -529,7 +540,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     final created = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Buat Kuis Post Test'),
+        title: Text(l10n.meetingCreatePosttestTitle),
         content: SizedBox(
           width: 440,
           child: Form(
@@ -539,17 +550,17 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
               children: [
                 TextFormField(
                   controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Judul Post Test'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
+                  decoration: InputDecoration(labelText: l10n.meetingPosttestTitleLabel),
+                  validator: (v) => v == null || v.trim().isEmpty ? l10n.meetingTitleRequired : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: durationController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
+                  decoration: InputDecoration(labelText: l10n.meetingDurationLabel),
                   validator: (v) {
                     final num = int.tryParse(v?.trim() ?? '');
-                    if (num == null || num <= 0) return 'Durasi harus > 0 menit';
+                    if (num == null || num <= 0) return l10n.meetingDurationMustBePositive;
                     return null;
                   },
                 ),
@@ -560,7 +571,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -581,12 +592,12 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
               } catch (e) {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+                    SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
                   );
                 }
               }
             },
-            child: const Text('Simpan & Kelola Soal'),
+            child: Text(l10n.meetingSaveAndManageQuestionsBtn),
           ),
         ],
       ),
@@ -605,17 +616,19 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (_isLoading) {
-      return const Scaffold(
-        body: LoadingIndicator(message: 'Memuat hub pertemuan...'),
+      return Scaffold(
+        body: LoadingIndicator(message: l10n.meetingDetailLoading),
       );
     }
 
     if (_errorMessage != null || _meeting == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Detail Pertemuan')),
+        appBar: AppBar(title: Text(l10n.meetingDetailTitle)),
         body: ErrorView(
-          message: _errorMessage ?? 'Pertemuan tidak ditemukan.',
+          message: _errorMessage ?? l10n.meetingNotFound,
           onRetry: _loadMeetingDetail,
         ),
       );
@@ -627,17 +640,17 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Pertemuan ${meeting.number}'),
+        title: Text(l10n.meetingCardNumber(meeting.number)),
         actions: [
           if (isStaff) ...[
             IconButton(
               icon: const Icon(Icons.edit_rounded),
-              tooltip: 'Edit Info Pertemuan',
+              tooltip: l10n.meetingEditTooltip,
               onPressed: _showEditMeetingDialog,
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline_rounded),
-              tooltip: 'Hapus Pertemuan',
+              tooltip: l10n.meetingDeleteTooltip,
               onPressed: _showDeleteMeetingDialog,
             ),
             IconButton(
@@ -648,11 +661,11 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.sync_rounded),
-              tooltip: 'Sinkronkan Jadwal Publikasi',
+              tooltip: l10n.meetingSyncTooltip,
               onPressed: _isSyncingSchedule ? null : _syncScheduledMeetings,
             ),
             PopupMenuButton<String>(
-              tooltip: 'Kelola Status',
+              tooltip: l10n.meetingManageStatusTooltip,
               icon: const Icon(Icons.more_vert_rounded),
               onSelected: (val) {
                 if (val == 'publish') {
@@ -667,24 +680,24 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
               },
               itemBuilder: (context) => [
                 if (meeting.status != ContentStatus.published)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'publish',
-                    child: Text('Publikasikan Sekarang (Published)'),
+                    child: Text(l10n.meetingMenuPublishNow),
                   ),
                 if (meeting.status != ContentStatus.scheduled)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'schedule',
-                    child: Text('Jadwalkan Publikasi (Scheduled)'),
+                    child: Text(l10n.meetingMenuSchedule),
                   ),
                 if (meeting.status != ContentStatus.draft)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'draft',
-                    child: Text('Jadikan Draft / Batalkan Jadwal'),
+                    child: Text(l10n.meetingMenuDraft),
                   ),
                 if (meeting.status != ContentStatus.archived)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'archive',
-                    child: Text('Arsipkan (Archived)'),
+                    child: Text(l10n.meetingMenuArchive),
                   ),
               ],
             ),
@@ -711,7 +724,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          'Pertemuan ${meeting.number}',
+                          l10n.meetingCardNumber(meeting.number),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -720,7 +733,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                         ),
                       ),
                       const Spacer(),
-                      _buildStatusBadge(meeting.status),
+                      _buildStatusBadge(meeting.status, l10n),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -732,7 +745,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                   Text(
                     meeting.description != null && meeting.description!.isNotEmpty
                         ? meeting.description!
-                        : 'Satu pertemuan menghubungkan kuis pretest, materi bacaan terstruktur, video pembelajaran, dan post test evaluasi.',
+                        : l10n.meetingDefaultDescription,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   if (meeting.status == ContentStatus.scheduled) ...[
@@ -752,15 +765,15 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Pertemuan Terjadwal',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blue),
+                                Text(
+                                  l10n.meetingScheduledBannerTitle,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blue),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   meeting.publishAt != null
-                                      ? 'Dijadwalkan terbit pada ${DateFormatter.formatWib(meeting.publishAt)}. Publikasi berjalan saat cron/sinkronisasi berikutnya (dalam kisaran jadwal), bukan tepat-menit otomatis.'
-                                      : 'Pertemuan disiapkan untuk jadwal publikasi mendatang.',
+                                      ? l10n.meetingScheduledBanner(DateFormatter.formatWib(meeting.publishAt))
+                                      : l10n.meetingScheduledBannerFallback,
                                   style: const TextStyle(fontSize: 12, color: Colors.blue),
                                 ),
                               ],
@@ -777,21 +790,21 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
           const SizedBox(height: 20),
 
           Text(
-            'Modul Pembelajaran',
+            l10n.meetingModulesTitle,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 12),
 
           // 1. Modul Materi Card
           _buildModuleCard(
-            title: 'Materi Pembelajaran',
+            title: l10n.meetingModuleMaterialTitle,
             subtitle: meeting.materiId != null
-                ? 'Materi bacaan terstruktur format Quill Delta'
-                : (isStaff ? 'Materi belum dibuat. Klik untuk membuat materi baru.' : 'Materi belum diunggah oleh pengajar'),
+                ? l10n.meetingModuleMaterialSubActive
+                : (isStaff ? l10n.meetingModuleMaterialSubStaffEmpty : l10n.meetingModuleMaterialSubStudentEmpty),
             icon: Icons.menu_book_rounded,
             accentColor: AppTheme.primary,
             isAvailable: meeting.materiId != null || isStaff,
-            actionLabel: meeting.materiId != null ? 'Buka Materi' : 'Buat Materi',
+            actionLabel: meeting.materiId != null ? l10n.meetingModuleMaterialActionOpen : l10n.meetingModuleMaterialActionCreate,
             onTap: () async {
               if (_isScheduledLockedForStudent) {
                 _showScheduledLockNotice();
@@ -809,16 +822,16 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
 
           // 2. Modul Pretest Card
           _buildModuleCard(
-            title: 'Kuis Pretest',
+            title: l10n.meetingModulePretestTitle,
             subtitle: meeting.pretestId != null
-                ? 'Uji pemahaman awal sebelum memulai materi inti'
-                : (isStaff ? 'Pretest belum diaktifkan. Klik untuk membuat pretest.' : 'Pretest belum diaktifkan untuk pertemuan ini'),
+                ? l10n.meetingModulePretestSubActive
+                : (isStaff ? l10n.meetingModulePretestSubStaffEmpty : l10n.meetingModulePretestSubStudentEmpty),
             icon: Icons.quiz_outlined,
             accentColor: AppTheme.secondary,
             isAvailable: meeting.pretestId != null || isStaff,
-            actionLabel: meeting.pretestId != null ? 'Mulai Pretest' : 'Buat Pretest',
-            secondaryActionLabel: (isStaff && meeting.pretestId != null) ? 'Kelola Soal' : null,
-            badgeNotice: meeting.pretestId != null ? 'Wajib pernah buka materi' : null,
+            actionLabel: meeting.pretestId != null ? l10n.meetingModulePretestActionStart : l10n.meetingModulePretestActionCreate,
+            secondaryActionLabel: (isStaff && meeting.pretestId != null) ? l10n.meetingModulePretestManageQuestions : null,
+            badgeNotice: meeting.pretestId != null ? l10n.meetingModulePretestBadgeNotice : null,
             onTap: () async {
               if (_isScheduledLockedForStudent) {
                 _showScheduledLockNotice();
@@ -839,14 +852,14 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
 
           // 3. Modul Video Card
           _buildModuleCard(
-            title: 'Video Pembelajaran',
+            title: l10n.meetingModuleVideoTitle,
             subtitle: meeting.videoId != null
-                ? 'Video tutorial & demonstrasi interaktif'
-                : (isStaff ? 'Video belum ditautkan. Klik untuk menambahkan link video.' : 'Video belum ditautkan ke pertemuan ini'),
+                ? l10n.meetingModuleVideoSubActive
+                : (isStaff ? l10n.meetingModuleVideoSubStaffEmpty : l10n.meetingModuleVideoSubStudentEmpty),
             icon: Icons.play_circle_outline_rounded,
             accentColor: AppTheme.warning,
             isAvailable: meeting.videoId != null || isStaff,
-            actionLabel: meeting.videoId != null ? 'Tonton Video' : 'Tambah Video',
+            actionLabel: meeting.videoId != null ? l10n.meetingModuleVideoActionWatch : l10n.meetingModuleVideoActionAdd,
             onTap: () async {
               if (_isScheduledLockedForStudent) {
                 _showScheduledLockNotice();
@@ -864,15 +877,15 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
 
           // 4. Modul Post Test Card
           _buildModuleCard(
-            title: 'Kuis Post Test',
+            title: l10n.meetingModulePosttestTitle,
             subtitle: meeting.posttestId != null
-                ? 'Evaluasi akhir capaian pembelajaran setelah memahami materi'
-                : (isStaff ? 'Post test belum dibuat. Klik untuk membuat post test.' : 'Post test belum diaktifkan untuk pertemuan ini'),
+                ? l10n.meetingModulePosttestSubActive
+                : (isStaff ? l10n.meetingModulePosttestSubStaffEmpty : l10n.meetingModulePosttestSubStudentEmpty),
             icon: Icons.assignment_turned_in_rounded,
             accentColor: Colors.deepPurple,
             isAvailable: meeting.posttestId != null || isStaff,
-            actionLabel: meeting.posttestId != null ? 'Mulai Post Test' : 'Buat Post Test',
-            secondaryActionLabel: (isStaff && meeting.posttestId != null) ? 'Kelola Soal' : null,
+            actionLabel: meeting.posttestId != null ? l10n.meetingModulePosttestActionStart : l10n.meetingModulePosttestActionCreate,
+            secondaryActionLabel: (isStaff && meeting.posttestId != null) ? l10n.meetingModulePretestManageQuestions : null,
             onTap: () async {
               if (_isScheduledLockedForStudent) {
                 _showScheduledLockNotice();
@@ -906,6 +919,8 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     required VoidCallback onTap,
     VoidCallback? onSecondaryTap,
   }) {
+    final l10n = AppLocalizations.of(context);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -925,16 +940,16 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 6,
+                    runSpacing: 4,
                     children: [
-                      Flexible(
-                        child: Text(
-                          title,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                        ),
+                      Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                       ),
-                      if (badgeNotice != null) ...[
-                        const SizedBox(width: 6),
+                      if (badgeNotice != null)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
@@ -950,7 +965,6 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                             ),
                           ),
                         ),
-                      ],
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -971,7 +985,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                         ),
                         child: Text(
-                          isAvailable ? actionLabel : 'Belum Tersedia',
+                          isAvailable ? actionLabel : l10n.meetingModuleNotAvailable,
                           style: TextStyle(
                             fontSize: 13,
                             color: isAvailable ? Colors.white : AppTheme.textSecondary,
@@ -1020,7 +1034,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     );
   }
 
-  Widget _buildStatusBadge(ContentStatus status) {
+  Widget _buildStatusBadge(ContentStatus status, AppLocalizations l10n) {
     Color color;
     switch (status) {
       case ContentStatus.published:
@@ -1045,7 +1059,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         border: Border.all(color: color.withAlpha(50)),
       ),
       child: Text(
-        status.value,
+        MeetingStatusLocalization.label(status, l10n),
         style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
       ),
     );
@@ -1088,6 +1102,7 @@ class _AddVideoDialogState extends State<_AddVideoDialog> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate() || _isSaving) return;
     setState(() => _isSaving = true);
+    final l10n = AppLocalizations.of(context);
     try {
       final videoItem = VideoItem(
         id: '',
@@ -1103,7 +1118,7 @@ class _AddVideoDialogState extends State<_AddVideoDialog> {
       if (mounted) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
         );
       }
     }
@@ -1111,8 +1126,10 @@ class _AddVideoDialogState extends State<_AddVideoDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return AlertDialog(
-      title: const Text('Tambah Video Pembelajaran'),
+      title: Text(l10n.meetingAddVideoTitle),
       content: SizedBox(
         width: 440,
         child: Form(
@@ -1121,67 +1138,67 @@ class _AddVideoDialogState extends State<_AddVideoDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<VideoProvider>(
-              isExpanded: true,
-              initialValue: _selectedProvider,
-              decoration: const InputDecoration(
-                labelText: 'Penyedia Video',
-                isDense: true,
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: VideoProvider.youtube,
-                  child: Text(
-                    'YouTube Video',
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
+                isExpanded: true,
+                initialValue: _selectedProvider,
+                decoration: InputDecoration(
+                  labelText: l10n.meetingVideoProviderLabel,
+                  isDense: true,
                 ),
-                DropdownMenuItem(
-                  value: VideoProvider.cloudinary,
-                  child: Text(
-                    'Cloudinary (MP4/URL)',
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
+                items: const [
+                  DropdownMenuItem(
+                    value: VideoProvider.youtube,
+                    child: Text(
+                      'YouTube Video',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   ),
-                ),
-              ],
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() => _selectedProvider = val);
-                }
-              },
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _urlController,
-              decoration: InputDecoration(
-                labelText: 'URL Video',
-                hintText: _selectedProvider == VideoProvider.youtube
-                    ? 'https://www.youtube.com/watch?v=...'
-                    : 'https://res.cloudinary.com/...',
+                  DropdownMenuItem(
+                    value: VideoProvider.cloudinary,
+                    child: Text(
+                      'Cloudinary (MP4/URL)',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                ],
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => _selectedProvider = val);
+                  }
+                },
               ),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'URL wajib diisi';
-                if (!v.startsWith('http://') && !v.startsWith('https://')) {
-                  return 'URL harus diawali http:// atau https://';
-                }
-                return null;
-              },
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _urlController,
+                decoration: InputDecoration(
+                  labelText: l10n.meetingVideoUrlLabel,
+                  hintText: _selectedProvider == VideoProvider.youtube
+                      ? 'https://www.youtube.com/watch?v=...'
+                      : 'https://res.cloudinary.com/...',
+                ),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return l10n.meetingVideoUrlRequired;
+                  if (!v.startsWith('http://') && !v.startsWith('https://')) {
+                    return l10n.meetingVideoUrlInvalid;
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: _isSaving ? null : () => Navigator.pop(context, false),
-        child: const Text('Batal'),
-      ),
+      actions: [
+        TextButton(
+          onPressed: _isSaving ? null : () => Navigator.pop(context, false),
+          child: Text(l10n.btnCancel),
+        ),
         ElevatedButton(
           onPressed: _isSaving ? null : _submit,
           child: _isSaving
               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('Simpan Video'),
+              : Text(l10n.meetingSaveVideoBtn),
         ),
       ],
     );
@@ -1242,10 +1259,11 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
   }
 
   Future<void> _publish(List<Question> questions) async {
+    final l10n = AppLocalizations.of(context);
     if (questions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Tambahkan minimal 1 soal sebelum mempublikasikan kuis.'),
+        SnackBar(
+          content: Text(l10n.meetingPublishMinOneQuestion),
           backgroundColor: AppTheme.warning,
         ),
       );
@@ -1266,8 +1284,8 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
         });
         widget.onStatusChanged?.call();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Kuis berhasil dipublikasikan! Mahasiswa sekarang dapat mengakses kuis ini.'),
+          SnackBar(
+            content: Text(l10n.meetingQuizPublishedSuccess),
             backgroundColor: AppTheme.success,
           ),
         );
@@ -1276,7 +1294,7 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
       if (mounted) {
         setState(() => _isPublishing = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal publikasi: $e'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text(l10n.meetingPublishFailed(e.toString())), backgroundColor: AppTheme.error),
         );
       }
     }
@@ -1299,6 +1317,8 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
       minChildSize: 0.5,
@@ -1341,7 +1361,7 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                               runSpacing: 4,
                               children: [
                                 Text(
-                                  'Kelola Soal ${widget.testTitle}',
+                                  l10n.meetingManageQuestionsTitle(widget.testTitle),
                                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -1357,7 +1377,7 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                                       ),
                                     ),
                                     child: Text(
-                                      _status == ContentStatus.draft ? 'DRAFT' : _status!.value.toUpperCase(),
+                                      MeetingStatusLocalization.labelUpperCase(_status, l10n),
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
@@ -1369,7 +1389,7 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Jumlah Soal: ${questions.length} soal aktif',
+                              l10n.meetingQuestionCountActive(questions.length),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppTheme.textSecondary,
                                 fontWeight: FontWeight.w600,
@@ -1380,7 +1400,7 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.close_rounded),
-                        tooltip: 'Tutup',
+                        tooltip: l10n.btnClose,
                         onPressed: () => Navigator.pop(context),
                       ),
                     ],
@@ -1393,7 +1413,7 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                     children: [
                       ElevatedButton.icon(
                         icon: const Icon(Icons.add_rounded, size: 18),
-                        label: const Text('Tambah Soal'),
+                        label: Text(l10n.meetingAddQuestionBtn),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primary,
                           foregroundColor: Colors.white,
@@ -1410,7 +1430,7 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                                 )
                               : const Icon(Icons.publish_rounded, size: 16),
-                          label: const Text('Publikasikan Kuis'),
+                          label: Text(l10n.meetingPublishQuizBtn),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.success,
                             foregroundColor: Colors.white,
@@ -1431,14 +1451,14 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                           children: [
                             Icon(Icons.quiz_outlined, size: 48, color: AppTheme.textSecondary.withAlpha(100)),
                             const SizedBox(height: 12),
-                            const Text(
-                              'Draft, belum ada soal aktif.',
-                              style: TextStyle(fontWeight: FontWeight.w600),
+                            Text(
+                              l10n.meetingDraftNoQuestionsTitle,
+                              style: const TextStyle(fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: 6),
-                            const Text(
-                              'Klik tombol "Tambah Soal" untuk membuat soal kuis pertama.',
-                              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                            Text(
+                              l10n.meetingDraftNoQuestionsBody,
+                              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                             ),
                           ],
                         ),
@@ -1458,169 +1478,169 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                             itemBuilder: (context, idx) {
                               final q = sortedQuestions[idx];
                               return Card(
-                            elevation: 1,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: const BorderSide(color: AppTheme.border),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
+                                elevation: 1,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: const BorderSide(color: AppTheme.border),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      CircleAvatar(
-                                        radius: 12,
-                                        backgroundColor: AppTheme.primary.withAlpha(30),
-                                        child: Text(
-                                          '${idx + 1}',
-                                          style: const TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppTheme.primary,
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 12,
+                                            backgroundColor: AppTheme.primary.withAlpha(30),
+                                            child: Text(
+                                              '${idx + 1}',
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppTheme.primary,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          q.text,
-                                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.background,
-                                          borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(color: AppTheme.border),
-                                        ),
-                                        child: Text(
-                                          '${q.points} poin',
-                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 32),
-                                    child: Wrap(
-                                      spacing: 8,
-                                      runSpacing: 6,
-                                      children: q.options.asMap().entries.map((opt) {
-                                        final label = String.fromCharCode(65 + opt.key);
-                                        return Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                          decoration: BoxDecoration(
-                                            color: AppTheme.background,
-                                            borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(color: AppTheme.border),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              q.text,
+                                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                                            ),
                                           ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                                decoration: BoxDecoration(
-                                                  color: AppTheme.primary.withAlpha(20),
-                                                  borderRadius: BorderRadius.circular(4),
-                                                ),
-                                                child: Text(
-                                                  label,
-                                                  style: const TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: AppTheme.primary,
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.background,
+                                              borderRadius: BorderRadius.circular(4),
+                                              border: Border.all(color: AppTheme.border),
+                                            ),
+                                            child: Text(
+                                              l10n.meetingPointsLabel(q.points),
+                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 32),
+                                        child: Wrap(
+                                          spacing: 8,
+                                          runSpacing: 6,
+                                          children: q.options.asMap().entries.map((opt) {
+                                            final label = String.fromCharCode(65 + opt.key);
+                                            return Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.background,
+                                                borderRadius: BorderRadius.circular(8),
+                                                border: Border.all(color: AppTheme.border),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                                    decoration: BoxDecoration(
+                                                      color: AppTheme.primary.withAlpha(20),
+                                                      borderRadius: BorderRadius.circular(4),
+                                                    ),
+                                                    child: Text(
+                                                      label,
+                                                      style: const TextStyle(
+                                                        fontSize: 11,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: AppTheme.primary,
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Flexible(
-                                                child: Text(
-                                                  opt.value,
-                                                  style: const TextStyle(fontSize: 12, color: AppTheme.textPrimary),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }).toList(),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      TextButton.icon(
-                                        icon: const Icon(Icons.edit_outlined, size: 16),
-                                        label: const Text('Edit'),
-                                        onPressed: () => _openEditor(q),
-                                      ),
-                                      TextButton.icon(
-                                        icon: const Icon(Icons.delete_outline_rounded, size: 16, color: AppTheme.error),
-                                        label: const Text('Hapus', style: TextStyle(color: AppTheme.error)),
-                                        onPressed: () async {
-                                          final messenger = ScaffoldMessenger.of(context);
-                                          if (_status == ContentStatus.published && sortedQuestions.length <= 1) {
-                                            messenger.showSnackBar(
-                                              const SnackBar(
-                                                content: Text('Tidak dapat menghapus soal aktif terakhir pada kuis yang berstatus Published. Silakan arsipkan kuis terlebih dahulu jika ingin menonaktifkannya.'),
-                                                backgroundColor: AppTheme.error,
+                                                  const SizedBox(width: 6),
+                                                  Flexible(
+                                                    child: Text(
+                                                      opt.value,
+                                                      style: const TextStyle(fontSize: 12, color: AppTheme.textPrimary),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             );
-                                            return;
-                                          }
-
-                                          final confirm = await showDialog<bool>(
-                                            context: context,
-                                            builder: (dCtx) => AlertDialog(
-                                              title: const Text('Konfirmasi Hapus Soal'),
-                                              content: Text(
-                                                'Apakah Anda yakin ingin menghapus Soal ${idx + 1}? Jika kuis sudah pernah dikerjakan siswa, soal akan diarsipkan (soft-delete) dan riwayat nilai siswa terdahulu tetap aman.',
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () => Navigator.pop(dCtx, false),
-                                                  child: const Text('Batal'),
-                                                ),
-                                                ElevatedButton(
-                                                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-                                                  onPressed: () => Navigator.pop(dCtx, true),
-                                                  child: const Text('Hapus Soal'),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                          if (confirm == true && mounted) {
-                                            try {
-                                              if (widget.isPretest) {
-                                                await widget.pretestRepository.deleteQuestion(testId: widget.testId, qid: q.id);
-                                              } else {
-                                                await widget.posttestRepository.deleteQuestion(testId: widget.testId, qid: q.id);
+                                          }).toList(),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          TextButton.icon(
+                                            icon: const Icon(Icons.edit_outlined, size: 16),
+                                            label: Text(l10n.meetingEditAction),
+                                            onPressed: () => _openEditor(q),
+                                          ),
+                                          TextButton.icon(
+                                            icon: const Icon(Icons.delete_outline_rounded, size: 16, color: AppTheme.error),
+                                            label: Text(l10n.meetingDeleteAction, style: const TextStyle(color: AppTheme.error)),
+                                            onPressed: () async {
+                                              final messenger = ScaffoldMessenger.of(context);
+                                              if (_status == ContentStatus.published && sortedQuestions.length <= 1) {
+                                                messenger.showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(l10n.meetingCannotDeleteLastPublished),
+                                                    backgroundColor: AppTheme.error,
+                                                  ),
+                                                );
+                                                return;
                                               }
-                                              _reloadQuestions();
-                                            } catch (e) {
-                                              messenger.showSnackBar(
-                                                SnackBar(content: Text('Gagal menghapus: $e'), backgroundColor: AppTheme.error),
+
+                                              final confirm = await showDialog<bool>(
+                                                context: context,
+                                                builder: (dCtx) => AlertDialog(
+                                                  title: Text(l10n.meetingDeleteQuestionConfirmTitle),
+                                                  content: Text(
+                                                    l10n.meetingDeleteQuestionConfirmBody(idx + 1),
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () => Navigator.pop(dCtx, false),
+                                                      child: Text(l10n.btnCancel),
+                                                    ),
+                                                    ElevatedButton(
+                                                      style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+                                                      onPressed: () => Navigator.pop(dCtx, true),
+                                                      child: Text(l10n.meetingDeleteQuestionBtn),
+                                                    ),
+                                                  ],
+                                                ),
                                               );
-                                            }
-                                          }
-                                        },
+                                              if (confirm == true && mounted) {
+                                                try {
+                                                  if (widget.isPretest) {
+                                                    await widget.pretestRepository.deleteQuestion(testId: widget.testId, qid: q.id);
+                                                  } else {
+                                                    await widget.posttestRepository.deleteQuestion(testId: widget.testId, qid: q.id);
+                                                  }
+                                                  _reloadQuestions();
+                                                } catch (e) {
+                                                  messenger.showSnackBar(
+                                                    SnackBar(content: Text(l10n.meetingDeleteFailed(e.toString())), backgroundColor: AppTheme.error),
+                                                  );
+                                                }
+                                              }
+                                            },
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
-                            ),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  ),
-                ),
+                      ),
+                    ),
                 ],
               ),
             );
@@ -1692,6 +1712,7 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate() || _isSaving) return;
     setState(() => _isSaving = true);
+    final l10n = AppLocalizations.of(context);
 
     final optionsList = [
       ..._optionControllers.map((c) => c.text.trim()),
@@ -1727,7 +1748,7 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
       if (mounted) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
         );
       }
     }
@@ -1735,8 +1756,10 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return AlertDialog(
-      title: Text(widget.existing == null ? 'Tambah Soal Baru' : 'Edit Soal'),
+      title: Text(widget.existing == null ? l10n.meetingAddQuestionDialogTitle : l10n.meetingEditQuestionDialogTitle),
       content: SizedBox(
         width: 520,
         child: Form(
@@ -1748,24 +1771,24 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
               children: [
                 TextFormField(
                   controller: _textController,
-                  decoration: const InputDecoration(
-                    labelText: 'Teks Pertanyaan *',
-                    hintText: 'Masukkan pertanyaan...',
+                  decoration: InputDecoration(
+                    labelText: l10n.meetingQuestionTextLabel,
+                    hintText: l10n.meetingQuestionTextHint,
                   ),
                   maxLines: 3,
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Teks pertanyaan wajib diisi' : null,
+                  validator: (v) => v == null || v.trim().isEmpty ? l10n.meetingQuestionTextRequired : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _pointsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Poin Soal (1 - 100) *',
+                  decoration: InputDecoration(
+                    labelText: l10n.meetingQuestionPointsLabel,
                   ),
                   keyboardType: TextInputType.number,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Poin wajib diisi';
+                    if (v == null || v.trim().isEmpty) return l10n.meetingQuestionPointsRequired;
                     final parsed = int.tryParse(v.trim());
-                    if (parsed == null || parsed < 1 || parsed > 100) return 'Poin harus antara 1 - 100';
+                    if (parsed == null || parsed < 1 || parsed > 100) return l10n.meetingQuestionPointsInvalid;
                     return null;
                   },
                 ),
@@ -1773,14 +1796,14 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Pilihan Jawaban & Kunci (A - E) *',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    Text(
+                      l10n.meetingOptionsSectionTitle,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Tentukan 5 pilihan jawaban (A sampai E) dan pilih satu radio sebagai kunci jawaban benar.',
-                      style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                    Text(
+                      l10n.meetingOptionsSectionSubtitle,
+                      style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                     ),
                   ],
                 ),
@@ -1820,7 +1843,7 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                             child: TextFormField(
                               controller: ctrl,
                               decoration: InputDecoration(
-                                labelText: isKey ? 'Pilihan $label (★ KUNCI BENAR)' : 'Pilihan $label',
+                                labelText: isKey ? l10n.meetingOptionLabelKey(label) : l10n.meetingOptionLabelRegular(label),
                                 labelStyle: TextStyle(
                                   color: isKey ? AppTheme.success : AppTheme.textSecondary,
                                   fontWeight: isKey ? FontWeight.bold : FontWeight.normal,
@@ -1830,7 +1853,7 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,
                               ),
-                              validator: (v) => v == null || v.trim().isEmpty ? 'Pilihan $label tidak boleh kosong' : null,
+                              validator: (v) => v == null || v.trim().isEmpty ? l10n.meetingOptionRequired(label) : null,
                             ),
                           ),
                         ],
@@ -1851,9 +1874,9 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Pilihan Tambahan Terarsip (Legacy - Read Only):',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.textSecondary),
+                        Text(
+                          l10n.meetingLegacyOptionsTitle,
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.textSecondary),
                         ),
                         const SizedBox(height: 4),
                         ..._legacyExtraOptions.asMap().entries.map((e) {
@@ -1878,13 +1901,13 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
       actions: [
         TextButton(
           onPressed: _isSaving ? null : () => Navigator.pop(context),
-          child: const Text('Batal'),
+          child: Text(l10n.btnCancel),
         ),
         ElevatedButton(
           onPressed: _isSaving ? null : _submit,
           child: _isSaving
               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('Simpan'),
+              : Text(l10n.btnSave),
         ),
       ],
     );

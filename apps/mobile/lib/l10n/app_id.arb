@@ -493,5 +493,562 @@
   "@profileResetClassBtn": { "description": "Tombol buka dialog reset pilihan kelas aktif" },
 
   "profileResetClassDone": "Pilihan kelas aktif berhasil direset.",
-  "@profileResetClassDone": { "description": "Snackbar sukses reset kelas aktif" }
+  "@profileResetClassDone": { "description": "Snackbar sukses reset kelas aktif" },
+
+  "meetingStatusDraft": "Draf",
+  "@meetingStatusDraft": { "description": "Label status draf" },
+
+  "meetingStatusScheduled": "Terjadwal",
+  "@meetingStatusScheduled": { "description": "Label status terjadwal" },
+
+  "meetingStatusPublished": "Dipublikasikan",
+  "@meetingStatusPublished": { "description": "Label status dipublikasikan" },
+
+  "meetingStatusArchived": "Diarsipkan",
+  "@meetingStatusArchived": { "description": "Label status diarsipkan" },
+
+  "meetingListTitle": "Materi & Pertemuan",
+  "@meetingListTitle": { "description": "Judul AppBar daftar pertemuan" },
+
+  "meetingSyncTooltip": "Sinkronkan Jadwal Publikasi",
+  "@meetingSyncTooltip": { "description": "Tooltip ikon sinkronkan jadwal" },
+
+  "meetingRefreshTooltip": "Segarkan",
+  "@meetingRefreshTooltip": { "description": "Tooltip ikon segarkan data" },
+
+  "meetingAddFab": "Tambah Pertemuan",
+  "@meetingAddFab": { "description": "Tombol aksi terapung tambah pertemuan baru" },
+
+  "meetingErrorPermissionStaff": "Akses ditolak: Anda tidak memiliki wewenang untuk mengelola kelas ini.",
+  "@meetingErrorPermissionStaff": { "description": "Pesan error permission-denied untuk staf/pengajar" },
+
+  "meetingErrorPermissionStudent": "Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini. Pastikan Anda telah bergabung dan disetujui.",
+  "@meetingErrorPermissionStudent": { "description": "Pesan error permission-denied untuk mahasiswa" },
+
+  "meetingErrorNetwork": "Koneksi ke server bermasalah. Periksa jaringan internet atau emulator Anda.",
+  "@meetingErrorNetwork": { "description": "Pesan error jaringan pada daftar pertemuan" },
+
+  "meetingErrorLoadFailed": "Gagal memuat daftar pertemuan: {detail}",
+  "@meetingErrorLoadFailed": {
+    "description": "Pesan error umum gagal memuat pertemuan",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "meetingSelectClassFirst": "Pilih kelas yang valid terlebih dahulu untuk membuat pertemuan.",
+  "@meetingSelectClassFirst": { "description": "Snackbar peringatan belum memilih kelas saat buat pertemuan" },
+
+  "meetingCreateTitle": "Buat Pertemuan Baru",
+  "@meetingCreateTitle": { "description": "Judul dialog buat pertemuan baru" },
+
+  "meetingNumberLabel": "Nomor Pertemuan",
+  "@meetingNumberLabel": { "description": "Label input nomor pertemuan" },
+
+  "meetingNumberRequired": "Nomor wajib diisi",
+  "@meetingNumberRequired": { "description": "Validasi nomor pertemuan kosong" },
+
+  "meetingNumberMustBePositive": "Nomor harus angka > 0",
+  "@meetingNumberMustBePositive": { "description": "Validasi nomor pertemuan harus angka positif" },
+
+  "meetingTitleLabel": "Judul Pertemuan",
+  "@meetingTitleLabel": { "description": "Label input judul pertemuan" },
+
+  "meetingTitleRequired": "Judul wajib diisi",
+  "@meetingTitleRequired": { "description": "Validasi judul pertemuan kosong" },
+
+  "meetingSaveDraftBtn": "Simpan Draft",
+  "@meetingSaveDraftBtn": { "description": "Tombol simpan draf pertemuan" },
+
+  "meetingCreateFailed": "Gagal: {detail}",
+  "@meetingCreateFailed": {
+    "description": "Snackbar gagal aksi pertemuan",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "meetingActionFailed": "Gagal: {detail}",
+  "@meetingActionFailed": {
+    "description": "Snackbar generik gagal operasi pada pertemuan",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "meetingSyncScheduleSuccess": "{count, plural, =0{Tidak ada pertemuan terjadwal yang jatuh tempo saat ini.} other{{count} pertemuan terjadwal yang jatuh tempo berhasil dipublikasikan.}}",
+  "@meetingSyncScheduleSuccess": {
+    "description": "Snackbar hasil sinkronisasi jadwal publikasi",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "meetingSyncFailed": "Gagal menyinkronkan jadwal: {detail}",
+  "@meetingSyncFailed": {
+    "description": "Snackbar gagal sinkronisasi jadwal",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "meetingNoClassTitle": "Pilih Kelas Pembelajaran",
+  "@meetingNoClassTitle": { "description": "Judul tampilan saat belum memilih kelas" },
+
+  "meetingNoClassBody": "Anda belum memilih kelas. Silakan bergabung menggunakan kode kelas atau pilih kelas dari Beranda untuk melihat pertemuan.",
+  "@meetingNoClassBody": { "description": "Instruksi saat belum memilih kelas" },
+
+  "meetingJoinClassBtn": "Gabung Kelas",
+  "@meetingJoinClassBtn": { "description": "Tombol menuju layar gabung kelas" },
+
+  "meetingClassLabel": "Kelas:",
+  "@meetingClassLabel": { "description": "Label bar pemilih kelas aktif" },
+
+  "meetingLoading": "Memuat pertemuan...",
+  "@meetingLoading": { "description": "Teks indikator memuat daftar pertemuan" },
+
+  "meetingEmptyTitle": "Belum Ada Pertemuan",
+  "@meetingEmptyTitle": { "description": "Judul status kosong daftar pertemuan" },
+
+  "meetingEmptyStaffDesc": "Buat pertemuan baru untuk mulai mengunggah materi, kuis pretest, dan video pembelajaran.",
+  "@meetingEmptyStaffDesc": { "description": "Deskripsi status kosong untuk staf/pengajar" },
+
+  "meetingEmptyStudentDesc": "Pengajar belum mempublikasikan pertemuan pembelajaran di kelas ini.",
+  "@meetingEmptyStudentDesc": { "description": "Deskripsi status kosong untuk mahasiswa" },
+
+  "meetingCreateFirstBtn": "Buat Pertemuan Pertama",
+  "@meetingCreateFirstBtn": { "description": "Tombol buat pertemuan pertama pada status kosong" },
+
+  "meetingCardNumber": "Pertemuan {number}",
+  "@meetingCardNumber": {
+    "description": "Nomor pertemuan pada kartu atau header",
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+
+  "meetingPublishAtLabel": "Terbit: {when}",
+  "@meetingPublishAtLabel": {
+    "description": "Label jadwal terbit pertemuan pada kartu",
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
+
+  "meetingModulePretest": "Pretest",
+  "@meetingModulePretest": { "description": "Label chip modul pretest" },
+
+  "meetingModuleMateri": "Materi",
+  "@meetingModuleMateri": { "description": "Label chip modul materi" },
+
+  "meetingModuleVideo": "Video",
+  "@meetingModuleVideo": { "description": "Label chip modul video" },
+
+  "meetingModulePosttest": "Post Test",
+  "@meetingModulePosttest": { "description": "Label chip modul post test" },
+
+  "meetingDetailLoading": "Memuat hub pertemuan...",
+  "@meetingDetailLoading": { "description": "Teks indikator memuat detail pertemuan" },
+
+  "meetingDetailTitle": "Detail Pertemuan",
+  "@meetingDetailTitle": { "description": "Judul AppBar detail pertemuan saat fallback" },
+
+  "meetingNotFound": "Pertemuan tidak ditemukan.",
+  "@meetingNotFound": { "description": "Pesan error pertemuan tidak ditemukan" },
+
+  "meetingLoadDetailFailed": "Gagal memuat detail pertemuan: {detail}",
+  "@meetingLoadDetailFailed": {
+    "description": "Pesan error gagal memuat detail pertemuan",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "meetingScheduledLockedNotice": "Pertemuan ini masih berstatus Terjadwal. Konten akan dibuka pada {when}.",
+  "@meetingScheduledLockedNotice": {
+    "description": "Snackbar kunci pertemuan terjadwal bagi mahasiswa",
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
+
+  "meetingScheduledFutureFallback": "waktu jadwal mendatang",
+  "@meetingScheduledFutureFallback": { "description": "Teks fallback waktu jadwal mendatang saat tanggal kosong" },
+
+  "meetingPickScheduleDateTitle": "Pilih Tanggal Publikasi Pertemuan",
+  "@meetingPickScheduleDateTitle": { "description": "Judul pemilih tanggal publikasi" },
+
+  "meetingPickScheduleTimeTitle": "Pilih Jam Publikasi (WIB)",
+  "@meetingPickScheduleTimeTitle": { "description": "Judul pemilih jam publikasi" },
+
+  "meetingScheduleMustBeFuture": "Waktu publikasi terjadwal harus di waktu mendatang.",
+  "@meetingScheduleMustBeFuture": { "description": "Validasi waktu jadwal publikasi harus masa depan" },
+
+  "meetingScheduledSuccess": "Pertemuan berhasil dijadwalkan terbit pada {when}.",
+  "@meetingScheduledSuccess": {
+    "description": "Snackbar sukses menjadwalkan pertemuan",
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
+
+  "meetingScheduleFailed": "Gagal menjadwalkan pertemuan: {detail}",
+  "@meetingScheduleFailed": {
+    "description": "Snackbar gagal menjadwalkan pertemuan",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "meetingChangeStatusConfirmTitle": "Ubah Status ke {status}?",
+  "@meetingChangeStatusConfirmTitle": {
+    "description": "Judul konfirmasi ubah status pertemuan",
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+
+  "meetingChangeStatusPublishBody": "Pertemuan ini akan dapat diakses oleh seluruh anggota kelas yang aktif.",
+  "@meetingChangeStatusPublishBody": { "description": "Deskripsi konfirmasi publikasikan pertemuan" },
+
+  "meetingChangeStatusArchiveBody": "Pertemuan ini akan diarsipkan dan tidak lagi muncul sebagai sesi aktif.",
+  "@meetingChangeStatusArchiveBody": { "description": "Deskripsi konfirmasi arsipkan pertemuan" },
+
+  "meetingStatusChangedSuccess": "Status berhasil diubah menjadi {status}",
+  "@meetingStatusChangedSuccess": {
+    "description": "Snackbar sukses ubah status pertemuan",
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+
+  "meetingEditDialogTitle": "Edit Informasi Pertemuan",
+  "@meetingEditDialogTitle": { "description": "Judul dialog edit informasi pertemuan" },
+
+  "meetingDescriptionLabel": "Deskripsi / Ringkasan",
+  "@meetingDescriptionLabel": { "description": "Label field deskripsi pertemuan" },
+
+  "meetingEditTooltip": "Edit Info Pertemuan",
+  "@meetingEditTooltip": { "description": "Tooltip ikon edit pertemuan" },
+
+  "meetingDeleteTooltip": "Hapus Pertemuan",
+  "@meetingDeleteTooltip": { "description": "Tooltip ikon hapus pertemuan" },
+
+  "meetingManageStatusTooltip": "Kelola Status",
+  "@meetingManageStatusTooltip": { "description": "Tooltip ikon popup menu kelola status" },
+
+  "meetingMenuPublishNow": "Publikasikan Sekarang (Published)",
+  "@meetingMenuPublishNow": { "description": "Menu publikasikan sekarang" },
+
+  "meetingMenuSchedule": "Jadwalkan Publikasi (Scheduled)",
+  "@meetingMenuSchedule": { "description": "Menu jadwalkan publikasi" },
+
+  "meetingMenuDraft": "Jadikan Draft / Batalkan Jadwal",
+  "@meetingMenuDraft": { "description": "Menu jadikan draf" },
+
+  "meetingMenuArchive": "Arsipkan (Archived)",
+  "@meetingMenuArchive": { "description": "Menu arsipkan pertemuan" },
+
+  "meetingDeleteConfirmTitle": "Hapus Pertemuan Ini?",
+  "@meetingDeleteConfirmTitle": { "description": "Judul dialog konfirmasi hapus pertemuan" },
+
+  "meetingDeleteConfirmBody": "Tindakan ini akan menghapus pertemuan dari daftar kelas.",
+  "@meetingDeleteConfirmBody": { "description": "Deskripsi dialog konfirmasi hapus pertemuan" },
+
+  "meetingDeleteAction": "Hapus",
+  "@meetingDeleteAction": { "description": "Tombol aksi hapus pada dialog konfirmasi" },
+
+  "meetingDeletedSuccess": "Pertemuan berhasil dihapus.",
+  "@meetingDeletedSuccess": { "description": "Snackbar sukses hapus pertemuan" },
+
+  "meetingDeleteFailed": "Gagal menghapus: {detail}",
+  "@meetingDeleteFailed": {
+    "description": "Snackbar gagal hapus pertemuan",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "meetingDefaultDescription": "Satu pertemuan menghubungkan kuis pretest, materi bacaan terstruktur, video pembelajaran, dan post test evaluasi.",
+  "@meetingDefaultDescription": { "description": "Deskripsi default pertemuan jika tidak diisi pengajar" },
+
+  "meetingScheduledBannerTitle": "Pertemuan Terjadwal",
+  "@meetingScheduledBannerTitle": { "description": "Judul kartu banner pertemuan terjadwal" },
+
+  "meetingScheduledBanner": "Dijadwalkan terbit pada {when}. Publikasi berjalan saat cron/sinkronisasi berikutnya (dalam kisaran jadwal), bukan tepat-menit otomatis.",
+  "@meetingScheduledBanner": {
+    "description": "Deskripsi banner jadwal terbit pertemuan",
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
+
+  "meetingScheduledBannerFallback": "Pertemuan disiapkan untuk jadwal publikasi mendatang.",
+  "@meetingScheduledBannerFallback": { "description": "Deskripsi banner jadwal jika tanggal belum ditetapkan" },
+
+  "meetingModulesTitle": "Modul Pembelajaran",
+  "@meetingModulesTitle": { "description": "Judul bagian daftar modul pembelajaran" },
+
+  "meetingModuleMaterialTitle": "Materi Pembelajaran",
+  "@meetingModuleMaterialTitle": { "description": "Judul kartu modul materi" },
+
+  "meetingModuleMaterialSubActive": "Materi bacaan terstruktur format Quill Delta",
+  "@meetingModuleMaterialSubActive": { "description": "Subjudul materi jika sudah tersedia" },
+
+  "meetingModuleMaterialSubStaffEmpty": "Materi belum dibuat. Klik untuk membuat materi baru.",
+  "@meetingModuleMaterialSubStaffEmpty": { "description": "Subjudul materi kosong untuk pengajar" },
+
+  "meetingModuleMaterialSubStudentEmpty": "Materi belum diunggah oleh pengajar",
+  "@meetingModuleMaterialSubStudentEmpty": { "description": "Subjudul materi kosong untuk mahasiswa" },
+
+  "meetingModuleMaterialActionOpen": "Buka Materi",
+  "@meetingModuleMaterialActionOpen": { "description": "Tombol buka materi" },
+
+  "meetingModuleMaterialActionCreate": "Buat Materi",
+  "@meetingModuleMaterialActionCreate": { "description": "Tombol buat materi baru" },
+
+  "meetingModulePretestTitle": "Kuis Pretest",
+  "@meetingModulePretestTitle": { "description": "Judul kartu modul pretest" },
+
+  "meetingModulePretestSubActive": "Uji pemahaman awal sebelum memulai materi inti",
+  "@meetingModulePretestSubActive": { "description": "Subjudul kuis pretest jika sudah aktif" },
+
+  "meetingModulePretestSubStaffEmpty": "Pretest belum diaktifkan. Klik untuk membuat pretest.",
+  "@meetingModulePretestSubStaffEmpty": { "description": "Subjudul kuis pretest kosong untuk pengajar" },
+
+  "meetingModulePretestSubStudentEmpty": "Pretest belum diaktifkan untuk pertemuan ini",
+  "@meetingModulePretestSubStudentEmpty": { "description": "Subjudul kuis pretest kosong untuk mahasiswa" },
+
+  "meetingModulePretestActionStart": "Mulai Pretest",
+  "@meetingModulePretestActionStart": { "description": "Tombol mulai kuis pretest" },
+
+  "meetingModulePretestActionCreate": "Buat Pretest",
+  "@meetingModulePretestActionCreate": { "description": "Tombol buat kuis pretest baru" },
+
+  "meetingModulePretestManageQuestions": "Kelola Soal",
+  "@meetingModulePretestManageQuestions": { "description": "Tombol kelola butir soal kuis" },
+
+  "meetingModulePretestBadgeNotice": "Wajib pernah buka materi",
+  "@meetingModulePretestBadgeNotice": { "description": "Badge prasyarat pembukaan kuis pretest" },
+
+  "meetingModuleVideoTitle": "Video Pembelajaran",
+  "@meetingModuleVideoTitle": { "description": "Judul kartu modul video" },
+
+  "meetingModuleVideoSubActive": "Video tutorial & demonstrasi interaktif",
+  "@meetingModuleVideoSubActive": { "description": "Subjudul video jika sudah ditautkan" },
+
+  "meetingModuleVideoSubStaffEmpty": "Video belum ditautkan. Klik untuk menambahkan link video.",
+  "@meetingModuleVideoSubStaffEmpty": { "description": "Subjudul video kosong untuk pengajar" },
+
+  "meetingModuleVideoSubStudentEmpty": "Video belum ditautkan ke pertemuan ini",
+  "@meetingModuleVideoSubStudentEmpty": { "description": "Subjudul video kosong untuk mahasiswa" },
+
+  "meetingModuleVideoActionWatch": "Tonton Video",
+  "@meetingModuleVideoActionWatch": { "description": "Tombol tonton video pembelajaran" },
+
+  "meetingModuleVideoActionAdd": "Tambah Video",
+  "@meetingModuleVideoActionAdd": { "description": "Tombol tambah tautan video baru" },
+
+  "meetingModulePosttestTitle": "Kuis Post Test",
+  "@meetingModulePosttestTitle": { "description": "Judul kartu modul post test" },
+
+  "meetingModulePosttestSubActive": "Evaluasi akhir capaian pembelajaran setelah memahami materi",
+  "@meetingModulePosttestSubActive": { "description": "Subjudul kuis post test jika sudah aktif" },
+
+  "meetingModulePosttestSubStaffEmpty": "Post test belum dibuat. Klik untuk membuat post test.",
+  "@meetingModulePosttestSubStaffEmpty": { "description": "Subjudul kuis post test kosong untuk pengajar" },
+
+  "meetingModulePosttestSubStudentEmpty": "Post test belum diaktifkan untuk pertemuan ini",
+  "@meetingModulePosttestSubStudentEmpty": { "description": "Subjudul kuis post test kosong untuk mahasiswa" },
+
+  "meetingModulePosttestActionStart": "Mulai Post Test",
+  "@meetingModulePosttestActionStart": { "description": "Tombol mulai kuis post test" },
+
+  "meetingModulePosttestActionCreate": "Buat Post Test",
+  "@meetingModulePosttestActionCreate": { "description": "Tombol buat kuis post test baru" },
+
+  "meetingModuleNotAvailable": "Belum Tersedia",
+  "@meetingModuleNotAvailable": { "description": "Label tombol modul yang belum aktif" },
+
+  "meetingCreatePretestTitle": "Buat Kuis Pretest",
+  "@meetingCreatePretestTitle": { "description": "Judul dialog pembuatan kuis pretest" },
+
+  "meetingPretestDefaultTitle": "Pretest Pertemuan {number}",
+  "@meetingPretestDefaultTitle": {
+    "description": "Judul bawaan kuis pretest",
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+
+  "meetingPretestTitleLabel": "Judul Pretest",
+  "@meetingPretestTitleLabel": { "description": "Label field judul pretest" },
+
+  "meetingDurationLabel": "Durasi (Menit)",
+  "@meetingDurationLabel": { "description": "Label durasi kuis dalam menit" },
+
+  "meetingDurationMustBePositive": "Durasi harus > 0 menit",
+  "@meetingDurationMustBePositive": { "description": "Validasi durasi kuis harus angka positif" },
+
+  "meetingSaveAndManageQuestionsBtn": "Simpan & Kelola Soal",
+  "@meetingSaveAndManageQuestionsBtn": { "description": "Tombol simpan kuis dan lanjut mengelola soal" },
+
+  "meetingCreatePosttestTitle": "Buat Kuis Post Test",
+  "@meetingCreatePosttestTitle": { "description": "Judul dialog pembuatan kuis post test" },
+
+  "meetingPosttestDefaultTitle": "Post Test Pertemuan {number}",
+  "@meetingPosttestDefaultTitle": {
+    "description": "Judul bawaan kuis post test",
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+
+  "meetingPosttestTitleLabel": "Judul Post Test",
+  "@meetingPosttestTitleLabel": { "description": "Label field judul post test" },
+
+  "meetingAddVideoTitle": "Tambah Video Pembelajaran",
+  "@meetingAddVideoTitle": { "description": "Judul dialog tambah video pembelajaran" },
+
+  "meetingVideoProviderLabel": "Penyedia Video",
+  "@meetingVideoProviderLabel": { "description": "Label dropdown penyedia video" },
+
+  "meetingVideoUrlLabel": "URL Video",
+  "@meetingVideoUrlLabel": { "description": "Label input URL video" },
+
+  "meetingVideoUrlRequired": "URL wajib diisi",
+  "@meetingVideoUrlRequired": { "description": "Validasi URL video kosong" },
+
+  "meetingVideoUrlInvalid": "URL harus diawali http:// atau https://",
+  "@meetingVideoUrlInvalid": { "description": "Validasi protokol URL video" },
+
+  "meetingSaveVideoBtn": "Simpan Video",
+  "@meetingSaveVideoBtn": { "description": "Tombol simpan video" },
+
+  "meetingManageQuestionsTitle": "Kelola Soal {testTitle}",
+  "@meetingManageQuestionsTitle": {
+    "description": "Judul sheet kelola soal kuis",
+    "placeholders": {
+      "testTitle": { "type": "String" }
+    }
+  },
+
+  "meetingQuestionCountActive": "Jumlah Soal: {count} soal aktif",
+  "@meetingQuestionCountActive": {
+    "description": "Keterangan jumlah butir soal aktif",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "meetingAddQuestionBtn": "Tambah Soal",
+  "@meetingAddQuestionBtn": { "description": "Tombol tambah soal baru" },
+
+  "meetingPublishQuizBtn": "Publikasikan Kuis",
+  "@meetingPublishQuizBtn": { "description": "Tombol publikasikan kuis" },
+
+  "meetingPublishMinOneQuestion": "Tambahkan minimal 1 soal sebelum mempublikasikan kuis.",
+  "@meetingPublishMinOneQuestion": { "description": "Peringatan kuis kosong sebelum dipublikasikan" },
+
+  "meetingPublishFailed": "Gagal publikasi: {detail}",
+  "@meetingPublishFailed": {
+    "description": "Snackbar gagal publikasi kuis",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "meetingQuizPublishedSuccess": "Kuis berhasil dipublikasikan! Mahasiswa sekarang dapat mengakses kuis ini.",
+  "@meetingQuizPublishedSuccess": { "description": "Snackbar sukses publikasikan kuis" },
+
+  "meetingDraftNoQuestionsTitle": "Draft, belum ada soal aktif.",
+  "@meetingDraftNoQuestionsTitle": { "description": "Judul status kosong sheet soal kuis draf" },
+
+  "meetingDraftNoQuestionsBody": "Klik tombol \"Tambah Soal\" untuk membuat soal kuis pertama.",
+  "@meetingDraftNoQuestionsBody": { "description": "Instruksi status kosong sheet soal kuis" },
+
+  "meetingPointsLabel": "{points} poin",
+  "@meetingPointsLabel": {
+    "description": "Label jumlah poin soal",
+    "placeholders": {
+      "points": { "type": "int" }
+    }
+  },
+
+  "meetingEditAction": "Edit",
+  "@meetingEditAction": { "description": "Tombol edit soal atau item" },
+
+  "meetingCannotDeleteLastPublished": "Tidak dapat menghapus soal aktif terakhir pada kuis yang berstatus Published. Silakan arsipkan kuis terlebih dahulu jika ingin menonaktifkannya.",
+  "@meetingCannotDeleteLastPublished": { "description": "Peringatan dilarang menghapus soal terakhir pada kuis terbit" },
+
+  "meetingDeleteQuestionConfirmTitle": "Konfirmasi Hapus Soal",
+  "@meetingDeleteQuestionConfirmTitle": { "description": "Judul dialog konfirmasi hapus butir soal" },
+
+  "meetingDeleteQuestionConfirmBody": "Apakah Anda yakin ingin menghapus Soal {number}? Jika kuis sudah pernah dikerjakan siswa, soal akan diarsipkan (soft-delete) dan riwayat nilai siswa terdahulu tetap aman.",
+  "@meetingDeleteQuestionConfirmBody": {
+    "description": "Deskripsi konfirmasi hapus butir soal",
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+
+  "meetingDeleteQuestionBtn": "Hapus Soal",
+  "@meetingDeleteQuestionBtn": { "description": "Tombol hapus soal pada dialog konfirmasi" },
+
+  "meetingAddQuestionDialogTitle": "Tambah Soal Baru",
+  "@meetingAddQuestionDialogTitle": { "description": "Judul dialog tambah butir soal baru" },
+
+  "meetingEditQuestionDialogTitle": "Edit Soal",
+  "@meetingEditQuestionDialogTitle": { "description": "Judul dialog edit butir soal" },
+
+  "meetingQuestionTextLabel": "Teks Pertanyaan *",
+  "@meetingQuestionTextLabel": { "description": "Label input teks pertanyaan" },
+
+  "meetingQuestionTextHint": "Masukkan pertanyaan...",
+  "@meetingQuestionTextHint": { "description": "Hint input teks pertanyaan" },
+
+  "meetingQuestionTextRequired": "Teks pertanyaan wajib diisi",
+  "@meetingQuestionTextRequired": { "description": "Validasi teks pertanyaan kosong" },
+
+  "meetingQuestionPointsLabel": "Poin Soal (1 - 100) *",
+  "@meetingQuestionPointsLabel": { "description": "Label input poin soal" },
+
+  "meetingQuestionPointsRequired": "Poin wajib diisi",
+  "@meetingQuestionPointsRequired": { "description": "Validasi poin soal kosong" },
+
+  "meetingQuestionPointsInvalid": "Poin harus antara 1 - 100",
+  "@meetingQuestionPointsInvalid": { "description": "Validasi rentang poin soal" },
+
+  "meetingOptionsSectionTitle": "Pilihan Jawaban & Kunci (A - E) *",
+  "@meetingOptionsSectionTitle": { "description": "Judul seksi 5 pilihan jawaban" },
+
+  "meetingOptionsSectionSubtitle": "Tentukan 5 pilihan jawaban (A sampai E) dan pilih satu radio sebagai kunci jawaban benar.",
+  "@meetingOptionsSectionSubtitle": { "description": "Petunjuk seksi 5 pilihan jawaban" },
+
+  "meetingOptionLabelKey": "Pilihan {letter} (★ KUNCI BENAR)",
+  "@meetingOptionLabelKey": {
+    "description": "Label field pilihan jawaban yang menjadi kunci benar",
+    "placeholders": {
+      "letter": { "type": "String" }
+    }
+  },
+
+  "meetingOptionLabelRegular": "Pilihan {letter}",
+  "@meetingOptionLabelRegular": {
+    "description": "Label field pilihan jawaban biasa",
+    "placeholders": {
+      "letter": { "type": "String" }
+    }
+  },
+
+  "meetingOptionRequired": "Pilihan {letter} tidak boleh kosong",
+  "@meetingOptionRequired": {
+    "description": "Validasi pilihan jawaban kosong",
+    "placeholders": {
+      "letter": { "type": "String" }
+    }
+  },
+
+  "meetingLegacyOptionsTitle": "Pilihan Tambahan Terarsip (Legacy - Read Only):",
+  "@meetingLegacyOptionsTitle": { "description": "Judul seksi pilihan jawaban warisan tambahan" }
 }
