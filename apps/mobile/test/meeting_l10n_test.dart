@@ -363,5 +363,21 @@ void main() {
       expect(find.text('Learning Modules'), findsNothing);
       expect(find.text('Learning Material'), findsNothing);
     });
+
+    testWidgets('MeetingDetailScreen pada layar sempit (320px, EN) tidak melempar RenderFlex overflow', (tester) async {
+      tester.view.physicalSize = const Size(320, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(
+        createMeetingDetailHarness(
+          meeting: testMeeting,
+          locale: const Locale('en'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
   });
 }

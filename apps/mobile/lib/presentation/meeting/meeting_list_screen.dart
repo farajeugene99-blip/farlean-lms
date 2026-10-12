@@ -453,7 +453,11 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 6,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -470,7 +474,6 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
                       ),
                     ),
                   ),
-                  const Spacer(),
                   if (isStaff || meeting.status == ContentStatus.scheduled)
                     _buildStatusBadge(meeting.status, l10n),
                 ],

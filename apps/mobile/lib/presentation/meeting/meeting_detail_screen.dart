@@ -715,7 +715,11 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 6,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -732,7 +736,6 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                           ),
                         ),
                       ),
-                      const Spacer(),
                       _buildStatusBadge(meeting.status, l10n),
                     ],
                   ),
