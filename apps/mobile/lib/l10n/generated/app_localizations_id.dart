@@ -1001,4 +1001,142 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get meetingLegacyOptionsTitle =>
       'Pilihan Tambahan Terarsip (Legacy - Read Only):';
+
+  @override
+  String get materialNotFound => 'Materi tidak ditemukan.';
+
+  @override
+  String get materialNotFoundOrDeleted =>
+      'Materi tidak ditemukan atau telah dihapus.';
+
+  @override
+  String materialLoadFailed(String detail) {
+    return 'Gagal memuat materi: $detail';
+  }
+
+  @override
+  String get materialLoading => 'Memuat materi pembelajaran...';
+
+  @override
+  String get materialAppBarTitle => 'Materi';
+
+  @override
+  String get materialEditTooltip => 'Edit Materi';
+
+  @override
+  String materialFormat(String format) {
+    return 'Format: $format';
+  }
+
+  @override
+  String get materialRecordingProgress => 'Mencatat Progres...';
+
+  @override
+  String get materialRecordedOpened => 'Tercatat Dibuka';
+
+  @override
+  String get materialNotSyncedTapRetry =>
+      'Belum Tersinkron (Ketuk untuk coba lagi)';
+
+  @override
+  String get materialEmptyPlaceholder => 'Materi kosong.';
+
+  @override
+  String get materialInsertImageTitle => 'Sisipkan Gambar (URL Cloudinary)';
+
+  @override
+  String get materialInsertImageSecurityNote =>
+      'Sesuai aturan keamanan Farlean LMS, gambar harus bersumber dari URL eksternal (Cloudinary). Gambar base64 dilarang.';
+
+  @override
+  String get materialImageUrlLabel => 'URL Gambar (https://...)';
+
+  @override
+  String get materialImageUrlRequired => 'URL gambar wajib diisi';
+
+  @override
+  String get materialImageBase64Forbidden => 'Gambar base64 inline dilarang.';
+
+  @override
+  String get materialImageUrlInvalid =>
+      'URL harus diawali dengan http:// atau https://';
+
+  @override
+  String get materialInsertBtn => 'Sisipkan';
+
+  @override
+  String get materialTemplateOnlyEmpty =>
+      'Template hanya dapat disisipkan pada editor kosong agar konten tidak tertimpa.';
+
+  @override
+  String get materialTemplateSuccess =>
+      'Template materi berhasil disisipkan. Silakan lengkapi setiap bagian.';
+
+  @override
+  String materialTemplateFailed(String detail) {
+    return 'Gagal menyisipkan template: $detail';
+  }
+
+  @override
+  String get materialPreviewTitle => 'Pratinjau Materi';
+
+  @override
+  String get materialDiscardConfirmTitle => 'Buang Perubahan?';
+
+  @override
+  String get materialDiscardConfirmBody =>
+      'Ada perubahan materi yang belum disimpan. Keluar sekarang akan membuang perubahan tersebut.';
+
+  @override
+  String get materialKeepEditingBtn => 'Lanjutkan Mengedit';
+
+  @override
+  String get materialDiscardChangesBtn => 'Buang Perubahan';
+
+  @override
+  String get materialTitleRequired => 'Judul materi wajib diisi.';
+
+  @override
+  String materialSavedAsStatus(String status) {
+    return 'Materi berhasil disimpan sebagai $status.';
+  }
+
+  @override
+  String materialSaveFailed(String detail) {
+    return 'Gagal menyimpan materi: $detail';
+  }
+
+  @override
+  String get materialCreateTitle => 'Buat Materi Baru';
+
+  @override
+  String get materialEditTitle => 'Edit Materi';
+
+  @override
+  String get materialPreviewTooltip => 'Pratinjau Tampilan Mahasiswa';
+
+  @override
+  String get materialPublishBtn => 'Publikasikan';
+
+  @override
+  String get materialTitleLabel => 'Judul Materi Pembelajaran';
+
+  @override
+  String get materialImageBtn => 'Gambar';
+
+  @override
+  String get materialTemplateBtn => 'Template';
+
+  @override
+  String materialCharCountDeltaJson(int count) {
+    return '$count karakter • Format: Delta JSON';
+  }
+
+  @override
+  String get materialEmptyWarning =>
+      'Materi masih kosong. Tulis konten atau sisipkan template sebelum menyimpan.';
+
+  @override
+  String get materialEditorPlaceholder =>
+      'Tuliskan materi pembelajaran terstruktur di sini...';
 }

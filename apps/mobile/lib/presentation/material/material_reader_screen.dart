@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth/role_guard.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/material_content.dart';
 import '../../repositories/material_repository.dart';
 import '../../services/auth_provider.dart';
@@ -102,8 +103,9 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       if (!mounted) return;
 
       if (material == null) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
-          _errorMessage = 'Materi tidak ditemukan.';
+          _errorMessage = l10n.materialNotFound;
           _isLoading = false;
         });
         return;
@@ -115,10 +117,10 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         if (material.content is List) {
           doc = Document.fromJson(material.content as List);
         } else {
-          doc = Document()..insert(0, 'Konten belum tersedia.\n');
+          doc = Document()..insert(0, '\n');
         }
-      } catch (e) {
-        doc = Document()..insert(0, 'Gagal memuat format konten Delta: $e\n');
+      } catch (_) {
+        doc = Document()..insert(0, '\n');
       }
 
       _quillController?.dispose();
@@ -137,8 +139,9 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       await _recordViewOnly();
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
-          _errorMessage = 'Gagal memuat materi: $e';
+          _errorMessage = l10n.materialLoadFailed(e.toString());
           _isLoading = false;
         });
       }
@@ -147,17 +150,19 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (_isLoading) {
-      return const Scaffold(
-        body: LoadingIndicator(message: 'Memuat materi pembelajaran...'),
+      return Scaffold(
+        body: LoadingIndicator(message: l10n.materialLoading),
       );
     }
 
     if (_errorMessage != null || _material == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Materi')),
+        appBar: AppBar(title: Text(l10n.materialAppBarTitle)),
         body: ErrorView(
-          message: _errorMessage ?? 'Materi tidak ditemukan.',
+          message: _errorMessage ?? l10n.materialNotFound,
           onRetry: _loadMaterial,
         ),
       );
@@ -174,7 +179,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
           if (isStaff)
             IconButton(
               icon: const Icon(Icons.edit_note_rounded),
-              tooltip: 'Edit Materi',
+              tooltip: l10n.materialEditTooltip,
               onPressed: () async {
                 final queryParams = <String, String>{};
                 if (widget.classId.isNotEmpty) queryParams['classId'] = widget.classId;
@@ -205,7 +210,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    'Versi ${material.version}',
+                    l10n.labelVersion(material.version),
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -215,7 +220,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Format: ${material.format.toUpperCase()}',
+                  l10n.materialFormat(material.format.toUpperCase()),
                   style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                 ),
                 const Spacer(),
@@ -226,28 +231,28 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.textSecondary),
                   ),
                   const SizedBox(width: 6),
-                  const Text(
-                    'Mencatat Progres...',
-                    style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                  Text(
+                    l10n.materialRecordingProgress,
+                    style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
                   ),
                 ] else if (_recordSuccess) ...[
                   const Icon(Icons.check_circle_outline_rounded, size: 14, color: AppTheme.success),
                   const SizedBox(width: 4),
-                  const Text(
-                    'Tercatat Dibuka',
-                    style: TextStyle(fontSize: 11, color: AppTheme.success, fontWeight: FontWeight.w500),
+                  Text(
+                    l10n.materialRecordedOpened,
+                    style: const TextStyle(fontSize: 11, color: AppTheme.success, fontWeight: FontWeight.w500),
                   ),
                 ] else if (_recordError != null) ...[
                   InkWell(
                     onTap: _recordViewOnly,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.warning_amber_rounded, size: 14, color: AppTheme.warning),
-                        SizedBox(width: 4),
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, size: 14, color: AppTheme.warning),
+                        const SizedBox(width: 4),
                         Text(
-                          'Belum Tersinkron (Ketuk untuk coba lagi)',
-                          style: TextStyle(fontSize: 11, color: AppTheme.warning, fontWeight: FontWeight.w500),
+                          l10n.materialNotSyncedTapRetry,
+                          style: const TextStyle(fontSize: 11, color: AppTheme.warning, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -266,11 +271,11 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
                 controller: _quillController!,
                 focusNode: _focusNode,
                 scrollController: _scrollController,
-                config: const QuillEditorConfig(
+                config: QuillEditorConfig(
                   autoFocus: false,
                   expands: true,
                   padding: EdgeInsets.zero,
-                  placeholder: 'Materi kosong.',
+                  placeholder: l10n.materialEmptyPlaceholder,
                 ),
               ),
             ),

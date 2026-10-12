@@ -1753,6 +1753,240 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Pilihan Tambahan Terarsip (Legacy - Read Only):'**
   String get meetingLegacyOptionsTitle;
+
+  /// Pesan materi tidak ditemukan
+  ///
+  /// In id, this message translates to:
+  /// **'Materi tidak ditemukan.'**
+  String get materialNotFound;
+
+  /// Pesan materi tidak ditemukan atau telah dihapus pada editor
+  ///
+  /// In id, this message translates to:
+  /// **'Materi tidak ditemukan atau telah dihapus.'**
+  String get materialNotFoundOrDeleted;
+
+  /// Pesan error gagal memuat materi
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memuat materi: {detail}'**
+  String materialLoadFailed(String detail);
+
+  /// Teks indikator memuat materi pembelajaran
+  ///
+  /// In id, this message translates to:
+  /// **'Memuat materi pembelajaran...'**
+  String get materialLoading;
+
+  /// Judul AppBar pembaca materi saat fallback
+  ///
+  /// In id, this message translates to:
+  /// **'Materi'**
+  String get materialAppBarTitle;
+
+  /// Tooltip ikon edit materi pada pembaca
+  ///
+  /// In id, this message translates to:
+  /// **'Edit Materi'**
+  String get materialEditTooltip;
+
+  /// Label format konten materi
+  ///
+  /// In id, this message translates to:
+  /// **'Format: {format}'**
+  String materialFormat(String format);
+
+  /// Status saat sistem sedang mencatat progres pembacaan
+  ///
+  /// In id, this message translates to:
+  /// **'Mencatat Progres...'**
+  String get materialRecordingProgress;
+
+  /// Status sukses progres pembacaan materi tercatat
+  ///
+  /// In id, this message translates to:
+  /// **'Tercatat Dibuka'**
+  String get materialRecordedOpened;
+
+  /// Status gagal catat progres pembacaan dengan ajakan coba lagi
+  ///
+  /// In id, this message translates to:
+  /// **'Belum Tersinkron (Ketuk untuk coba lagi)'**
+  String get materialNotSyncedTapRetry;
+
+  /// Teks placeholder saat dokumen materi kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Materi kosong.'**
+  String get materialEmptyPlaceholder;
+
+  /// Judul dialog sisipkan gambar pada editor
+  ///
+  /// In id, this message translates to:
+  /// **'Sisipkan Gambar (URL Cloudinary)'**
+  String get materialInsertImageTitle;
+
+  /// Petunjuk aturan keamanan penyimpanan gambar materi
+  ///
+  /// In id, this message translates to:
+  /// **'Sesuai aturan keamanan Farlean LMS, gambar harus bersumber dari URL eksternal (Cloudinary). Gambar base64 dilarang.'**
+  String get materialInsertImageSecurityNote;
+
+  /// Label field input URL gambar
+  ///
+  /// In id, this message translates to:
+  /// **'URL Gambar (https://...)'**
+  String get materialImageUrlLabel;
+
+  /// Validasi URL gambar kosong
+  ///
+  /// In id, this message translates to:
+  /// **'URL gambar wajib diisi'**
+  String get materialImageUrlRequired;
+
+  /// Validasi penolakan gambar base64 inline
+  ///
+  /// In id, this message translates to:
+  /// **'Gambar base64 inline dilarang.'**
+  String get materialImageBase64Forbidden;
+
+  /// Validasi protokol URL gambar
+  ///
+  /// In id, this message translates to:
+  /// **'URL harus diawali dengan http:// atau https://'**
+  String get materialImageUrlInvalid;
+
+  /// Tombol aksi sisipkan gambar ke dokumen
+  ///
+  /// In id, this message translates to:
+  /// **'Sisipkan'**
+  String get materialInsertBtn;
+
+  /// Peringatan template hanya untuk editor kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Template hanya dapat disisipkan pada editor kosong agar konten tidak tertimpa.'**
+  String get materialTemplateOnlyEmpty;
+
+  /// Snackbar sukses menyisipkan template struktur materi
+  ///
+  /// In id, this message translates to:
+  /// **'Template materi berhasil disisipkan. Silakan lengkapi setiap bagian.'**
+  String get materialTemplateSuccess;
+
+  /// Snackbar gagal menyisipkan template materi
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal menyisipkan template: {detail}'**
+  String materialTemplateFailed(String detail);
+
+  /// Judul dialog pratinjau materi jika judul dokumen kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Pratinjau Materi'**
+  String get materialPreviewTitle;
+
+  /// Judul dialog konfirmasi buang perubahan materi
+  ///
+  /// In id, this message translates to:
+  /// **'Buang Perubahan?'**
+  String get materialDiscardConfirmTitle;
+
+  /// Isi dialog konfirmasi buang perubahan materi
+  ///
+  /// In id, this message translates to:
+  /// **'Ada perubahan materi yang belum disimpan. Keluar sekarang akan membuang perubahan tersebut.'**
+  String get materialDiscardConfirmBody;
+
+  /// Tombol batal buang perubahan untuk tetap mengedit
+  ///
+  /// In id, this message translates to:
+  /// **'Lanjutkan Mengedit'**
+  String get materialKeepEditingBtn;
+
+  /// Tombol konfirmasi buang perubahan materi
+  ///
+  /// In id, this message translates to:
+  /// **'Buang Perubahan'**
+  String get materialDiscardChangesBtn;
+
+  /// Peringatan judul materi kosong saat menyimpan
+  ///
+  /// In id, this message translates to:
+  /// **'Judul materi wajib diisi.'**
+  String get materialTitleRequired;
+
+  /// Snackbar sukses simpan materi dengan statusnya
+  ///
+  /// In id, this message translates to:
+  /// **'Materi berhasil disimpan sebagai {status}.'**
+  String materialSavedAsStatus(String status);
+
+  /// Snackbar gagal menyimpan materi
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal menyimpan materi: {detail}'**
+  String materialSaveFailed(String detail);
+
+  /// Judul AppBar saat membuat materi baru
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Materi Baru'**
+  String get materialCreateTitle;
+
+  /// Judul AppBar saat mengedit materi yang ada
+  ///
+  /// In id, this message translates to:
+  /// **'Edit Materi'**
+  String get materialEditTitle;
+
+  /// Tooltip ikon pratinjau tampilan mahasiswa
+  ///
+  /// In id, this message translates to:
+  /// **'Pratinjau Tampilan Mahasiswa'**
+  String get materialPreviewTooltip;
+
+  /// Tombol publikasikan materi
+  ///
+  /// In id, this message translates to:
+  /// **'Publikasikan'**
+  String get materialPublishBtn;
+
+  /// Label field input judul materi pembelajaran
+  ///
+  /// In id, this message translates to:
+  /// **'Judul Materi Pembelajaran'**
+  String get materialTitleLabel;
+
+  /// Tombol buka dialog sisipkan gambar
+  ///
+  /// In id, this message translates to:
+  /// **'Gambar'**
+  String get materialImageBtn;
+
+  /// Tombol sisipkan template struktur materi
+  ///
+  /// In id, this message translates to:
+  /// **'Template'**
+  String get materialTemplateBtn;
+
+  /// Indikator jumlah karakter dan format editor materi
+  ///
+  /// In id, this message translates to:
+  /// **'{count} karakter • Format: Delta JSON'**
+  String materialCharCountDeltaJson(int count);
+
+  /// Banner peringatan editor materi masih 0 karakter
+  ///
+  /// In id, this message translates to:
+  /// **'Materi masih kosong. Tulis konten atau sisipkan template sebelum menyimpan.'**
+  String get materialEmptyWarning;
+
+  /// Placeholder editor Quill saat kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Tuliskan materi pembelajaran terstruktur di sini...'**
+  String get materialEditorPlaceholder;
 }
 
 class _AppLocalizationsDelegate

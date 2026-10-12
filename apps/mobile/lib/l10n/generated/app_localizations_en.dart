@@ -999,4 +999,142 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get meetingLegacyOptionsTitle =>
       'Archived Extra Options (Legacy - Read Only):';
+
+  @override
+  String get materialNotFound => 'Material not found.';
+
+  @override
+  String get materialNotFoundOrDeleted =>
+      'Material not found or has been deleted.';
+
+  @override
+  String materialLoadFailed(String detail) {
+    return 'Failed to load material: $detail';
+  }
+
+  @override
+  String get materialLoading => 'Loading learning material...';
+
+  @override
+  String get materialAppBarTitle => 'Material';
+
+  @override
+  String get materialEditTooltip => 'Edit Material';
+
+  @override
+  String materialFormat(String format) {
+    return 'Format: $format';
+  }
+
+  @override
+  String get materialRecordingProgress => 'Recording Progress...';
+
+  @override
+  String get materialRecordedOpened => 'Recorded as Opened';
+
+  @override
+  String get materialNotSyncedTapRetry => 'Not Synced (Tap to retry)';
+
+  @override
+  String get materialEmptyPlaceholder => 'Material is empty.';
+
+  @override
+  String get materialInsertImageTitle => 'Insert Image (Cloudinary URL)';
+
+  @override
+  String get materialInsertImageSecurityNote =>
+      'Per Farlean LMS security rules, images must source from external URLs (Cloudinary). Inline base64 images are forbidden.';
+
+  @override
+  String get materialImageUrlLabel => 'Image URL (https://...)';
+
+  @override
+  String get materialImageUrlRequired => 'Image URL is required';
+
+  @override
+  String get materialImageBase64Forbidden =>
+      'Inline base64 images are forbidden.';
+
+  @override
+  String get materialImageUrlInvalid =>
+      'URL must start with http:// or https://';
+
+  @override
+  String get materialInsertBtn => 'Insert';
+
+  @override
+  String get materialTemplateOnlyEmpty =>
+      'Templates can only be inserted into an empty editor to prevent overwriting existing content.';
+
+  @override
+  String get materialTemplateSuccess =>
+      'Material template successfully inserted. Please complete each section.';
+
+  @override
+  String materialTemplateFailed(String detail) {
+    return 'Failed to insert template: $detail';
+  }
+
+  @override
+  String get materialPreviewTitle => 'Material Preview';
+
+  @override
+  String get materialDiscardConfirmTitle => 'Discard Changes?';
+
+  @override
+  String get materialDiscardConfirmBody =>
+      'There are unsaved changes to this material. Leaving now will discard those changes.';
+
+  @override
+  String get materialKeepEditingBtn => 'Keep Editing';
+
+  @override
+  String get materialDiscardChangesBtn => 'Discard Changes';
+
+  @override
+  String get materialTitleRequired => 'Material title is required.';
+
+  @override
+  String materialSavedAsStatus(String status) {
+    return 'Material successfully saved as $status.';
+  }
+
+  @override
+  String materialSaveFailed(String detail) {
+    return 'Failed to save material: $detail';
+  }
+
+  @override
+  String get materialCreateTitle => 'Create New Material';
+
+  @override
+  String get materialEditTitle => 'Edit Material';
+
+  @override
+  String get materialPreviewTooltip => 'Preview Student View';
+
+  @override
+  String get materialPublishBtn => 'Publish';
+
+  @override
+  String get materialTitleLabel => 'Learning Material Title';
+
+  @override
+  String get materialImageBtn => 'Image';
+
+  @override
+  String get materialTemplateBtn => 'Template';
+
+  @override
+  String materialCharCountDeltaJson(int count) {
+    return '$count characters • Format: Delta JSON';
+  }
+
+  @override
+  String get materialEmptyWarning =>
+      'Material is still empty. Write content or insert a template before saving.';
+
+  @override
+  String get materialEditorPlaceholder =>
+      'Write structured learning material here...';
 }

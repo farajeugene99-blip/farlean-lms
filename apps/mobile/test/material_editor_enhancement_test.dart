@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/core/theme/app_theme.dart';
+import 'package:mobile/l10n/generated/app_localizations.dart';
 import 'package:mobile/models/material_content.dart';
 import 'package:mobile/presentation/material/material_editor_screen.dart';
 
@@ -10,12 +11,13 @@ Widget _wrap(Widget child) {
   return MaterialApp(
     theme: AppTheme.lightTheme,
     localizationsDelegates: const [
+      AppLocalizations.delegate,
       GlobalMaterialLocalizations.delegate,
       GlobalWidgetsLocalizations.delegate,
       GlobalCupertinoLocalizations.delegate,
       FlutterQuillLocalizations.delegate,
     ],
-    supportedLocales: const [Locale('id'), Locale('en')],
+    supportedLocales: AppLocalizations.supportedLocales,
     locale: const Locale('id'),
     home: child,
   );

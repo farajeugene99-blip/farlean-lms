@@ -4,6 +4,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/content_status.dart';
 import '../../models/delta_sanitizer.dart';
 import '../../models/material_content.dart';
@@ -11,6 +12,7 @@ import '../../repositories/material_repository.dart';
 import '../../services/auth_provider.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
+import '../meeting/meeting_status_localization.dart';
 
 class MaterialEditorScreen extends StatefulWidget {
   final String? materiId;
@@ -112,9 +114,10 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
       if (!mounted) return;
 
       if (fetched == null) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
           _isLoadingInitial = false;
-          _initError = 'Materi tidak ditemukan atau telah dihapus.';
+          _initError = l10n.materialNotFoundOrDeleted;
         });
         return;
       }
@@ -145,9 +148,10 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
       });
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
           _isLoadingInitial = false;
-          _initError = 'Gagal memuat materi: $e';
+          _initError = l10n.materialLoadFailed(e.toString());
         });
       }
     }
@@ -163,13 +167,14 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
   }
 
   Future<void> _showInsertImageDialog() async {
+    final l10n = AppLocalizations.of(context);
     final urlController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     final inserted = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Sisipkan Gambar (URL Cloudinary)'),
+        title: Text(l10n.materialInsertImageTitle),
         content: SizedBox(
           width: 440,
           child: Form(
@@ -178,26 +183,26 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Sesuai aturan keamanan Farlean LMS, gambar harus bersumber dari URL eksternal (Cloudinary). Gambar base64 dilarang.',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                Text(
+                  l10n.materialInsertImageSecurityNote,
+                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: urlController,
                   autofocus: true,
-                  decoration: const InputDecoration(
-                    labelText: 'URL Gambar (https://...)',
-                    prefixIcon: Icon(Icons.image_outlined, size: 20),
+                  decoration: InputDecoration(
+                    labelText: l10n.materialImageUrlLabel,
+                    prefixIcon: const Icon(Icons.image_outlined, size: 20),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'URL gambar wajib diisi';
+                    if (v == null || v.trim().isEmpty) return l10n.materialImageUrlRequired;
                     final trimmed = v.trim().toLowerCase();
                     if (trimmed.startsWith('data:image')) {
-                      return 'Gambar base64 inline dilarang.';
+                      return l10n.materialImageBase64Forbidden;
                     }
                     if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-                      return 'URL harus diawali dengan http:// atau https://';
+                      return l10n.materialImageUrlInvalid;
                     }
                     return null;
                   },
@@ -209,7 +214,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -217,7 +222,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
                 Navigator.pop(ctx, true);
               }
             },
-            child: const Text('Sisipkan'),
+            child: Text(l10n.materialInsertBtn),
           ),
         ],
       ),
@@ -239,11 +244,12 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
   /// Menyisipkan template struktur materi (Pendahuluan → Tujuan → Pembahasan → Contoh → Rangkuman).
   /// Hanya mengisi editor kosong agar tidak menimpa konten guru yang sudah ada.
   void _insertTemplate() {
+    final l10n = AppLocalizations.of(context);
     final plainText = _quillController.document.toPlainText().trim();
     if (plainText.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Template hanya dapat disisipkan pada editor kosong agar konten tidak tertimpa.'),
+        SnackBar(
+          content: Text(l10n.materialTemplateOnlyEmpty),
           backgroundColor: AppTheme.warning,
         ),
       );
@@ -261,20 +267,21 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
       _markDirty();
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Template materi berhasil disisipkan. Silakan lengkapi setiap bagian.'),
+        SnackBar(
+          content: Text(l10n.materialTemplateSuccess),
           backgroundColor: AppTheme.success,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menyisipkan template: $e'), backgroundColor: AppTheme.error),
+        SnackBar(content: Text(l10n.materialTemplateFailed(e.toString())), backgroundColor: AppTheme.error),
       );
     }
   }
 
   /// Pratinjau tampilan mahasiswa memakai renderer read-only yang sama dengan reader.
   void _showStudentPreview() {
+    final l10n = AppLocalizations.of(context);
     final title = _titleController.text.trim();
     List previewOps;
     try {
@@ -296,7 +303,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(title.isEmpty ? 'Pratinjau Materi' : title),
+        title: Text(title.isEmpty ? l10n.materialPreviewTitle : title),
         content: SizedBox(
           width: 440,
           height: 420,
@@ -304,18 +311,18 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
             controller: previewController,
             focusNode: previewFocus,
             scrollController: previewScroll,
-            config: const QuillEditorConfig(
+            config: QuillEditorConfig(
               autoFocus: false,
               expands: true,
               padding: EdgeInsets.zero,
-              placeholder: 'Materi kosong.',
+              placeholder: l10n.materialEmptyPlaceholder,
             ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Tutup'),
+            child: Text(l10n.btnClose),
           ),
         ],
       ),
@@ -329,22 +336,23 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
   /// Konfirmasi keluar saat ada perubahan yang belum disimpan.
   Future<bool> _confirmDiscardIfDirty() async {
     if (!_isDirty || _isSaving) return true;
+    final l10n = AppLocalizations.of(context);
     final discard = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Buang Perubahan?'),
-        content: const Text(
-          'Ada perubahan materi yang belum disimpan. Keluar sekarang akan membuang perubahan tersebut.',
+        title: Text(l10n.materialDiscardConfirmTitle),
+        content: Text(
+          l10n.materialDiscardConfirmBody,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Lanjutkan Mengedit'),
+            child: Text(l10n.materialKeepEditingBtn),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-            child: const Text('Buang Perubahan'),
+            child: Text(l10n.materialDiscardChangesBtn),
           ),
         ],
       ),
@@ -353,10 +361,11 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
   }
 
   Future<void> _saveMaterial(ContentStatus status) async {
+    final l10n = AppLocalizations.of(context);
     final title = _titleController.text.trim();
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Judul materi wajib diisi.'), backgroundColor: AppTheme.error),
+        SnackBar(content: Text(l10n.materialTitleRequired), backgroundColor: AppTheme.error),
       );
       return;
     }
@@ -409,9 +418,10 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
         _isDirty = false;
       });
 
+      final statusLabel = MeetingStatusLocalization.label(status, l10n);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Materi berhasil disimpan sebagai ${status.value}.'),
+          content: Text(l10n.materialSavedAsStatus(statusLabel)),
           backgroundColor: AppTheme.success,
         ),
       );
@@ -420,22 +430,24 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
       if (!mounted) return;
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menyimpan materi: $e'), backgroundColor: AppTheme.error),
+        SnackBar(content: Text(l10n.materialSaveFailed(e.toString())), backgroundColor: AppTheme.error),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (_isLoadingInitial) {
-      return const Scaffold(
-        body: LoadingIndicator(message: 'Memuat materi pembelajaran...'),
+      return Scaffold(
+        body: LoadingIndicator(message: l10n.materialLoading),
       );
     }
 
     if (_initError != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Edit Materi')),
+        appBar: AppBar(title: Text(l10n.materialEditTitle)),
         body: ErrorView(
           message: _initError!,
           onRetry: () {
@@ -457,16 +469,16 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
       },
       child: Scaffold(
       appBar: AppBar(
-        title: Text(_existingMaterial == null ? 'Buat Materi Baru' : 'Edit Materi'),
+        title: Text(_existingMaterial == null ? l10n.materialCreateTitle : l10n.materialEditTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.visibility_outlined, size: 20),
-            tooltip: 'Pratinjau Tampilan Mahasiswa',
+            tooltip: l10n.materialPreviewTooltip,
             onPressed: _isSaving ? null : _showStudentPreview,
           ),
           TextButton(
             onPressed: _isSaving ? null : () => _saveMaterial(ContentStatus.draft),
-            child: const Text('Simpan Draft'),
+            child: Text(l10n.meetingSaveDraftBtn),
           ),
           ElevatedButton(
             onPressed: _isSaving ? null : () => _saveMaterial(ContentStatus.published),
@@ -480,7 +492,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
                     height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Text('Publikasikan'),
+                : Text(l10n.materialPublishBtn),
           ),
           const SizedBox(width: 8),
         ],
@@ -492,9 +504,9 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
             child: TextField(
               controller: _titleController,
               enabled: !_isSaving,
-              decoration: const InputDecoration(
-                labelText: 'Judul Materi Pembelajaran',
-                prefixIcon: Icon(Icons.title_rounded, size: 20),
+              decoration: InputDecoration(
+                labelText: l10n.materialTitleLabel,
+                prefixIcon: const Icon(Icons.title_rounded, size: 20),
               ),
             ),
           ),
@@ -524,19 +536,19 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
                 OutlinedButton.icon(
                   onPressed: _isSaving ? null : _showInsertImageDialog,
                   icon: const Icon(Icons.add_photo_alternate_outlined, size: 16),
-                  label: const Text('Gambar', style: TextStyle(fontSize: 12)),
+                  label: Text(l10n.materialImageBtn, style: const TextStyle(fontSize: 12)),
                   style: OutlinedButton.styleFrom(minimumSize: const Size(90, 32)),
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: _isSaving ? null : _insertTemplate,
                   icon: const Icon(Icons.dashboard_customize_outlined, size: 16),
-                  label: const Text('Template', style: TextStyle(fontSize: 12)),
+                  label: Text(l10n.materialTemplateBtn, style: const TextStyle(fontSize: 12)),
                   style: OutlinedButton.styleFrom(minimumSize: const Size(90, 32)),
                 ),
                 const Spacer(),
                 Text(
-                  '$_charCount karakter • Format: Delta JSON',
+                  l10n.materialCharCountDeltaJson(_charCount),
                   style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                 ),
               ],
@@ -550,14 +562,14 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               color: AppTheme.warning.withAlpha(20),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, size: 16, color: AppTheme.warning),
-                  SizedBox(width: 8),
+                  const Icon(Icons.info_outline_rounded, size: 16, color: AppTheme.warning),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Materi masih kosong. Tulis konten atau sisipkan template sebelum menyimpan.',
-                      style: TextStyle(fontSize: 12, color: AppTheme.warning),
+                      l10n.materialEmptyWarning,
+                      style: const TextStyle(fontSize: 12, color: AppTheme.warning),
                     ),
                   ),
                 ],
@@ -572,11 +584,11 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
                 controller: _quillController,
                 focusNode: _focusNode,
                 scrollController: _scrollController,
-                config: const QuillEditorConfig(
+                config: QuillEditorConfig(
                   autoFocus: true,
                   expands: true,
                   padding: EdgeInsets.zero,
-                  placeholder: 'Tuliskan materi pembelajaran terstruktur di sini...',
+                  placeholder: l10n.materialEditorPlaceholder,
                 ),
               ),
             ),
@@ -589,7 +601,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               color: AppTheme.surface,
               child: Text(
-                'Terakhir disimpan: ${DateFormatter.formatLastSaved(_existingMaterial!.updatedAt, _existingMaterial!.version)}',
+                '${l10n.labelLastSaved}: ${DateFormatter.formatLastSaved(_existingMaterial!.updatedAt, _existingMaterial!.version)}',
                 style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                 textAlign: TextAlign.center,
               ),

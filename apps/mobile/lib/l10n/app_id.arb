@@ -1050,5 +1050,152 @@
   },
 
   "meetingLegacyOptionsTitle": "Pilihan Tambahan Terarsip (Legacy - Read Only):",
-  "@meetingLegacyOptionsTitle": { "description": "Judul seksi pilihan jawaban warisan tambahan" }
+  "@meetingLegacyOptionsTitle": { "description": "Judul seksi pilihan jawaban warisan tambahan" },
+
+  "materialNotFound": "Materi tidak ditemukan.",
+  "@materialNotFound": { "description": "Pesan materi tidak ditemukan" },
+
+  "materialNotFoundOrDeleted": "Materi tidak ditemukan atau telah dihapus.",
+  "@materialNotFoundOrDeleted": { "description": "Pesan materi tidak ditemukan atau telah dihapus pada editor" },
+
+  "materialLoadFailed": "Gagal memuat materi: {detail}",
+  "@materialLoadFailed": {
+    "description": "Pesan error gagal memuat materi",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "materialLoading": "Memuat materi pembelajaran...",
+  "@materialLoading": { "description": "Teks indikator memuat materi pembelajaran" },
+
+  "materialAppBarTitle": "Materi",
+  "@materialAppBarTitle": { "description": "Judul AppBar pembaca materi saat fallback" },
+
+  "materialEditTooltip": "Edit Materi",
+  "@materialEditTooltip": { "description": "Tooltip ikon edit materi pada pembaca" },
+
+  "materialFormat": "Format: {format}",
+  "@materialFormat": {
+    "description": "Label format konten materi",
+    "placeholders": {
+      "format": { "type": "String" }
+    }
+  },
+
+  "materialRecordingProgress": "Mencatat Progres...",
+  "@materialRecordingProgress": { "description": "Status saat sistem sedang mencatat progres pembacaan" },
+
+  "materialRecordedOpened": "Tercatat Dibuka",
+  "@materialRecordedOpened": { "description": "Status sukses progres pembacaan materi tercatat" },
+
+  "materialNotSyncedTapRetry": "Belum Tersinkron (Ketuk untuk coba lagi)",
+  "@materialNotSyncedTapRetry": { "description": "Status gagal catat progres pembacaan dengan ajakan coba lagi" },
+
+  "materialEmptyPlaceholder": "Materi kosong.",
+  "@materialEmptyPlaceholder": { "description": "Teks placeholder saat dokumen materi kosong" },
+
+  "materialInsertImageTitle": "Sisipkan Gambar (URL Cloudinary)",
+  "@materialInsertImageTitle": { "description": "Judul dialog sisipkan gambar pada editor" },
+
+  "materialInsertImageSecurityNote": "Sesuai aturan keamanan Farlean LMS, gambar harus bersumber dari URL eksternal (Cloudinary). Gambar base64 dilarang.",
+  "@materialInsertImageSecurityNote": { "description": "Petunjuk aturan keamanan penyimpanan gambar materi" },
+
+  "materialImageUrlLabel": "URL Gambar (https://...)",
+  "@materialImageUrlLabel": { "description": "Label field input URL gambar" },
+
+  "materialImageUrlRequired": "URL gambar wajib diisi",
+  "@materialImageUrlRequired": { "description": "Validasi URL gambar kosong" },
+
+  "materialImageBase64Forbidden": "Gambar base64 inline dilarang.",
+  "@materialImageBase64Forbidden": { "description": "Validasi penolakan gambar base64 inline" },
+
+  "materialImageUrlInvalid": "URL harus diawali dengan http:// atau https://",
+  "@materialImageUrlInvalid": { "description": "Validasi protokol URL gambar" },
+
+  "materialInsertBtn": "Sisipkan",
+  "@materialInsertBtn": { "description": "Tombol aksi sisipkan gambar ke dokumen" },
+
+  "materialTemplateOnlyEmpty": "Template hanya dapat disisipkan pada editor kosong agar konten tidak tertimpa.",
+  "@materialTemplateOnlyEmpty": { "description": "Peringatan template hanya untuk editor kosong" },
+
+  "materialTemplateSuccess": "Template materi berhasil disisipkan. Silakan lengkapi setiap bagian.",
+  "@materialTemplateSuccess": { "description": "Snackbar sukses menyisipkan template struktur materi" },
+
+  "materialTemplateFailed": "Gagal menyisipkan template: {detail}",
+  "@materialTemplateFailed": {
+    "description": "Snackbar gagal menyisipkan template materi",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "materialPreviewTitle": "Pratinjau Materi",
+  "@materialPreviewTitle": { "description": "Judul dialog pratinjau materi jika judul dokumen kosong" },
+
+  "materialDiscardConfirmTitle": "Buang Perubahan?",
+  "@materialDiscardConfirmTitle": { "description": "Judul dialog konfirmasi buang perubahan materi" },
+
+  "materialDiscardConfirmBody": "Ada perubahan materi yang belum disimpan. Keluar sekarang akan membuang perubahan tersebut.",
+  "@materialDiscardConfirmBody": { "description": "Isi dialog konfirmasi buang perubahan materi" },
+
+  "materialKeepEditingBtn": "Lanjutkan Mengedit",
+  "@materialKeepEditingBtn": { "description": "Tombol batal buang perubahan untuk tetap mengedit" },
+
+  "materialDiscardChangesBtn": "Buang Perubahan",
+  "@materialDiscardChangesBtn": { "description": "Tombol konfirmasi buang perubahan materi" },
+
+  "materialTitleRequired": "Judul materi wajib diisi.",
+  "@materialTitleRequired": { "description": "Peringatan judul materi kosong saat menyimpan" },
+
+  "materialSavedAsStatus": "Materi berhasil disimpan sebagai {status}.",
+  "@materialSavedAsStatus": {
+    "description": "Snackbar sukses simpan materi dengan statusnya",
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+
+  "materialSaveFailed": "Gagal menyimpan materi: {detail}",
+  "@materialSaveFailed": {
+    "description": "Snackbar gagal menyimpan materi",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "materialCreateTitle": "Buat Materi Baru",
+  "@materialCreateTitle": { "description": "Judul AppBar saat membuat materi baru" },
+
+  "materialEditTitle": "Edit Materi",
+  "@materialEditTitle": { "description": "Judul AppBar saat mengedit materi yang ada" },
+
+  "materialPreviewTooltip": "Pratinjau Tampilan Mahasiswa",
+  "@materialPreviewTooltip": { "description": "Tooltip ikon pratinjau tampilan mahasiswa" },
+
+  "materialPublishBtn": "Publikasikan",
+  "@materialPublishBtn": { "description": "Tombol publikasikan materi" },
+
+  "materialTitleLabel": "Judul Materi Pembelajaran",
+  "@materialTitleLabel": { "description": "Label field input judul materi pembelajaran" },
+
+  "materialImageBtn": "Gambar",
+  "@materialImageBtn": { "description": "Tombol buka dialog sisipkan gambar" },
+
+  "materialTemplateBtn": "Template",
+  "@materialTemplateBtn": { "description": "Tombol sisipkan template struktur materi" },
+
+  "materialCharCountDeltaJson": "{count} karakter • Format: Delta JSON",
+  "@materialCharCountDeltaJson": {
+    "description": "Indikator jumlah karakter dan format editor materi",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "materialEmptyWarning": "Materi masih kosong. Tulis konten atau sisipkan template sebelum menyimpan.",
+  "@materialEmptyWarning": { "description": "Banner peringatan editor materi masih 0 karakter" },
+
+  "materialEditorPlaceholder": "Tuliskan materi pembelajaran terstruktur di sini...",
+  "@materialEditorPlaceholder": { "description": "Placeholder editor Quill saat kosong" }
 }
