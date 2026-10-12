@@ -1708,4 +1708,79 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get navDiscussion => 'Diskusi';
+
+  @override
+  String get manualBookErrorPermissionStaff =>
+      'Akses ditolak: Anda tidak memiliki wewenang untuk melihat berkas panduan kelas ini.';
+
+  @override
+  String get manualBookErrorPermissionStudent =>
+      'Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini.';
+
+  @override
+  String manualBookErrorLoadFailed(String detail) {
+    return 'Gagal memuat manual book: $detail';
+  }
+
+  @override
+  String get manualBookOpenPdfFailed => 'Tidak dapat membuka tautan PDF.';
+
+  @override
+  String manualBookOpenPdfError(String detail) {
+    return 'Error membuka berkas: $detail';
+  }
+
+  @override
+  String get manualBookSelectClassFirst =>
+      'Pilih kelas yang valid terlebih dahulu untuk mengunggah buku panduan.';
+
+  @override
+  String get manualBookAddTitle => 'Tambah Manual Book';
+
+  @override
+  String get manualBookTitleLabel => 'Judul Panduan';
+
+  @override
+  String get manualBookTitleRequired => 'Judul wajib diisi';
+
+  @override
+  String get manualBookDescLabel => 'Deskripsi Singkat';
+
+  @override
+  String get manualBookUrlLabel => 'URL Berkas Cloudinary (PDF)';
+
+  @override
+  String get manualBookUrlRequired => 'URL berkas wajib diisi';
+
+  @override
+  String get manualBookUrlInvalid => 'URL harus diawali http:// atau https://';
+
+  @override
+  String get manualBookFileNameLabel => 'Nama Berkas (.pdf)';
+
+  @override
+  String get manualBookAppBarTitle => 'Buku Panduan (Manual Book)';
+
+  @override
+  String get manualBookNoClassBody =>
+      'Anda belum memilih kelas. Silakan bergabung menggunakan kode kelas atau pilih kelas dari Beranda untuk mengakses Buku Panduan.';
+
+  @override
+  String get manualBookJoinNewClassBtn => 'Gabung Kelas Baru';
+
+  @override
+  String get manualBookLoading => 'Memuat buku panduan...';
+
+  @override
+  String get manualBookEmptyTitle => 'Belum Ada Buku Panduan';
+
+  @override
+  String get manualBookEmptyBody =>
+      'Pengajar belum menambahkan buku panduan (Manual Book) PDF untuk kelas ini.';
+
+  @override
+  String get manualBookNoDescription => 'Tidak ada deskripsi';
+
+  @override
+  String get manualBookOpenPdfBtn => 'Buka Dokumen PDF';
 }

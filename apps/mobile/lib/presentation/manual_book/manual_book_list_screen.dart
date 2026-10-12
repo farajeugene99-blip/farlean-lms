@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/auth/role_guard.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/manual_book.dart';
 import '../../repositories/manual_book_repository.dart';
 import '../../services/auth_provider.dart';
@@ -69,16 +70,17 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         String friendlyMessage;
         final errorString = e.toString().toLowerCase();
         if (errorString.contains('permission-denied') || errorString.contains('evaluation error')) {
           friendlyMessage = isStaff
-              ? 'Akses ditolak: Anda tidak memiliki wewenang untuk melihat berkas panduan kelas ini.'
-              : 'Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini.';
+              ? l10n.manualBookErrorPermissionStaff
+              : l10n.manualBookErrorPermissionStudent;
         } else if (errorString.contains('network') || errorString.contains('unavailable')) {
-          friendlyMessage = 'Koneksi ke server bermasalah. Periksa jaringan internet atau emulator Anda.';
+          friendlyMessage = l10n.meetingErrorNetwork;
         } else {
-          friendlyMessage = 'Gagal memuat manual book: $e';
+          friendlyMessage = l10n.manualBookErrorLoadFailed(e.toString());
         }
 
         setState(() {
@@ -90,6 +92,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
   }
 
   Future<void> _openPdf(String fileUrl) async {
+    final l10n = AppLocalizations.of(context);
     try {
       final uri = Uri.parse(fileUrl);
       if (await canLaunchUrl(uri)) {
@@ -97,8 +100,8 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Tidak dapat membuka tautan PDF.'),
+            SnackBar(
+              content: Text(l10n.manualBookOpenPdfFailed),
               backgroundColor: AppTheme.error,
             ),
           );
@@ -107,18 +110,19 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error membuka berkas: $e'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text(l10n.manualBookOpenPdfError(e.toString())), backgroundColor: AppTheme.error),
         );
       }
     }
   }
 
   Future<void> _showAddBookDialog() async {
+    final l10n = AppLocalizations.of(context);
     final effectiveClassId = widget.classId?.trim() ?? '';
     if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pilih kelas yang valid terlebih dahulu untuk mengunggah buku panduan.'),
+        SnackBar(
+          content: Text(l10n.manualBookSelectClassFirst),
           backgroundColor: AppTheme.error,
         ),
       );
@@ -134,7 +138,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
     final created = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Tambah Manual Book'),
+        title: Text(l10n.manualBookAddTitle),
         content: SizedBox(
           width: 440,
           child: Form(
@@ -145,26 +149,26 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
                 children: [
                   TextFormField(
                     controller: titleController,
-                    decoration: const InputDecoration(labelText: 'Judul Panduan'),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
+                    decoration: InputDecoration(labelText: l10n.manualBookTitleLabel),
+                    validator: (v) => v == null || v.trim().isEmpty ? l10n.manualBookTitleRequired : null,
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: descController,
-                    decoration: const InputDecoration(labelText: 'Deskripsi Singkat'),
+                    decoration: InputDecoration(labelText: l10n.manualBookDescLabel),
                     maxLines: 2,
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: urlController,
-                    decoration: const InputDecoration(
-                      labelText: 'URL Berkas Cloudinary (PDF)',
-                      prefixIcon: Icon(Icons.link_rounded, size: 20),
+                    decoration: InputDecoration(
+                      labelText: l10n.manualBookUrlLabel,
+                      prefixIcon: const Icon(Icons.link_rounded, size: 20),
                     ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'URL berkas wajib diisi';
+                      if (v == null || v.trim().isEmpty) return l10n.manualBookUrlRequired;
                       if (!v.startsWith('http://') && !v.startsWith('https://')) {
-                        return 'URL harus diawali http:// atau https://';
+                        return l10n.manualBookUrlInvalid;
                       }
                       return null;
                     },
@@ -172,7 +176,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: fileNameController,
-                    decoration: const InputDecoration(labelText: 'Nama Berkas (.pdf)'),
+                    decoration: InputDecoration(labelText: l10n.manualBookFileNameLabel),
                   ),
                 ],
               ),
@@ -182,7 +186,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -203,12 +207,12 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
               } catch (e) {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+                    SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
                   );
                 }
               }
             },
-            child: const Text('Simpan'),
+            child: Text(l10n.btnSave),
           ),
         ],
       ),
@@ -226,16 +230,17 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authProvider = context.watch<AuthProvider>();
     final isStaff = RoleGuard.isStaff(authProvider.appUser);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Buku Panduan (Manual Book)'),
+        title: Text(l10n.manualBookAppBarTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Segarkan',
+            tooltip: l10n.meetingRefreshTooltip,
             onPressed: _loadBooks,
           ),
           const SizedBox(width: 8),
@@ -245,7 +250,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
           ? FloatingActionButton.extended(
               onPressed: _showAddBookDialog,
               icon: const Icon(Icons.upload_file_rounded),
-              label: const Text('Tambah Manual Book'),
+              label: Text(l10n.manualBookAddTitle),
               backgroundColor: AppTheme.primary,
               foregroundColor: Colors.white,
             )
@@ -255,6 +260,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     final effectiveClassId = widget.classId?.trim() ?? '';
     if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
       return Center(
@@ -270,12 +276,12 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Pilih Kelas Pembelajaran',
+                l10n.meetingNoClassTitle,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
               Text(
-                'Anda belum memilih kelas. Silakan bergabung menggunakan kode kelas atau pilih kelas dari Beranda untuk mengakses Buku Panduan.',
+                l10n.manualBookNoClassBody,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
@@ -283,7 +289,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
               ElevatedButton.icon(
                 onPressed: () => context.push(AppConstants.joinClassRoute),
                 icon: const Icon(Icons.qr_code_rounded),
-                label: const Text('Gabung Kelas Baru'),
+                label: Text(l10n.manualBookJoinNewClassBtn),
               ),
             ],
           ),
@@ -292,7 +298,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
     }
 
     if (_isLoading) {
-      return const LoadingIndicator(message: 'Memuat buku panduan...');
+      return LoadingIndicator(message: l10n.manualBookLoading);
     }
 
     if (_errorMessage != null) {
@@ -313,14 +319,14 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Belum Ada Buku Panduan',
+                l10n.manualBookEmptyTitle,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Pengajar belum menambahkan buku panduan (Manual Book) PDF untuk kelas ini.',
+              Text(
+                l10n.manualBookEmptyBody,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textSecondary),
+                style: const TextStyle(color: AppTheme.textSecondary),
               ),
             ],
           ),
@@ -343,6 +349,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
   }
 
   Widget _buildBookCard(ManualBook book) {
+    final l10n = AppLocalizations.of(context);
     final sizeKb = (book.fileSize / 1024).round();
     final sizeStr = sizeKb > 1024
         ? '${(sizeKb / 1024).toStringAsFixed(1)} MB'
@@ -376,7 +383,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        book.description.isNotEmpty ? book.description : 'Tidak ada deskripsi',
+                        book.description.isNotEmpty ? book.description : l10n.manualBookNoDescription,
                         style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                       ),
                       const SizedBox(height: 8),
@@ -405,7 +412,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
                 ElevatedButton.icon(
                   onPressed: () => _openPdf(book.fileUrl),
                   icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                  label: const Text('Buka Dokumen PDF'),
+                  label: Text(l10n.manualBookOpenPdfBtn),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(140, 36),
                     padding: const EdgeInsets.symmetric(horizontal: 14),

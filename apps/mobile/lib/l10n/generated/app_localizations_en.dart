@@ -1712,4 +1712,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navDiscussion => 'Discussion';
+
+  @override
+  String get manualBookErrorPermissionStaff =>
+      'Access denied: You are not authorized to view this class guide files.';
+
+  @override
+  String get manualBookErrorPermissionStudent =>
+      'Access denied: You are not enrolled as an active member in this class.';
+
+  @override
+  String manualBookErrorLoadFailed(String detail) {
+    return 'Failed to load manual book: $detail';
+  }
+
+  @override
+  String get manualBookOpenPdfFailed => 'Unable to open PDF link.';
+
+  @override
+  String manualBookOpenPdfError(String detail) {
+    return 'Error opening file: $detail';
+  }
+
+  @override
+  String get manualBookSelectClassFirst =>
+      'Please select a valid class first to upload a guide book.';
+
+  @override
+  String get manualBookAddTitle => 'Add Manual Book';
+
+  @override
+  String get manualBookTitleLabel => 'Guide Title';
+
+  @override
+  String get manualBookTitleRequired => 'Title is required';
+
+  @override
+  String get manualBookDescLabel => 'Short Description';
+
+  @override
+  String get manualBookUrlLabel => 'Cloudinary File URL (PDF)';
+
+  @override
+  String get manualBookUrlRequired => 'File URL is required';
+
+  @override
+  String get manualBookUrlInvalid => 'URL must start with http:// or https://';
+
+  @override
+  String get manualBookFileNameLabel => 'File Name (.pdf)';
+
+  @override
+  String get manualBookAppBarTitle => 'Guide Book (Manual Book)';
+
+  @override
+  String get manualBookNoClassBody =>
+      'You haven\'t selected a class. Please join using a class code or select a class from Home to access Guide Books.';
+
+  @override
+  String get manualBookJoinNewClassBtn => 'Join New Class';
+
+  @override
+  String get manualBookLoading => 'Loading guide book...';
+
+  @override
+  String get manualBookEmptyTitle => 'No Guide Books Yet';
+
+  @override
+  String get manualBookEmptyBody =>
+      'Instructor has not added any PDF guide books (Manual Books) for this class yet.';
+
+  @override
+  String get manualBookNoDescription => 'No description';
+
+  @override
+  String get manualBookOpenPdfBtn => 'Open PDF Document';
 }

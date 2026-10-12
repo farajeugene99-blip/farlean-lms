@@ -2917,6 +2917,138 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Diskusi'**
   String get navDiscussion;
+
+  /// Pesan error permission-denied manual book untuk staf
+  ///
+  /// In id, this message translates to:
+  /// **'Akses ditolak: Anda tidak memiliki wewenang untuk melihat berkas panduan kelas ini.'**
+  String get manualBookErrorPermissionStaff;
+
+  /// Pesan error permission-denied manual book untuk siswa
+  ///
+  /// In id, this message translates to:
+  /// **'Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini.'**
+  String get manualBookErrorPermissionStudent;
+
+  /// Pesan error gagal memuat buku panduan
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memuat manual book: {detail}'**
+  String manualBookErrorLoadFailed(String detail);
+
+  /// Snackbar gagal membuka link PDF
+  ///
+  /// In id, this message translates to:
+  /// **'Tidak dapat membuka tautan PDF.'**
+  String get manualBookOpenPdfFailed;
+
+  /// Snackbar error membuka berkas PDF
+  ///
+  /// In id, this message translates to:
+  /// **'Error membuka berkas: {detail}'**
+  String manualBookOpenPdfError(String detail);
+
+  /// Peringatan pilih kelas sebelum unggah buku panduan
+  ///
+  /// In id, this message translates to:
+  /// **'Pilih kelas yang valid terlebih dahulu untuk mengunggah buku panduan.'**
+  String get manualBookSelectClassFirst;
+
+  /// Judul dialog tambah buku panduan
+  ///
+  /// In id, this message translates to:
+  /// **'Tambah Manual Book'**
+  String get manualBookAddTitle;
+
+  /// Label field judul panduan
+  ///
+  /// In id, this message translates to:
+  /// **'Judul Panduan'**
+  String get manualBookTitleLabel;
+
+  /// Validasi judul panduan kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Judul wajib diisi'**
+  String get manualBookTitleRequired;
+
+  /// Label field deskripsi panduan
+  ///
+  /// In id, this message translates to:
+  /// **'Deskripsi Singkat'**
+  String get manualBookDescLabel;
+
+  /// Label field URL berkas PDF
+  ///
+  /// In id, this message translates to:
+  /// **'URL Berkas Cloudinary (PDF)'**
+  String get manualBookUrlLabel;
+
+  /// Validasi URL berkas kosong
+  ///
+  /// In id, this message translates to:
+  /// **'URL berkas wajib diisi'**
+  String get manualBookUrlRequired;
+
+  /// Validasi URL berkas harus protokol http/https
+  ///
+  /// In id, this message translates to:
+  /// **'URL harus diawali http:// atau https://'**
+  String get manualBookUrlInvalid;
+
+  /// Label field nama berkas pdf
+  ///
+  /// In id, this message translates to:
+  /// **'Nama Berkas (.pdf)'**
+  String get manualBookFileNameLabel;
+
+  /// Judul AppBar layar manual book
+  ///
+  /// In id, this message translates to:
+  /// **'Buku Panduan (Manual Book)'**
+  String get manualBookAppBarTitle;
+
+  /// Instruksi saat belum memilih kelas di manual book
+  ///
+  /// In id, this message translates to:
+  /// **'Anda belum memilih kelas. Silakan bergabung menggunakan kode kelas atau pilih kelas dari Beranda untuk mengakses Buku Panduan.'**
+  String get manualBookNoClassBody;
+
+  /// Tombol gabung kelas baru pada manual book
+  ///
+  /// In id, this message translates to:
+  /// **'Gabung Kelas Baru'**
+  String get manualBookJoinNewClassBtn;
+
+  /// Indikator loading buku panduan
+  ///
+  /// In id, this message translates to:
+  /// **'Memuat buku panduan...'**
+  String get manualBookLoading;
+
+  /// Judul kosong buku panduan
+  ///
+  /// In id, this message translates to:
+  /// **'Belum Ada Buku Panduan'**
+  String get manualBookEmptyTitle;
+
+  /// Deskripsi kosong buku panduan
+  ///
+  /// In id, this message translates to:
+  /// **'Pengajar belum menambahkan buku panduan (Manual Book) PDF untuk kelas ini.'**
+  String get manualBookEmptyBody;
+
+  /// Fallback saat deskripsi manual book kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Tidak ada deskripsi'**
+  String get manualBookNoDescription;
+
+  /// Tombol membuka dokumen PDF manual book
+  ///
+  /// In id, this message translates to:
+  /// **'Buka Dokumen PDF'**
+  String get manualBookOpenPdfBtn;
 }
 
 class _AppLocalizationsDelegate

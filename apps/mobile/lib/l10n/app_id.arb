@@ -1805,5 +1805,81 @@
   "@navAiTutor": { "description": "Label tab navigasi AI Tutor" },
 
   "navDiscussion": "Diskusi",
-  "@navDiscussion": { "description": "Label tab navigasi diskusi" }
+  "@navDiscussion": { "description": "Label tab navigasi diskusi" },
+
+  "manualBookErrorPermissionStaff": "Akses ditolak: Anda tidak memiliki wewenang untuk melihat berkas panduan kelas ini.",
+  "@manualBookErrorPermissionStaff": { "description": "Pesan error permission-denied manual book untuk staf" },
+
+  "manualBookErrorPermissionStudent": "Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini.",
+  "@manualBookErrorPermissionStudent": { "description": "Pesan error permission-denied manual book untuk siswa" },
+
+  "manualBookErrorLoadFailed": "Gagal memuat manual book: {detail}",
+  "@manualBookErrorLoadFailed": {
+    "description": "Pesan error gagal memuat buku panduan",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "manualBookOpenPdfFailed": "Tidak dapat membuka tautan PDF.",
+  "@manualBookOpenPdfFailed": { "description": "Snackbar gagal membuka link PDF" },
+
+  "manualBookOpenPdfError": "Error membuka berkas: {detail}",
+  "@manualBookOpenPdfError": {
+    "description": "Snackbar error membuka berkas PDF",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "manualBookSelectClassFirst": "Pilih kelas yang valid terlebih dahulu untuk mengunggah buku panduan.",
+  "@manualBookSelectClassFirst": { "description": "Peringatan pilih kelas sebelum unggah buku panduan" },
+
+  "manualBookAddTitle": "Tambah Manual Book",
+  "@manualBookAddTitle": { "description": "Judul dialog tambah buku panduan" },
+
+  "manualBookTitleLabel": "Judul Panduan",
+  "@manualBookTitleLabel": { "description": "Label field judul panduan" },
+
+  "manualBookTitleRequired": "Judul wajib diisi",
+  "@manualBookTitleRequired": { "description": "Validasi judul panduan kosong" },
+
+  "manualBookDescLabel": "Deskripsi Singkat",
+  "@manualBookDescLabel": { "description": "Label field deskripsi panduan" },
+
+  "manualBookUrlLabel": "URL Berkas Cloudinary (PDF)",
+  "@manualBookUrlLabel": { "description": "Label field URL berkas PDF" },
+
+  "manualBookUrlRequired": "URL berkas wajib diisi",
+  "@manualBookUrlRequired": { "description": "Validasi URL berkas kosong" },
+
+  "manualBookUrlInvalid": "URL harus diawali http:// atau https://",
+  "@manualBookUrlInvalid": { "description": "Validasi URL berkas harus protokol http/https" },
+
+  "manualBookFileNameLabel": "Nama Berkas (.pdf)",
+  "@manualBookFileNameLabel": { "description": "Label field nama berkas pdf" },
+
+  "manualBookAppBarTitle": "Buku Panduan (Manual Book)",
+  "@manualBookAppBarTitle": { "description": "Judul AppBar layar manual book" },
+
+  "manualBookNoClassBody": "Anda belum memilih kelas. Silakan bergabung menggunakan kode kelas atau pilih kelas dari Beranda untuk mengakses Buku Panduan.",
+  "@manualBookNoClassBody": { "description": "Instruksi saat belum memilih kelas di manual book" },
+
+  "manualBookJoinNewClassBtn": "Gabung Kelas Baru",
+  "@manualBookJoinNewClassBtn": { "description": "Tombol gabung kelas baru pada manual book" },
+
+  "manualBookLoading": "Memuat buku panduan...",
+  "@manualBookLoading": { "description": "Indikator loading buku panduan" },
+
+  "manualBookEmptyTitle": "Belum Ada Buku Panduan",
+  "@manualBookEmptyTitle": { "description": "Judul kosong buku panduan" },
+
+  "manualBookEmptyBody": "Pengajar belum menambahkan buku panduan (Manual Book) PDF untuk kelas ini.",
+  "@manualBookEmptyBody": { "description": "Deskripsi kosong buku panduan" },
+
+  "manualBookNoDescription": "Tidak ada deskripsi",
+  "@manualBookNoDescription": { "description": "Fallback saat deskripsi manual book kosong" },
+
+  "manualBookOpenPdfBtn": "Buka Dokumen PDF",
+  "@manualBookOpenPdfBtn": { "description": "Tombol membuka dokumen PDF manual book" }
 }
