@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/core/theme/app_theme.dart';
+import 'package:mobile/l10n/generated/app_localizations.dart';
 import 'package:mobile/models/app_user.dart';
 import 'package:mobile/models/classroom.dart';
 import 'package:mobile/presentation/main/main_shell.dart';
@@ -77,6 +78,9 @@ void main() {
     Widget createTestWidget({required AttemptRepository attemptRepo}) {
       return MaterialApp(
         theme: AppTheme.lightTheme,
+        locale: const Locale('id'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: MultiProvider(
           providers: [
             ChangeNotifierProvider<AuthProvider>.value(value: authProvider),

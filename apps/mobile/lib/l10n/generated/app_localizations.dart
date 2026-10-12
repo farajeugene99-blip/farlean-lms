@@ -475,6 +475,420 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Terjadi kesalahan otentikasi. Silakan coba lagi.'**
   String get authErrUnknown;
+
+  /// Judul AppBar halaman profil
+  ///
+  /// In id, this message translates to:
+  /// **'Profil Pengguna'**
+  String get profileScreenTitle;
+
+  /// Nama fallback pengguna jika profil kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Pengguna Farlean'**
+  String get profileDefaultName;
+
+  /// Tooltip ikon ubah nama
+  ///
+  /// In id, this message translates to:
+  /// **'Ubah Nama'**
+  String get profileEditNameTooltip;
+
+  /// Badge tipe akun pengguna
+  ///
+  /// In id, this message translates to:
+  /// **'Tipe: {type}'**
+  String profileBadgeType(String type);
+
+  /// Badge peran pengguna
+  ///
+  /// In id, this message translates to:
+  /// **'Role: {role}'**
+  String profileBadgeRole(String role);
+
+  /// Judul dialog ubah nama
+  ///
+  /// In id, this message translates to:
+  /// **'Ubah Nama Lengkap'**
+  String get profileEditNameTitle;
+
+  /// Validasi batas maksimum karakter nama
+  ///
+  /// In id, this message translates to:
+  /// **'Maksimal {max} karakter'**
+  String profileNameMaxLength(int max);
+
+  /// Snackbar gagal perbarui nama
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memperbarui nama: {detail}'**
+  String profileNameUpdateFail(String detail);
+
+  /// Snackbar sukses perbarui nama
+  ///
+  /// In id, this message translates to:
+  /// **'Nama profil berhasil diperbarui.'**
+  String get profileNameUpdated;
+
+  /// Judul dialog dan ListTile identitas dinamis NIM/NIP
+  ///
+  /// In id, this message translates to:
+  /// **'Nomor Induk ({label})'**
+  String profileIdentityTitle(String label);
+
+  /// Keterangan privasi sub-koleksi identitas
+  ///
+  /// In id, this message translates to:
+  /// **'Data ini disimpan di sub-koleksi private/identity yang terisolasi dan hanya dapat diakses oleh Anda dan Admin. Pengajar kelas Anda melihatnya hanya melalui rekap resmi, bukan dari aplikasi.'**
+  String get profileIdentityPrivacyNote;
+
+  /// Validasi field identitas kosong
+  ///
+  /// In id, this message translates to:
+  /// **'{label} wajib diisi'**
+  String profileIdentityRequired(String label);
+
+  /// Snackbar gagal simpan identitas
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal menyimpan {label}: {detail}'**
+  String profileIdentitySaveFail(String label, String detail);
+
+  /// Snackbar sukses simpan identitas
+  ///
+  /// In id, this message translates to:
+  /// **'{label} berhasil disimpan di private identity.'**
+  String profileIdentitySaved(String label);
+
+  /// Subjudul identitas saat nilai masih kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Belum diisi (Klik untuk menambahkan)'**
+  String get profileIdentityNotSet;
+
+  /// Judul menu keamanan dan kata sandi
+  ///
+  /// In id, this message translates to:
+  /// **'Keamanan & Kata Sandi'**
+  String get profileSecurityTitle;
+
+  /// Subjudul menu keamanan kata sandi
+  ///
+  /// In id, this message translates to:
+  /// **'Ubah kata sandi akun untuk perangkat ini'**
+  String get profileSecuritySubtitle;
+
+  /// Judul menu dan dialog penyimpanan dan cache
+  ///
+  /// In id, this message translates to:
+  /// **'Penyimpanan & Cache'**
+  String get profileCacheTitle;
+
+  /// Subjudul menu penyimpanan dan cache
+  ///
+  /// In id, this message translates to:
+  /// **'Kelola memori sementara dan pilihan kelas aktif'**
+  String get profileCacheSubtitle;
+
+  /// Judul menu status verifikasi email
+  ///
+  /// In id, this message translates to:
+  /// **'Status Verifikasi Email'**
+  String get profileEmailVerificationTitle;
+
+  /// Label email telah diverifikasi
+  ///
+  /// In id, this message translates to:
+  /// **'Email Terverifikasi'**
+  String get profileEmailVerified;
+
+  /// Label email belum diverifikasi
+  ///
+  /// In id, this message translates to:
+  /// **'Menunggu Verifikasi'**
+  String get profileEmailPending;
+
+  /// Judul menu sinkronisasi peran
+  ///
+  /// In id, this message translates to:
+  /// **'Sinkronisasi Sesi & Peran'**
+  String get profileSyncTitle;
+
+  /// Peringatan peran belum sinkron
+  ///
+  /// In id, this message translates to:
+  /// **'Peran belum sinkron (Token: {claimsRole} vs Profil: {profileRole}). Tekan perbarui.'**
+  String profileSyncOutOfSync(String claimsRole, String profileRole);
+
+  /// Keterangan sesi mutakhir
+  ///
+  /// In id, this message translates to:
+  /// **'Sesi dan hak akses token mutakhir.'**
+  String get profileSyncUpToDate;
+
+  /// Tooltip ikon perbarui sesi
+  ///
+  /// In id, this message translates to:
+  /// **'Perbarui Sesi'**
+  String get profileRefreshSessionTooltip;
+
+  /// Snackbar sukses perbarui sesi
+  ///
+  /// In id, this message translates to:
+  /// **'Sesi dan token hak akses berhasil diperbarui.'**
+  String get profileSessionRefreshed;
+
+  /// Label tombol merah keluar akun di bagian bawah profil
+  ///
+  /// In id, this message translates to:
+  /// **'Keluar dari Akun'**
+  String get profileLogoutBtn;
+
+  /// Status saat proses logout sedang berjalan
+  ///
+  /// In id, this message translates to:
+  /// **'Sedang Keluar...'**
+  String get profileLoggingOut;
+
+  /// Judul dialog konfirmasi logout
+  ///
+  /// In id, this message translates to:
+  /// **'Keluar dari Akun?'**
+  String get profileLogoutConfirmTitle;
+
+  /// Deskripsi dialog konfirmasi logout
+  ///
+  /// In id, this message translates to:
+  /// **'Apakah Anda yakin ingin keluar dari sesi Farlean LMS di perangkat ini?'**
+  String get profileLogoutConfirmBody;
+
+  /// Peringatan Active Quiz Guard saat logout
+  ///
+  /// In id, this message translates to:
+  /// **'Perhatian: Anda memiliki kuis yang sedang dikerjakan. Jika Anda keluar sekarang, pengerjaan kuis dapat terganggu dan jawaban yang belum tersimpan dapat hilang.'**
+  String get profileLogoutQuizWarning;
+
+  /// Peringatan perangkat offline saat logout
+  ///
+  /// In id, this message translates to:
+  /// **'Tidak dapat memverifikasi status kuis karena perangkat sedang offline. Jika Anda sedang mengerjakan kuis, jawaban yang belum tersinkronisasi ke server mungkin hilang.'**
+  String get profileLogoutOfflineWarning;
+
+  /// Snackbar gagal logout
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal keluar akun: {detail}'**
+  String profileLogoutFailed(String detail);
+
+  /// Judul dialog ubah kata sandi
+  ///
+  /// In id, this message translates to:
+  /// **'Ubah Kata Sandi'**
+  String get profileChangePasswordTitle;
+
+  /// Catatan kebijakan panjang kata sandi di dialog ubah sandi
+  ///
+  /// In id, this message translates to:
+  /// **'Untuk keamanan akun Anda, masukkan kata sandi saat ini lalu buat kata sandi baru minimal {min} karakter.'**
+  String profileChangePasswordNote(int min);
+
+  /// Label field kata sandi saat ini
+  ///
+  /// In id, this message translates to:
+  /// **'Kata Sandi Saat Ini'**
+  String get profileCurrentPasswordLabel;
+
+  /// Validasi kata sandi saat ini kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Kata sandi saat ini wajib diisi'**
+  String get profileCurrentPasswordRequired;
+
+  /// Label field kata sandi baru
+  ///
+  /// In id, this message translates to:
+  /// **'Kata Sandi Baru (Min. {min} Karakter)'**
+  String profileNewPasswordLabel(int min);
+
+  /// Validasi kata sandi baru kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Kata sandi baru wajib diisi'**
+  String get profileNewPasswordRequired;
+
+  /// Pesan validasi kata sandi baru kurang dari minimum
+  ///
+  /// In id, this message translates to:
+  /// **'Kata sandi baru minimal {min} karakter.'**
+  String profileNewPasswordMinError(int min);
+
+  /// Validasi kata sandi baru sama dengan yang lama
+  ///
+  /// In id, this message translates to:
+  /// **'Kata sandi baru tidak boleh sama dengan kata sandi saat ini.'**
+  String get profileNewPasswordSameAsCurrent;
+
+  /// Label field konfirmasi kata sandi baru
+  ///
+  /// In id, this message translates to:
+  /// **'Konfirmasi Kata Sandi Baru'**
+  String get profileConfirmNewPasswordLabel;
+
+  /// Validasi konfirmasi kata sandi kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Konfirmasi kata sandi wajib diisi'**
+  String get profileConfirmPasswordRequired;
+
+  /// Tautan lupa kata sandi saat ini di dialog ubah sandi
+  ///
+  /// In id, this message translates to:
+  /// **'Lupa kata sandi saat ini?'**
+  String get profileForgotCurrentPasswordLink;
+
+  /// Tombol simpan kata sandi baru
+  ///
+  /// In id, this message translates to:
+  /// **'Simpan Sandi'**
+  String get profileSavePasswordBtn;
+
+  /// Pesan error kredensial saat ini salah
+  ///
+  /// In id, this message translates to:
+  /// **'Kata sandi saat ini yang Anda masukkan salah.'**
+  String get profileCurrentPasswordWrong;
+
+  /// Pesan error gagal update kata sandi selain kredensial
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memperbarui kata sandi: {detail}'**
+  String profilePasswordUpdateFail(String detail);
+
+  /// Snackbar sukses perbarui kata sandi
+  ///
+  /// In id, this message translates to:
+  /// **'Kata sandi berhasil diperbarui untuk akun ini.'**
+  String get profilePwUpdated;
+
+  /// Deskripsi dialog penyimpanan & cache
+  ///
+  /// In id, this message translates to:
+  /// **'Kelola memori sementara gambar dan preferensi kelas aktif di perangkat ini secara aman.'**
+  String get profileCacheDesc;
+
+  /// Statistik memori gambar saat kosong
+  ///
+  /// In id, this message translates to:
+  /// **'0 KB (belum ada gambar dimuat di memori)'**
+  String get profileCacheEmpty;
+
+  /// Statistik penggunaan cache gambar RAM
+  ///
+  /// In id, this message translates to:
+  /// **'{count, plural, other{{kb} KB ({count} gambar aktif di memori)}}'**
+  String profileCacheStats(int count, String kb);
+
+  /// Judul seksi cache gambar RAM
+  ///
+  /// In id, this message translates to:
+  /// **'Cache Gambar di Memori (RAM)'**
+  String get profileCacheImageSection;
+
+  /// Catatan penjelasan cache memori gambar
+  ///
+  /// In id, this message translates to:
+  /// **'Catatan: Cache memori menampung gambar materi yang sedang dibuka. Mengosongkannya aman dan gambar akan diunduh kembali saat dibuka.'**
+  String get profileCacheImageNote;
+
+  /// Tombol bersihkan cache memori gambar
+  ///
+  /// In id, this message translates to:
+  /// **'Kosongkan Cache Gambar RAM'**
+  String get profileCacheClearBtn;
+
+  /// Snackbar sukses bersihkan cache gambar
+  ///
+  /// In id, this message translates to:
+  /// **'Cache memori gambar berhasil dikosongkan.'**
+  String get profileCacheCleared;
+
+  /// Judul seksi pilihan kelas aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Pilihan Kelas Aktif Tersimpan'**
+  String get profileClassSavedSection;
+
+  /// Keterangan saat tidak ada kelas aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Belum ada kelas aktif yang dipilih'**
+  String get profileClassNoneSelected;
+
+  /// Catatan penjelasan reset kelas aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Mereset kelas aktif akan mengarahkan Anda ke Beranda untuk memilih kembali kelas pembelajaran.'**
+  String get profileClassResetNote;
+
+  /// Judul dialog blokir reset kelas karena kuis aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Kuis Sedang Dikerjakan'**
+  String get profileActiveQuizTitle;
+
+  /// Isi dialog blokir reset kelas karena kuis aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Tidak dapat mereset kelas aktif: Anda sedang memiliki kuis yang sedang dikerjakan. Selesaikan atau kumpulkan kuis terlebih dahulu sebelum mereset kelas.'**
+  String get profileResetClassQuizBlocked;
+
+  /// Tombol konfirmasi dialog informasi kuis aktif/offline
+  ///
+  /// In id, this message translates to:
+  /// **'Mengerti'**
+  String get profileBtnGotIt;
+
+  /// Judul dialog blokir reset kelas saat offline
+  ///
+  /// In id, this message translates to:
+  /// **'Perangkat Offline'**
+  String get profileOfflineTitle;
+
+  /// Isi dialog blokir reset kelas saat offline
+  ///
+  /// In id, this message translates to:
+  /// **'Tidak dapat memverifikasi status kuis karena perangkat sedang offline. Untuk keamanan jawaban kuis Anda, reset kelas aktif ditunda hingga perangkat terhubung kembali.'**
+  String get profileResetClassOfflineBlocked;
+
+  /// Judul konfirmasi reset kelas aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Reset Pilihan Kelas?'**
+  String get profileResetClassConfirmTitle;
+
+  /// Isi konfirmasi reset kelas aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Anda akan diarahkan kembali ke Beranda untuk memilih kelas pembelajaran.'**
+  String get profileResetClassConfirmBody;
+
+  /// Tombol aksi reset kelas pada dialog konfirmasi
+  ///
+  /// In id, this message translates to:
+  /// **'Reset'**
+  String get profileBtnReset;
+
+  /// Tombol buka dialog reset pilihan kelas aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Reset Pilihan Kelas Aktif'**
+  String get profileResetClassBtn;
+
+  /// Snackbar sukses reset kelas aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Pilihan kelas aktif berhasil direset.'**
+  String get profileResetClassDone;
 }
 
 class _AppLocalizationsDelegate

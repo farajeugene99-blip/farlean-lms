@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/core/theme/app_theme.dart';
+import 'package:mobile/l10n/generated/app_localizations.dart';
 import 'package:mobile/models/app_user.dart';
 import 'package:mobile/presentation/main/profile_screen.dart';
 import 'package:mobile/services/auth_provider.dart';
@@ -36,6 +37,9 @@ void main() {
     Widget createTestWidget() {
       return MaterialApp(
         theme: AppTheme.lightTheme,
+        locale: const Locale('id'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: MultiProvider(
           providers: [
             ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
@@ -92,7 +96,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Kata sandi baru minimal 8 karakter.'), findsOneWidget);
-      expect(find.text('Konfirmasi kata sandi tidak cocok.'), findsOneWidget);
+      expect(find.text('Konfirmasi kata sandi tidak cocok'), findsOneWidget);
       expect(mockAuth.changePasswordCallCount, equals(0));
     });
 

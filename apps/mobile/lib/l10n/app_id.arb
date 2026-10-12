@@ -208,5 +208,290 @@
   "@authErrUserDisabled": { "description": "Pesan error Firebase user-disabled" },
 
   "authErrUnknown": "Terjadi kesalahan otentikasi. Silakan coba lagi.",
-  "@authErrUnknown": { "description": "Fallback error otentikasi tidak dikenal" }
+  "@authErrUnknown": { "description": "Fallback error otentikasi tidak dikenal" },
+
+  "profileScreenTitle": "Profil Pengguna",
+  "@profileScreenTitle": { "description": "Judul AppBar halaman profil" },
+
+  "profileDefaultName": "Pengguna Farlean",
+  "@profileDefaultName": { "description": "Nama fallback pengguna jika profil kosong" },
+
+  "profileEditNameTooltip": "Ubah Nama",
+  "@profileEditNameTooltip": { "description": "Tooltip ikon ubah nama" },
+
+  "profileBadgeType": "Tipe: {type}",
+  "@profileBadgeType": {
+    "description": "Badge tipe akun pengguna",
+    "placeholders": {
+      "type": { "type": "String" }
+    }
+  },
+
+  "profileBadgeRole": "Role: {role}",
+  "@profileBadgeRole": {
+    "description": "Badge peran pengguna",
+    "placeholders": {
+      "role": { "type": "String" }
+    }
+  },
+
+  "profileEditNameTitle": "Ubah Nama Lengkap",
+  "@profileEditNameTitle": { "description": "Judul dialog ubah nama" },
+
+  "profileNameMaxLength": "Maksimal {max} karakter",
+  "@profileNameMaxLength": {
+    "description": "Validasi batas maksimum karakter nama",
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+
+  "profileNameUpdateFail": "Gagal memperbarui nama: {detail}",
+  "@profileNameUpdateFail": {
+    "description": "Snackbar gagal perbarui nama",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "profileNameUpdated": "Nama profil berhasil diperbarui.",
+  "@profileNameUpdated": { "description": "Snackbar sukses perbarui nama" },
+
+  "profileIdentityTitle": "Nomor Induk ({label})",
+  "@profileIdentityTitle": {
+    "description": "Judul dialog dan ListTile identitas dinamis NIM/NIP",
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+
+  "profileIdentityPrivacyNote": "Data ini disimpan di sub-koleksi private/identity yang terisolasi dan hanya dapat diakses oleh Anda dan Admin. Pengajar kelas Anda melihatnya hanya melalui rekap resmi, bukan dari aplikasi.",
+  "@profileIdentityPrivacyNote": { "description": "Keterangan privasi sub-koleksi identitas" },
+
+  "profileIdentityRequired": "{label} wajib diisi",
+  "@profileIdentityRequired": {
+    "description": "Validasi field identitas kosong",
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+
+  "profileIdentitySaveFail": "Gagal menyimpan {label}: {detail}",
+  "@profileIdentitySaveFail": {
+    "description": "Snackbar gagal simpan identitas",
+    "placeholders": {
+      "label": { "type": "String" },
+      "detail": { "type": "String" }
+    }
+  },
+
+  "profileIdentitySaved": "{label} berhasil disimpan di private identity.",
+  "@profileIdentitySaved": {
+    "description": "Snackbar sukses simpan identitas",
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+
+  "profileIdentityNotSet": "Belum diisi (Klik untuk menambahkan)",
+  "@profileIdentityNotSet": { "description": "Subjudul identitas saat nilai masih kosong" },
+
+  "profileSecurityTitle": "Keamanan & Kata Sandi",
+  "@profileSecurityTitle": { "description": "Judul menu keamanan dan kata sandi" },
+
+  "profileSecuritySubtitle": "Ubah kata sandi akun untuk perangkat ini",
+  "@profileSecuritySubtitle": { "description": "Subjudul menu keamanan kata sandi" },
+
+  "profileCacheTitle": "Penyimpanan & Cache",
+  "@profileCacheTitle": { "description": "Judul menu dan dialog penyimpanan dan cache" },
+
+  "profileCacheSubtitle": "Kelola memori sementara dan pilihan kelas aktif",
+  "@profileCacheSubtitle": { "description": "Subjudul menu penyimpanan dan cache" },
+
+  "profileEmailVerificationTitle": "Status Verifikasi Email",
+  "@profileEmailVerificationTitle": { "description": "Judul menu status verifikasi email" },
+
+  "profileEmailVerified": "Email Terverifikasi",
+  "@profileEmailVerified": { "description": "Label email telah diverifikasi" },
+
+  "profileEmailPending": "Menunggu Verifikasi",
+  "@profileEmailPending": { "description": "Label email belum diverifikasi" },
+
+  "profileSyncTitle": "Sinkronisasi Sesi & Peran",
+  "@profileSyncTitle": { "description": "Judul menu sinkronisasi peran" },
+
+  "profileSyncOutOfSync": "Peran belum sinkron (Token: {claimsRole} vs Profil: {profileRole}). Tekan perbarui.",
+  "@profileSyncOutOfSync": {
+    "description": "Peringatan peran belum sinkron",
+    "placeholders": {
+      "claimsRole": { "type": "String" },
+      "profileRole": { "type": "String" }
+    }
+  },
+
+  "profileSyncUpToDate": "Sesi dan hak akses token mutakhir.",
+  "@profileSyncUpToDate": { "description": "Keterangan sesi mutakhir" },
+
+  "profileRefreshSessionTooltip": "Perbarui Sesi",
+  "@profileRefreshSessionTooltip": { "description": "Tooltip ikon perbarui sesi" },
+
+  "profileSessionRefreshed": "Sesi dan token hak akses berhasil diperbarui.",
+  "@profileSessionRefreshed": { "description": "Snackbar sukses perbarui sesi" },
+
+  "profileLogoutBtn": "Keluar dari Akun",
+  "@profileLogoutBtn": { "description": "Label tombol merah keluar akun di bagian bawah profil" },
+
+  "profileLoggingOut": "Sedang Keluar...",
+  "@profileLoggingOut": { "description": "Status saat proses logout sedang berjalan" },
+
+  "profileLogoutConfirmTitle": "Keluar dari Akun?",
+  "@profileLogoutConfirmTitle": { "description": "Judul dialog konfirmasi logout" },
+
+  "profileLogoutConfirmBody": "Apakah Anda yakin ingin keluar dari sesi Farlean LMS di perangkat ini?",
+  "@profileLogoutConfirmBody": { "description": "Deskripsi dialog konfirmasi logout" },
+
+  "profileLogoutQuizWarning": "Perhatian: Anda memiliki kuis yang sedang dikerjakan. Jika Anda keluar sekarang, pengerjaan kuis dapat terganggu dan jawaban yang belum tersimpan dapat hilang.",
+  "@profileLogoutQuizWarning": { "description": "Peringatan Active Quiz Guard saat logout" },
+
+  "profileLogoutOfflineWarning": "Tidak dapat memverifikasi status kuis karena perangkat sedang offline. Jika Anda sedang mengerjakan kuis, jawaban yang belum tersinkronisasi ke server mungkin hilang.",
+  "@profileLogoutOfflineWarning": { "description": "Peringatan perangkat offline saat logout" },
+
+  "profileLogoutFailed": "Gagal keluar akun: {detail}",
+  "@profileLogoutFailed": {
+    "description": "Snackbar gagal logout",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "profileChangePasswordTitle": "Ubah Kata Sandi",
+  "@profileChangePasswordTitle": { "description": "Judul dialog ubah kata sandi" },
+
+  "profileChangePasswordNote": "Untuk keamanan akun Anda, masukkan kata sandi saat ini lalu buat kata sandi baru minimal {min} karakter.",
+  "@profileChangePasswordNote": {
+    "description": "Catatan kebijakan panjang kata sandi di dialog ubah sandi",
+    "placeholders": {
+      "min": { "type": "int" }
+    }
+  },
+
+  "profileCurrentPasswordLabel": "Kata Sandi Saat Ini",
+  "@profileCurrentPasswordLabel": { "description": "Label field kata sandi saat ini" },
+
+  "profileCurrentPasswordRequired": "Kata sandi saat ini wajib diisi",
+  "@profileCurrentPasswordRequired": { "description": "Validasi kata sandi saat ini kosong" },
+
+  "profileNewPasswordLabel": "Kata Sandi Baru (Min. {min} Karakter)",
+  "@profileNewPasswordLabel": {
+    "description": "Label field kata sandi baru",
+    "placeholders": {
+      "min": { "type": "int" }
+    }
+  },
+
+  "profileNewPasswordRequired": "Kata sandi baru wajib diisi",
+  "@profileNewPasswordRequired": { "description": "Validasi kata sandi baru kosong" },
+
+  "profileNewPasswordMinError": "Kata sandi baru minimal {min} karakter.",
+  "@profileNewPasswordMinError": {
+    "description": "Pesan validasi kata sandi baru kurang dari minimum",
+    "placeholders": {
+      "min": { "type": "int" }
+    }
+  },
+
+  "profileNewPasswordSameAsCurrent": "Kata sandi baru tidak boleh sama dengan kata sandi saat ini.",
+  "@profileNewPasswordSameAsCurrent": { "description": "Validasi kata sandi baru sama dengan yang lama" },
+
+  "profileConfirmNewPasswordLabel": "Konfirmasi Kata Sandi Baru",
+  "@profileConfirmNewPasswordLabel": { "description": "Label field konfirmasi kata sandi baru" },
+
+  "profileConfirmPasswordRequired": "Konfirmasi kata sandi wajib diisi",
+  "@profileConfirmPasswordRequired": { "description": "Validasi konfirmasi kata sandi kosong" },
+
+  "profileForgotCurrentPasswordLink": "Lupa kata sandi saat ini?",
+  "@profileForgotCurrentPasswordLink": { "description": "Tautan lupa kata sandi saat ini di dialog ubah sandi" },
+
+  "profileSavePasswordBtn": "Simpan Sandi",
+  "@profileSavePasswordBtn": { "description": "Tombol simpan kata sandi baru" },
+
+  "profileCurrentPasswordWrong": "Kata sandi saat ini yang Anda masukkan salah.",
+  "@profileCurrentPasswordWrong": { "description": "Pesan error kredensial saat ini salah" },
+
+  "profilePasswordUpdateFail": "Gagal memperbarui kata sandi: {detail}",
+  "@profilePasswordUpdateFail": {
+    "description": "Pesan error gagal update kata sandi selain kredensial",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "profilePwUpdated": "Kata sandi berhasil diperbarui untuk akun ini.",
+  "@profilePwUpdated": { "description": "Snackbar sukses perbarui kata sandi" },
+
+  "profileCacheDesc": "Kelola memori sementara gambar dan preferensi kelas aktif di perangkat ini secara aman.",
+  "@profileCacheDesc": { "description": "Deskripsi dialog penyimpanan & cache" },
+
+  "profileCacheEmpty": "0 KB (belum ada gambar dimuat di memori)",
+  "@profileCacheEmpty": { "description": "Statistik memori gambar saat kosong" },
+
+  "profileCacheStats": "{count, plural, other{{kb} KB ({count} gambar aktif di memori)}}",
+  "@profileCacheStats": {
+    "description": "Statistik penggunaan cache gambar RAM",
+    "placeholders": {
+      "count": { "type": "int" },
+      "kb": { "type": "String" }
+    }
+  },
+
+  "profileCacheImageSection": "Cache Gambar di Memori (RAM)",
+  "@profileCacheImageSection": { "description": "Judul seksi cache gambar RAM" },
+
+  "profileCacheImageNote": "Catatan: Cache memori menampung gambar materi yang sedang dibuka. Mengosongkannya aman dan gambar akan diunduh kembali saat dibuka.",
+  "@profileCacheImageNote": { "description": "Catatan penjelasan cache memori gambar" },
+
+  "profileCacheClearBtn": "Kosongkan Cache Gambar RAM",
+  "@profileCacheClearBtn": { "description": "Tombol bersihkan cache memori gambar" },
+
+  "profileCacheCleared": "Cache memori gambar berhasil dikosongkan.",
+  "@profileCacheCleared": { "description": "Snackbar sukses bersihkan cache gambar" },
+
+  "profileClassSavedSection": "Pilihan Kelas Aktif Tersimpan",
+  "@profileClassSavedSection": { "description": "Judul seksi pilihan kelas aktif" },
+
+  "profileClassNoneSelected": "Belum ada kelas aktif yang dipilih",
+  "@profileClassNoneSelected": { "description": "Keterangan saat tidak ada kelas aktif" },
+
+  "profileClassResetNote": "Mereset kelas aktif akan mengarahkan Anda ke Beranda untuk memilih kembali kelas pembelajaran.",
+  "@profileClassResetNote": { "description": "Catatan penjelasan reset kelas aktif" },
+
+  "profileActiveQuizTitle": "Kuis Sedang Dikerjakan",
+  "@profileActiveQuizTitle": { "description": "Judul dialog blokir reset kelas karena kuis aktif" },
+
+  "profileResetClassQuizBlocked": "Tidak dapat mereset kelas aktif: Anda sedang memiliki kuis yang sedang dikerjakan. Selesaikan atau kumpulkan kuis terlebih dahulu sebelum mereset kelas.",
+  "@profileResetClassQuizBlocked": { "description": "Isi dialog blokir reset kelas karena kuis aktif" },
+
+  "profileBtnGotIt": "Mengerti",
+  "@profileBtnGotIt": { "description": "Tombol konfirmasi dialog informasi kuis aktif/offline" },
+
+  "profileOfflineTitle": "Perangkat Offline",
+  "@profileOfflineTitle": { "description": "Judul dialog blokir reset kelas saat offline" },
+
+  "profileResetClassOfflineBlocked": "Tidak dapat memverifikasi status kuis karena perangkat sedang offline. Untuk keamanan jawaban kuis Anda, reset kelas aktif ditunda hingga perangkat terhubung kembali.",
+  "@profileResetClassOfflineBlocked": { "description": "Isi dialog blokir reset kelas saat offline" },
+
+  "profileResetClassConfirmTitle": "Reset Pilihan Kelas?",
+  "@profileResetClassConfirmTitle": { "description": "Judul konfirmasi reset kelas aktif" },
+
+  "profileResetClassConfirmBody": "Anda akan diarahkan kembali ke Beranda untuk memilih kelas pembelajaran.",
+  "@profileResetClassConfirmBody": { "description": "Isi konfirmasi reset kelas aktif" },
+
+  "profileBtnReset": "Reset",
+  "@profileBtnReset": { "description": "Tombol aksi reset kelas pada dialog konfirmasi" },
+
+  "profileResetClassBtn": "Reset Pilihan Kelas Aktif",
+  "@profileResetClassBtn": { "description": "Tombol buka dialog reset pilihan kelas aktif" },
+
+  "profileResetClassDone": "Pilihan kelas aktif berhasil direset.",
+  "@profileResetClassDone": { "description": "Snackbar sukses reset kelas aktif" }
 }

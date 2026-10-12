@@ -219,4 +219,264 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get authErrUnknown =>
       'Terjadi kesalahan otentikasi. Silakan coba lagi.';
+
+  @override
+  String get profileScreenTitle => 'Profil Pengguna';
+
+  @override
+  String get profileDefaultName => 'Pengguna Farlean';
+
+  @override
+  String get profileEditNameTooltip => 'Ubah Nama';
+
+  @override
+  String profileBadgeType(String type) {
+    return 'Tipe: $type';
+  }
+
+  @override
+  String profileBadgeRole(String role) {
+    return 'Role: $role';
+  }
+
+  @override
+  String get profileEditNameTitle => 'Ubah Nama Lengkap';
+
+  @override
+  String profileNameMaxLength(int max) {
+    return 'Maksimal $max karakter';
+  }
+
+  @override
+  String profileNameUpdateFail(String detail) {
+    return 'Gagal memperbarui nama: $detail';
+  }
+
+  @override
+  String get profileNameUpdated => 'Nama profil berhasil diperbarui.';
+
+  @override
+  String profileIdentityTitle(String label) {
+    return 'Nomor Induk ($label)';
+  }
+
+  @override
+  String get profileIdentityPrivacyNote =>
+      'Data ini disimpan di sub-koleksi private/identity yang terisolasi dan hanya dapat diakses oleh Anda dan Admin. Pengajar kelas Anda melihatnya hanya melalui rekap resmi, bukan dari aplikasi.';
+
+  @override
+  String profileIdentityRequired(String label) {
+    return '$label wajib diisi';
+  }
+
+  @override
+  String profileIdentitySaveFail(String label, String detail) {
+    return 'Gagal menyimpan $label: $detail';
+  }
+
+  @override
+  String profileIdentitySaved(String label) {
+    return '$label berhasil disimpan di private identity.';
+  }
+
+  @override
+  String get profileIdentityNotSet => 'Belum diisi (Klik untuk menambahkan)';
+
+  @override
+  String get profileSecurityTitle => 'Keamanan & Kata Sandi';
+
+  @override
+  String get profileSecuritySubtitle =>
+      'Ubah kata sandi akun untuk perangkat ini';
+
+  @override
+  String get profileCacheTitle => 'Penyimpanan & Cache';
+
+  @override
+  String get profileCacheSubtitle =>
+      'Kelola memori sementara dan pilihan kelas aktif';
+
+  @override
+  String get profileEmailVerificationTitle => 'Status Verifikasi Email';
+
+  @override
+  String get profileEmailVerified => 'Email Terverifikasi';
+
+  @override
+  String get profileEmailPending => 'Menunggu Verifikasi';
+
+  @override
+  String get profileSyncTitle => 'Sinkronisasi Sesi & Peran';
+
+  @override
+  String profileSyncOutOfSync(String claimsRole, String profileRole) {
+    return 'Peran belum sinkron (Token: $claimsRole vs Profil: $profileRole). Tekan perbarui.';
+  }
+
+  @override
+  String get profileSyncUpToDate => 'Sesi dan hak akses token mutakhir.';
+
+  @override
+  String get profileRefreshSessionTooltip => 'Perbarui Sesi';
+
+  @override
+  String get profileSessionRefreshed =>
+      'Sesi dan token hak akses berhasil diperbarui.';
+
+  @override
+  String get profileLogoutBtn => 'Keluar dari Akun';
+
+  @override
+  String get profileLoggingOut => 'Sedang Keluar...';
+
+  @override
+  String get profileLogoutConfirmTitle => 'Keluar dari Akun?';
+
+  @override
+  String get profileLogoutConfirmBody =>
+      'Apakah Anda yakin ingin keluar dari sesi Farlean LMS di perangkat ini?';
+
+  @override
+  String get profileLogoutQuizWarning =>
+      'Perhatian: Anda memiliki kuis yang sedang dikerjakan. Jika Anda keluar sekarang, pengerjaan kuis dapat terganggu dan jawaban yang belum tersimpan dapat hilang.';
+
+  @override
+  String get profileLogoutOfflineWarning =>
+      'Tidak dapat memverifikasi status kuis karena perangkat sedang offline. Jika Anda sedang mengerjakan kuis, jawaban yang belum tersinkronisasi ke server mungkin hilang.';
+
+  @override
+  String profileLogoutFailed(String detail) {
+    return 'Gagal keluar akun: $detail';
+  }
+
+  @override
+  String get profileChangePasswordTitle => 'Ubah Kata Sandi';
+
+  @override
+  String profileChangePasswordNote(int min) {
+    return 'Untuk keamanan akun Anda, masukkan kata sandi saat ini lalu buat kata sandi baru minimal $min karakter.';
+  }
+
+  @override
+  String get profileCurrentPasswordLabel => 'Kata Sandi Saat Ini';
+
+  @override
+  String get profileCurrentPasswordRequired =>
+      'Kata sandi saat ini wajib diisi';
+
+  @override
+  String profileNewPasswordLabel(int min) {
+    return 'Kata Sandi Baru (Min. $min Karakter)';
+  }
+
+  @override
+  String get profileNewPasswordRequired => 'Kata sandi baru wajib diisi';
+
+  @override
+  String profileNewPasswordMinError(int min) {
+    return 'Kata sandi baru minimal $min karakter.';
+  }
+
+  @override
+  String get profileNewPasswordSameAsCurrent =>
+      'Kata sandi baru tidak boleh sama dengan kata sandi saat ini.';
+
+  @override
+  String get profileConfirmNewPasswordLabel => 'Konfirmasi Kata Sandi Baru';
+
+  @override
+  String get profileConfirmPasswordRequired =>
+      'Konfirmasi kata sandi wajib diisi';
+
+  @override
+  String get profileForgotCurrentPasswordLink => 'Lupa kata sandi saat ini?';
+
+  @override
+  String get profileSavePasswordBtn => 'Simpan Sandi';
+
+  @override
+  String get profileCurrentPasswordWrong =>
+      'Kata sandi saat ini yang Anda masukkan salah.';
+
+  @override
+  String profilePasswordUpdateFail(String detail) {
+    return 'Gagal memperbarui kata sandi: $detail';
+  }
+
+  @override
+  String get profilePwUpdated =>
+      'Kata sandi berhasil diperbarui untuk akun ini.';
+
+  @override
+  String get profileCacheDesc =>
+      'Kelola memori sementara gambar dan preferensi kelas aktif di perangkat ini secara aman.';
+
+  @override
+  String get profileCacheEmpty => '0 KB (belum ada gambar dimuat di memori)';
+
+  @override
+  String profileCacheStats(int count, String kb) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$kb KB ($count gambar aktif di memori)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get profileCacheImageSection => 'Cache Gambar di Memori (RAM)';
+
+  @override
+  String get profileCacheImageNote =>
+      'Catatan: Cache memori menampung gambar materi yang sedang dibuka. Mengosongkannya aman dan gambar akan diunduh kembali saat dibuka.';
+
+  @override
+  String get profileCacheClearBtn => 'Kosongkan Cache Gambar RAM';
+
+  @override
+  String get profileCacheCleared => 'Cache memori gambar berhasil dikosongkan.';
+
+  @override
+  String get profileClassSavedSection => 'Pilihan Kelas Aktif Tersimpan';
+
+  @override
+  String get profileClassNoneSelected => 'Belum ada kelas aktif yang dipilih';
+
+  @override
+  String get profileClassResetNote =>
+      'Mereset kelas aktif akan mengarahkan Anda ke Beranda untuk memilih kembali kelas pembelajaran.';
+
+  @override
+  String get profileActiveQuizTitle => 'Kuis Sedang Dikerjakan';
+
+  @override
+  String get profileResetClassQuizBlocked =>
+      'Tidak dapat mereset kelas aktif: Anda sedang memiliki kuis yang sedang dikerjakan. Selesaikan atau kumpulkan kuis terlebih dahulu sebelum mereset kelas.';
+
+  @override
+  String get profileBtnGotIt => 'Mengerti';
+
+  @override
+  String get profileOfflineTitle => 'Perangkat Offline';
+
+  @override
+  String get profileResetClassOfflineBlocked =>
+      'Tidak dapat memverifikasi status kuis karena perangkat sedang offline. Untuk keamanan jawaban kuis Anda, reset kelas aktif ditunda hingga perangkat terhubung kembali.';
+
+  @override
+  String get profileResetClassConfirmTitle => 'Reset Pilihan Kelas?';
+
+  @override
+  String get profileResetClassConfirmBody =>
+      'Anda akan diarahkan kembali ke Beranda untuk memilih kelas pembelajaran.';
+
+  @override
+  String get profileBtnReset => 'Reset';
+
+  @override
+  String get profileResetClassBtn => 'Reset Pilihan Kelas Aktif';
+
+  @override
+  String get profileResetClassDone => 'Pilihan kelas aktif berhasil direset.';
 }

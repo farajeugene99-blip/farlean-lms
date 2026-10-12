@@ -217,4 +217,265 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authErrUnknown =>
       'An authentication error occurred. Please try again.';
+
+  @override
+  String get profileScreenTitle => 'User Profile';
+
+  @override
+  String get profileDefaultName => 'Farlean User';
+
+  @override
+  String get profileEditNameTooltip => 'Edit Name';
+
+  @override
+  String profileBadgeType(String type) {
+    return 'Type: $type';
+  }
+
+  @override
+  String profileBadgeRole(String role) {
+    return 'Role: $role';
+  }
+
+  @override
+  String get profileEditNameTitle => 'Edit Full Name';
+
+  @override
+  String profileNameMaxLength(int max) {
+    return 'Maximum $max characters';
+  }
+
+  @override
+  String profileNameUpdateFail(String detail) {
+    return 'Failed to update name: $detail';
+  }
+
+  @override
+  String get profileNameUpdated => 'Profile name successfully updated.';
+
+  @override
+  String profileIdentityTitle(String label) {
+    return 'ID Number ($label)';
+  }
+
+  @override
+  String get profileIdentityPrivacyNote =>
+      'This data is stored in an isolated private/identity sub-collection and can only be accessed by you and Admins. Your class instructors only view it via official gradebooks, not from the app.';
+
+  @override
+  String profileIdentityRequired(String label) {
+    return '$label is required';
+  }
+
+  @override
+  String profileIdentitySaveFail(String label, String detail) {
+    return 'Failed to save $label: $detail';
+  }
+
+  @override
+  String profileIdentitySaved(String label) {
+    return '$label successfully saved to private identity.';
+  }
+
+  @override
+  String get profileIdentityNotSet => 'Not filled (Click to add)';
+
+  @override
+  String get profileSecurityTitle => 'Security & Password';
+
+  @override
+  String get profileSecuritySubtitle =>
+      'Change account password for this device';
+
+  @override
+  String get profileCacheTitle => 'Storage & Cache';
+
+  @override
+  String get profileCacheSubtitle =>
+      'Manage temporary memory and active class selection';
+
+  @override
+  String get profileEmailVerificationTitle => 'Email Verification Status';
+
+  @override
+  String get profileEmailVerified => 'Email Verified';
+
+  @override
+  String get profileEmailPending => 'Pending Verification';
+
+  @override
+  String get profileSyncTitle => 'Session & Role Sync';
+
+  @override
+  String profileSyncOutOfSync(String claimsRole, String profileRole) {
+    return 'Role not in sync (Token: $claimsRole vs Profile: $profileRole). Tap to refresh.';
+  }
+
+  @override
+  String get profileSyncUpToDate =>
+      'Session and token permissions are up to date.';
+
+  @override
+  String get profileRefreshSessionTooltip => 'Refresh Session';
+
+  @override
+  String get profileSessionRefreshed =>
+      'Session and access token successfully refreshed.';
+
+  @override
+  String get profileLogoutBtn => 'Sign Out of Account';
+
+  @override
+  String get profileLoggingOut => 'Signing Out...';
+
+  @override
+  String get profileLogoutConfirmTitle => 'Sign Out of Account?';
+
+  @override
+  String get profileLogoutConfirmBody =>
+      'Are you sure you want to sign out of Farlean LMS on this device?';
+
+  @override
+  String get profileLogoutQuizWarning =>
+      'Warning: You have a quiz in progress. If you sign out now, your quiz attempt may be interrupted and unsaved answers may be lost.';
+
+  @override
+  String get profileLogoutOfflineWarning =>
+      'Cannot verify quiz status because the device is offline. If you are taking a quiz, unsynchronized answers may be lost.';
+
+  @override
+  String profileLogoutFailed(String detail) {
+    return 'Failed to sign out: $detail';
+  }
+
+  @override
+  String get profileChangePasswordTitle => 'Change Password';
+
+  @override
+  String profileChangePasswordNote(int min) {
+    return 'For your account\'s security, enter your current password and create a new password of at least $min characters.';
+  }
+
+  @override
+  String get profileCurrentPasswordLabel => 'Current Password';
+
+  @override
+  String get profileCurrentPasswordRequired => 'Current password is required';
+
+  @override
+  String profileNewPasswordLabel(int min) {
+    return 'New Password (Min. $min Characters)';
+  }
+
+  @override
+  String get profileNewPasswordRequired => 'New password is required';
+
+  @override
+  String profileNewPasswordMinError(int min) {
+    return 'New password must be at least $min characters.';
+  }
+
+  @override
+  String get profileNewPasswordSameAsCurrent =>
+      'New password cannot be the same as current password.';
+
+  @override
+  String get profileConfirmNewPasswordLabel => 'Confirm New Password';
+
+  @override
+  String get profileConfirmPasswordRequired => 'Confirm password is required';
+
+  @override
+  String get profileForgotCurrentPasswordLink => 'Forgot current password?';
+
+  @override
+  String get profileSavePasswordBtn => 'Save Password';
+
+  @override
+  String get profileCurrentPasswordWrong =>
+      'The current password you entered is incorrect.';
+
+  @override
+  String profilePasswordUpdateFail(String detail) {
+    return 'Failed to update password: $detail';
+  }
+
+  @override
+  String get profilePwUpdated =>
+      'Password successfully updated for this account.';
+
+  @override
+  String get profileCacheDesc =>
+      'Safely manage temporary image memory and active class preferences on this device.';
+
+  @override
+  String get profileCacheEmpty => '0 KB (no images loaded in memory yet)';
+
+  @override
+  String profileCacheStats(int count, String kb) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$kb KB ($count images active in memory)',
+      one: '$kb KB (1 image active in memory)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get profileCacheImageSection => 'Image Cache in Memory (RAM)';
+
+  @override
+  String get profileCacheImageNote =>
+      'Note: Memory cache holds images from materials currently opened. Clearing it is safe; images will be re-downloaded when viewed.';
+
+  @override
+  String get profileCacheClearBtn => 'Clear RAM Image Cache';
+
+  @override
+  String get profileCacheCleared => 'Image memory cache successfully cleared.';
+
+  @override
+  String get profileClassSavedSection => 'Saved Active Class Preference';
+
+  @override
+  String get profileClassNoneSelected => 'No active class selected yet';
+
+  @override
+  String get profileClassResetNote =>
+      'Resetting active class will redirect you to Home to re-select a class.';
+
+  @override
+  String get profileActiveQuizTitle => 'Quiz In Progress';
+
+  @override
+  String get profileResetClassQuizBlocked =>
+      'Cannot reset active class: You have a quiz in progress. Finish or submit the quiz first before resetting class.';
+
+  @override
+  String get profileBtnGotIt => 'Understood';
+
+  @override
+  String get profileOfflineTitle => 'Device Offline';
+
+  @override
+  String get profileResetClassOfflineBlocked =>
+      'Cannot verify quiz status because the device is offline. For your quiz answers\' safety, resetting active class is deferred until reconnected.';
+
+  @override
+  String get profileResetClassConfirmTitle => 'Reset Active Class?';
+
+  @override
+  String get profileResetClassConfirmBody =>
+      'You will be redirected to Home to re-select a learning class.';
+
+  @override
+  String get profileBtnReset => 'Reset';
+
+  @override
+  String get profileResetClassBtn => 'Reset Active Class';
+
+  @override
+  String get profileResetClassDone =>
+      'Active class selection successfully reset.';
 }

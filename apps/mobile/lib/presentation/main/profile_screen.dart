@@ -1,15 +1,18 @@
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/app_user.dart';
 import '../../repositories/attempt_repository.dart';
 import '../../repositories/user_repository.dart';
 import '../../services/auth_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/class_provider.dart';
+import '../auth/auth_error_localization.dart';
 import 'main_shell.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -61,13 +64,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showEditNameDialog(String currentName) async {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController(text: currentName);
     final formKey = GlobalKey<FormState>();
 
     final updated = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Ubah Nama Lengkap'),
+        title: Text(l10n.profileEditNameTitle),
         content: SizedBox(
           width: 440,
           child: Form(
@@ -75,10 +79,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: TextFormField(
               controller: controller,
               autofocus: true,
-              decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+              decoration: InputDecoration(labelText: l10n.authFieldName),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Nama wajib diisi';
-                if (v.trim().length > 100) return 'Maksimal 100 karakter';
+                if (v == null || v.trim().isEmpty) return l10n.validNameRequired;
+                if (v.trim().length > 100) return l10n.profileNameMaxLength(100);
                 return null;
               },
             ),
@@ -87,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -103,14 +107,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
                     SnackBar(
-                      content: Text('Gagal memperbarui nama: $e'),
+                      content: Text(l10n.profileNameUpdateFail(e.toString())),
                       backgroundColor: AppTheme.error,
                     ),
                   );
                 }
               }
             },
-            child: const Text('Simpan'),
+            child: Text(l10n.btnSave),
           ),
         ],
       ),
@@ -120,8 +124,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (updated == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Nama profil berhasil diperbarui.'),
+        SnackBar(
+          content: Text(l10n.profileNameUpdated),
           backgroundColor: AppTheme.success,
         ),
       );
@@ -129,13 +133,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showEditNimDialog(String label) async {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController(text: _nimNip ?? '');
     final formKey = GlobalKey<FormState>();
 
     final updated = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Nomor Induk ($label)'),
+        title: Text(l10n.profileIdentityTitle(label)),
         content: SizedBox(
           width: 440,
           child: Form(
@@ -144,9 +149,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Data ini disimpan di sub-koleksi private/identity yang terisolasi dan hanya dapat diakses oleh Anda dan Admin. Pengajar kelas Anda melihatnya hanya melalui rekap resmi, bukan dari aplikasi.',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                Text(
+                  l10n.profileIdentityPrivacyNote,
+                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -158,7 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     prefixIcon: const Icon(Icons.badge_outlined, size: 20),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return '$label wajib diisi';
+                    if (v == null || v.trim().isEmpty) return l10n.profileIdentityRequired(label);
                     return null;
                   },
                 ),
@@ -169,7 +174,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -185,14 +190,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
                     SnackBar(
-                      content: Text('Gagal menyimpan $label: $e'),
+                      content: Text(l10n.profileIdentitySaveFail(label, e.toString())),
                       backgroundColor: AppTheme.error,
                     ),
                   );
                 }
               }
             },
-            child: const Text('Simpan'),
+            child: Text(l10n.btnSave),
           ),
         ],
       ),
@@ -204,7 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() => _nimNip = controller.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('$label berhasil disimpan di private identity.'),
+          content: Text(l10n.profileIdentitySaved(label)),
           backgroundColor: AppTheme.success,
         ),
       );
@@ -231,8 +236,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (updated == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Kata sandi berhasil diperbarui untuk akun ini.'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).profilePwUpdated),
           backgroundColor: AppTheme.success,
         ),
       );
@@ -243,6 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final classProvider = context.read<ClassProvider>();
     final selectedClass = classProvider.selectedClass;
     final selectedClassId = classProvider.selectedClassId;
+    final l10n = AppLocalizations.of(context);
 
     await showDialog<void>(
       context: context,
@@ -251,22 +257,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
           builder: (ctx, setDialogState) {
             final cacheBytes = PaintingBinding.instance.imageCache.currentSizeBytes;
             final cacheCount = PaintingBinding.instance.imageCache.currentSize;
+            final kbFormatted = NumberFormat.decimalPatternDigits(
+              locale: l10n.localeName,
+              decimalDigits: 1,
+            ).format(cacheBytes / 1024);
             final cacheText = cacheBytes == 0
-                ? '0 KB (belum ada gambar dimuat di memori)'
-                : '${(cacheBytes / 1024).toStringAsFixed(1)} KB ($cacheCount gambar aktif di memori)';
+                ? l10n.profileCacheEmpty
+                : l10n.profileCacheStats(cacheCount, kbFormatted);
 
             final activeClassText = selectedClass != null
                 ? '${selectedClass.name} (${selectedClass.code})'
                 : (selectedClassId != null && selectedClassId.isNotEmpty
                     ? 'ID: $selectedClassId'
-                    : 'Belum ada kelas aktif yang dipilih');
+                    : l10n.profileClassNoneSelected);
 
             return AlertDialog(
-              title: const Row(
+              title: Row(
                 children: [
-                  Icon(Icons.storage_rounded, color: AppTheme.primary),
-                  SizedBox(width: 8),
-                  Text('Penyimpanan & Cache'),
+                  const Icon(Icons.storage_rounded, color: AppTheme.primary),
+                  const SizedBox(width: 8),
+                  Text(l10n.profileCacheTitle),
                 ],
               ),
               content: SizedBox(
@@ -276,9 +286,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Kelola memori sementara gambar dan preferensi kelas aktif di perangkat ini secara aman.',
-                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4),
+                      Text(
+                        l10n.profileCacheDesc,
+                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4),
                       ),
                       const SizedBox(height: 16),
                       // Bagian 1: Cache Gambar RAM
@@ -292,13 +302,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Row(
+                            Row(
                               children: [
-                                Icon(Icons.image_outlined, size: 16, color: AppTheme.secondary),
-                                SizedBox(width: 6),
+                                const Icon(Icons.image_outlined, size: 16, color: AppTheme.secondary),
+                                const SizedBox(width: 6),
                                 Text(
-                                  'Cache Gambar di Memori (RAM)',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  l10n.profileCacheImageSection,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                 ),
                               ],
                             ),
@@ -308,9 +318,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                             ),
                             const SizedBox(height: 8),
-                            const Text(
-                              'Catatan: Cache memori menampung gambar materi yang sedang dibuka. Mengosongkannya aman dan gambar akan diunduh kembali saat dibuka.',
-                              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.3),
+                            Text(
+                              l10n.profileCacheImageNote,
+                              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.3),
                             ),
                             const SizedBox(height: 10),
                             OutlinedButton.icon(
@@ -321,14 +331,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       PaintingBinding.instance.imageCache.clearLiveImages();
                                       setDialogState(() {});
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Cache memori gambar berhasil dikosongkan.'),
+                                        SnackBar(
+                                          content: Text(l10n.profileCacheCleared),
                                           backgroundColor: AppTheme.success,
                                         ),
                                       );
                                     },
                               icon: const Icon(Icons.cleaning_services_outlined, size: 16),
-                              label: const Text('Kosongkan Cache Gambar RAM', style: TextStyle(fontSize: 12)),
+                              label: Text(l10n.profileCacheClearBtn, style: const TextStyle(fontSize: 12)),
                             ),
                           ],
                         ),
@@ -345,13 +355,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Row(
+                            Row(
                               children: [
-                                Icon(Icons.class_outlined, size: 16, color: AppTheme.primary),
-                                SizedBox(width: 6),
+                                const Icon(Icons.class_outlined, size: 16, color: AppTheme.primary),
+                                const SizedBox(width: 6),
                                 Text(
-                                  'Pilihan Kelas Aktif Tersimpan',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  l10n.profileClassSavedSection,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                 ),
                               ],
                             ),
@@ -361,9 +371,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                             ),
                             const SizedBox(height: 8),
-                            const Text(
-                              'Mereset kelas aktif akan mengarahkan Anda ke Beranda untuk memilih kembali kelas pembelajaran.',
-                              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.3),
+                            Text(
+                              l10n.profileClassResetNote,
+                              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.3),
                             ),
                             const SizedBox(height: 10),
                             OutlinedButton.icon(
@@ -382,18 +392,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               await showDialog<void>(
                                                 context: dialogCtx,
                                                 builder: (c) => AlertDialog(
-                                                  title: const Row(
+                                                  title: Row(
                                                     children: [
-                                                      Icon(Icons.warning_amber_rounded, color: AppTheme.error),
-                                                      SizedBox(width: 8),
-                                                      Text('Kuis Sedang Dikerjakan'),
+                                                      const Icon(Icons.warning_amber_rounded, color: AppTheme.error),
+                                                      const SizedBox(width: 8),
+                                                      Text(l10n.profileActiveQuizTitle),
                                                     ],
                                                   ),
-                                                  content: const Text(
-                                                    'Tidak dapat mereset kelas aktif: Anda sedang memiliki kuis yang sedang dikerjakan. Selesaikan atau kumpulkan kuis terlebih dahulu sebelum mereset kelas.',
+                                                  content: Text(
+                                                    l10n.profileResetClassQuizBlocked,
                                                   ),
                                                   actions: [
-                                                    TextButton(onPressed: () => Navigator.pop(c), child: const Text('Mengerti')),
+                                                    TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.profileBtnGotIt)),
                                                   ],
                                                 ),
                                               );
@@ -406,18 +416,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             await showDialog<void>(
                                               context: dialogCtx,
                                               builder: (c) => AlertDialog(
-                                                title: const Row(
+                                                title: Row(
                                                   children: [
-                                                    Icon(Icons.wifi_off_rounded, color: AppTheme.warning),
-                                                    SizedBox(width: 8),
-                                                    Text('Perangkat Offline'),
+                                                    const Icon(Icons.wifi_off_rounded, color: AppTheme.warning),
+                                                    const SizedBox(width: 8),
+                                                    Text(l10n.profileOfflineTitle),
                                                   ],
                                                 ),
-                                                content: const Text(
-                                                  'Tidak dapat memverifikasi status kuis karena perangkat sedang offline. Untuk keamanan jawaban kuis Anda, reset kelas aktif ditunda hingga perangkat terhubung kembali.',
+                                                content: Text(
+                                                  l10n.profileResetClassOfflineBlocked,
                                                 ),
                                                 actions: [
-                                                  TextButton(onPressed: () => Navigator.pop(c), child: const Text('Mengerti')),
+                                                  TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.profileBtnGotIt)),
                                                 ],
                                               ),
                                             );
@@ -431,11 +441,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       final confirm = await showDialog<bool>(
                                         context: dialogCtx,
                                         builder: (c) => AlertDialog(
-                                          title: const Text('Reset Pilihan Kelas?'),
-                                          content: const Text('Anda akan diarahkan kembali ke Beranda untuk memilih kelas pembelajaran.'),
+                                          title: Text(l10n.profileResetClassConfirmTitle),
+                                          content: Text(l10n.profileResetClassConfirmBody),
                                           actions: [
-                                            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Batal')),
-                                            ElevatedButton(onPressed: () => Navigator.pop(c, true), child: const Text('Reset')),
+                                            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.btnCancel)),
+                                            ElevatedButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.profileBtnReset)),
                                           ],
                                         ),
                                       );
@@ -449,8 +459,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             context.go(AppConstants.dashboardRoute);
                                           } catch (_) {}
                                           ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Pilihan kelas aktif berhasil direset.'),
+                                            SnackBar(
+                                              content: Text(l10n.profileResetClassDone),
                                               backgroundColor: AppTheme.success,
                                             ),
                                           );
@@ -458,7 +468,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       }
                                     },
                               icon: const Icon(Icons.restart_alt_rounded, size: 16),
-                              label: const Text('Reset Pilihan Kelas Aktif', style: TextStyle(fontSize: 12)),
+                              label: Text(l10n.profileResetClassBtn, style: const TextStyle(fontSize: 12)),
                             ),
                           ],
                         ),
@@ -470,7 +480,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogCtx),
-                  child: const Text('Tutup'),
+                  child: Text(l10n.btnClose),
                 ),
               ],
             );
@@ -483,6 +493,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _confirmAndSignOut() async {
     if (_isLoggingOut) return;
 
+    final l10n = AppLocalizations.of(context);
     final authProvider = context.read<AuthProvider>();
     final uid = authProvider.firebaseUser?.uid;
 
@@ -492,15 +503,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       try {
         final hasActive = await _attemptRepository.hasActiveOngoingAttempt(userId: uid);
         if (hasActive) {
-          quizWarning =
-              'Perhatian: Anda memiliki kuis yang sedang dikerjakan. Jika Anda keluar sekarang, pengerjaan kuis dapat terganggu dan jawaban yang belum tersimpan dapat hilang.';
+          quizWarning = l10n.profileLogoutQuizWarning;
         }
       } catch (e) {
         if (e is FirebaseException && e.code == 'permission-denied') {
           // Aturan rules menolak pemeriksaan, jangan tampilkan peringatan offline palsu
         } else {
-          quizWarning =
-              'Tidak dapat memverifikasi status kuis karena perangkat sedang offline. Jika Anda sedang mengerjakan kuis, jawaban yang belum tersinkronisasi ke server mungkin hilang.';
+          quizWarning = l10n.profileLogoutOfflineWarning;
         }
       }
     }
@@ -524,11 +533,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: quizWarning != null ? AppTheme.warning : AppTheme.error,
                     ),
                     const SizedBox(width: 8),
-                    const Text('Keluar dari Akun?'),
+                    Text(l10n.profileLogoutConfirmTitle),
                   ],
                 ),
                 content: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: vitalityColumn(quizWarning, l10n),
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (quizWarning != null) ...[
@@ -542,16 +551,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 12),
                     ],
-                    const Text(
-                      'Apakah Anda yakin ingin keluar dari sesi Farlean LMS di perangkat ini?',
-                      style: TextStyle(color: AppTheme.textSecondary, height: 1.4),
+                    Text(
+                      l10n.profileLogoutConfirmBody,
+                      style: const TextStyle(color: AppTheme.textSecondary, height: 1.4),
                     ),
                   ],
                 ),
                 actions: [
                   TextButton(
                     onPressed: isDialogLoggingOut ? null : () => Navigator.pop(dialogContext, false),
-                    child: const Text('Batal'),
+                    child: Text(l10n.btnCancel),
                   ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
@@ -567,7 +576,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                           )
-                        : const Text('Keluar'),
+                        : Text(l10n.btnLogout),
                   ),
                 ],
               ),
@@ -591,7 +600,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Gagal keluar akun: $e'),
+          content: Text(l10n.profileLogoutFailed(e.toString())),
           backgroundColor: AppTheme.error,
         ),
       );
@@ -602,13 +611,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  static MainAxisSize vitalityColumn(String? quizWarning, AppLocalizations l10n) {
+    return MainAxisSize.min;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authProvider = context.watch<AuthProvider>();
     final firebaseUser = authProvider.firebaseUser;
     final appUser = authProvider.appUser;
 
-    final displayName = appUser?.name ?? firebaseUser?.displayName ?? 'Pengguna Farlean';
+    final displayName = appUser?.name ?? firebaseUser?.displayName ?? l10n.profileDefaultName;
     final email = firebaseUser?.email ?? appUser?.email ?? '-';
     final accountType = appUser?.accountType.value ?? 'UMUM';
     final role = appUser?.role.value ?? 'USER';
@@ -627,11 +641,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profil Pengguna'),
+        title: Text(l10n.profileScreenTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout_rounded),
-            tooltip: 'Keluar',
+            tooltip: l10n.btnLogout,
             onPressed: _isLoggingOut ? null : _confirmAndSignOut,
           ),
           const SizedBox(width: 8),
@@ -667,7 +681,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.edit_outlined, size: 18),
-                        tooltip: 'Ubah Nama',
+                        tooltip: l10n.profileEditNameTooltip,
                         onPressed: () => _showEditNameDialog(displayName),
                       ),
                     ],
@@ -683,8 +697,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _buildBadge('Tipe: $accountType', AppTheme.primary),
-                      _buildBadge('Role: $role', AppTheme.secondary),
+                      _buildBadge(l10n.profileBadgeType(accountType), AppTheme.primary),
+                      _buildBadge(l10n.profileBadgeRole(role), AppTheme.secondary),
                     ],
                   ),
                 ],
@@ -698,13 +712,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (identityLabel != null) ...[
                   ListTile(
                     leading: const Icon(Icons.badge_outlined),
-                    title: Text('Nomor Induk ($identityLabel)'),
+                    title: Text(l10n.profileIdentityTitle(identityLabel)),
                     subtitle: Text(
                       _isLoadingIdentity
-                          ? 'Memuat...'
+                          ? l10n.labelLoading
                           : (_nimNip != null && _nimNip!.isNotEmpty
                               ? _nimNip!
-                              : 'Belum diisi (Klik untuk menambahkan)'),
+                              : l10n.profileIdentityNotSet),
                     ),
                     trailing: IconButton(
                       icon: const Icon(Icons.edit_outlined, size: 20),
@@ -716,8 +730,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (authProvider.hasPasswordProvider) ...[
                   ListTile(
                     leading: const Icon(Icons.lock_outline_rounded),
-                    title: const Text('Keamanan & Kata Sandi'),
-                    subtitle: const Text('Ubah kata sandi akun untuk perangkat ini'),
+                    title: Text(l10n.profileSecurityTitle),
+                    subtitle: Text(l10n.profileSecuritySubtitle),
                     trailing: const Icon(Icons.chevron_right_rounded, size: 20),
                     onTap: _showChangePasswordDialog,
                   ),
@@ -725,16 +739,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
                 ListTile(
                   leading: const Icon(Icons.storage_rounded),
-                  title: const Text('Penyimpanan & Cache'),
-                  subtitle: const Text('Kelola memori sementara dan pilihan kelas aktif'),
+                  title: Text(l10n.profileCacheTitle),
+                  subtitle: Text(l10n.profileCacheSubtitle),
                   trailing: const Icon(Icons.chevron_right_rounded, size: 20),
                   onTap: _showCacheManagementDialog,
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.security_rounded),
-                  title: const Text('Status Verifikasi Email'),
-                  subtitle: Text(isVerified ? 'Email Terverifikasi' : 'Menunggu Verifikasi'),
+                  title: Text(l10n.profileEmailVerificationTitle),
+                  subtitle: Text(isVerified ? l10n.profileEmailVerified : l10n.profileEmailPending),
                   trailing: Icon(
                     isVerified ? Icons.check_circle_rounded : Icons.pending_rounded,
                     color: isVerified ? AppTheme.success : AppTheme.warning,
@@ -747,21 +761,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     authProvider.isRoleOutOfSync ? Icons.sync_problem_rounded : Icons.sync_rounded,
                     color: authProvider.isRoleOutOfSync ? AppTheme.warning : null,
                   ),
-                  title: const Text('Sinkronisasi Sesi & Peran'),
+                  title: Text(l10n.profileSyncTitle),
                   subtitle: Text(
                     authProvider.isRoleOutOfSync
-                        ? 'Peran belum sinkron (Token: ${appUser?.claimsRole?.value ?? "USER"} vs Profil: ${appUser?.role.value}). Tekan perbarui.'
-                        : 'Sesi dan hak akses token mutakhir.',
+                        ? l10n.profileSyncOutOfSync(
+                            appUser?.claimsRole?.value ?? 'USER',
+                            appUser?.role.value ?? 'USER',
+                          )
+                        : l10n.profileSyncUpToDate,
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.refresh_rounded),
-                    tooltip: 'Perbarui Sesi',
+                    tooltip: l10n.profileRefreshSessionTooltip,
                     onPressed: () async {
                       await authProvider.refreshSession();
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Sesi dan token hak akses berhasil diperbarui.'),
+                          SnackBar(
+                            content: Text(l10n.profileSessionRefreshed),
                             backgroundColor: AppTheme.success,
                           ),
                         );
@@ -792,7 +809,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   )
                 : const Icon(Icons.logout_rounded, size: 20),
             label: Text(
-              _isLoggingOut ? 'Sedang Keluar...' : 'Keluar dari Akun',
+              _isLoggingOut ? l10n.profileLoggingOut : l10n.profileLogoutBtn,
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
           ),
@@ -838,6 +855,8 @@ class _ChangePasswordDialog extends StatefulWidget {
 }
 
 class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+  static const int _newPasswordMinLength = 8;
+
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -862,14 +881,16 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return PopScope(
       canPop: !_isSubmitting,
       child: AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.lock_reset_rounded, color: AppTheme.primary),
-            SizedBox(width: 8),
-            Text('Ubah Kata Sandi'),
+            const Icon(Icons.lock_reset_rounded, color: AppTheme.primary),
+            const SizedBox(width: 8),
+            Text(l10n.profileChangePasswordTitle),
           ],
         ),
         content: SizedBox(
@@ -881,9 +902,9 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Untuk keamanan akun Anda, masukkan kata sandi saat ini lalu buat kata sandi baru minimal 8 karakter.',
-                    style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4),
+                  Text(
+                    l10n.profileChangePasswordNote(_newPasswordMinLength),
+                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4),
                   ),
                   const SizedBox(height: 16),
                   if (_serverError != null) ...[
@@ -914,7 +935,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                     obscureText: _obscureCurrent,
                     enabled: !_isSubmitting,
                     decoration: InputDecoration(
-                      labelText: 'Kata Sandi Saat Ini',
+                      labelText: l10n.profileCurrentPasswordLabel,
                       prefixIcon: const Icon(Icons.lock_outline, size: 20),
                       suffixIcon: IconButton(
                         icon: Icon(_obscureCurrent ? Icons.visibility_off : Icons.visibility, size: 18),
@@ -922,7 +943,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                       ),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Kata sandi saat ini wajib diisi';
+                      if (v == null || v.isEmpty) return l10n.profileCurrentPasswordRequired;
                       return null;
                     },
                   ),
@@ -932,7 +953,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                     obscureText: _obscureNew,
                     enabled: !_isSubmitting,
                     decoration: InputDecoration(
-                      labelText: 'Kata Sandi Baru (Min. 8 Karakter)',
+                      labelText: l10n.profileNewPasswordLabel(_newPasswordMinLength),
                       prefixIcon: const Icon(Icons.password_rounded, size: 20),
                       suffixIcon: IconButton(
                         icon: Icon(_obscureNew ? Icons.visibility_off : Icons.visibility, size: 18),
@@ -940,10 +961,12 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                       ),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Kata sandi baru wajib diisi';
-                      if (v.length < 8) return 'Kata sandi baru minimal 8 karakter.';
+                      if (v == null || v.isEmpty) return l10n.profileNewPasswordRequired;
+                      if (v.length < _newPasswordMinLength) {
+                        return l10n.profileNewPasswordMinError(_newPasswordMinLength);
+                      }
                       if (v == _currentPasswordController.text) {
-                        return 'Kata sandi baru tidak boleh sama dengan kata sandi saat ini.';
+                        return l10n.profileNewPasswordSameAsCurrent;
                       }
                       return null;
                     },
@@ -954,7 +977,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                     obscureText: _obscureConfirm,
                     enabled: !_isSubmitting,
                     decoration: InputDecoration(
-                      labelText: 'Konfirmasi Kata Sandi Baru',
+                      labelText: l10n.profileConfirmNewPasswordLabel,
                       prefixIcon: const Icon(Icons.check_circle_outline_rounded, size: 20),
                       suffixIcon: IconButton(
                         icon: Icon(_obscureConfirm ? Icons.visibility_off : Icons.visibility, size: 18),
@@ -962,8 +985,8 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                       ),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Konfirmasi kata sandi wajib diisi';
-                      if (v != _newPasswordController.text) return 'Konfirmasi kata sandi tidak cocok.';
+                      if (v == null || v.isEmpty) return l10n.profileConfirmPasswordRequired;
+                      if (v != _newPasswordController.text) return l10n.validPasswordMismatch;
                       return null;
                     },
                   ),
@@ -979,7 +1002,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                                 await widget.onResetPassword(email);
                                 if (context.mounted) Navigator.pop(context, false);
                               },
-                        child: const Text('Lupa kata sandi saat ini?', style: TextStyle(fontSize: 12)),
+                        child: Text(l10n.profileForgotCurrentPasswordLink, style: const TextStyle(fontSize: 12)),
                       ),
                     ),
                 ],
@@ -990,7 +1013,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
         actions: [
           TextButton(
             onPressed: _isSubmitting ? null : () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: Text(l10n.btnCancel),
           ),
           ElevatedButton(
             onPressed: _isSubmitting
@@ -1014,12 +1037,16 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                           _isSubmitting = false;
                           if (e is FirebaseAuthException) {
                             if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
-                              _serverError = 'Kata sandi saat ini yang Anda masukkan salah.';
+                              _serverError = l10n.profileCurrentPasswordWrong;
                             } else {
-                              _serverError = AuthService.translateError(e);
+                              _serverError = AuthErrorLocalization.fromCode(
+                                l10n,
+                                e.code,
+                                fallbackMessage: AuthService.translateError(e),
+                              );
                             }
                           } else {
-                            _serverError = 'Gagal memperbarui kata sandi: $e';
+                            _serverError = l10n.profilePasswordUpdateFail(e.toString());
                           }
                         });
                       }
@@ -1031,7 +1058,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                     height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Text('Simpan Sandi'),
+                : Text(l10n.profileSavePasswordBtn),
           ),
         ],
       ),
