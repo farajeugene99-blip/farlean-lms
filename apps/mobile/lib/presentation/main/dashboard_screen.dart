@@ -5,12 +5,13 @@ import 'package:provider/provider.dart';
 import '../../core/auth/role_guard.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/classroom.dart';
 import '../../repositories/meeting_repository.dart';
 import '../../services/auth_provider.dart';
 import '../../services/class_provider.dart';
 import '../common/loading_indicator.dart';
-
+import 'dashboard_profile_error_localization.dart';
 import 'main_shell.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -33,6 +34,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _showCreateClassDialog() async {
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController();
     final descController = TextEditingController();
     final codeController = TextEditingController();
@@ -41,7 +43,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final created = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Buat Kelas Baru'),
+        title: Text(l10n.dashboardCreateClassTitle),
         content: SizedBox(
           width: 440,
           child: Form(
@@ -50,95 +52,95 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                TextFormField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nama Kelas',
-                    hintText: 'Contoh: Pemrograman Mobile',
-                  ),
-                  validator: (v) {
-                    if (v == null || v.trim().length < 3) {
-                      return 'Nama kelas minimal 3 karakter';
-                    }
-                    if (v.trim().length > 100) {
-                      return 'Nama kelas maksimal 100 karakter';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: descController,
-                  decoration: const InputDecoration(
-                    labelText: 'Deskripsi (Opsional)',
-                    hintText: 'Deskripsi singkat silabus kelas',
-                  ),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: codeController,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: const InputDecoration(
-                    labelText: 'Kode Kelas Khusus (Opsional)',
-                    hintText: 'Kosongkan untuk kode acak 8 karakter',
-                  ),
-                  validator: (v) {
-                    if (v != null && v.trim().isNotEmpty) {
-                      final clean = v.trim().toUpperCase();
-                      if (clean.length < 6 || clean.length > 12) {
-                        return 'Kode harus 6-12 karakter';
+                  TextFormField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: l10n.dashboardClassNameLabel,
+                      hintText: l10n.dashboardClassNameHint,
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().length < 3) {
+                        return l10n.dashboardClassNameMinLength;
                       }
-                      if (!RegExp(r'^[A-Z0-9]+$').hasMatch(clean)) {
-                        return 'Kode hanya huruf kapital dan angka';
+                      if (v.trim().length > 100) {
+                        return l10n.dashboardClassNameMaxLength;
                       }
-                    }
-                    return null;
-                  },
-                ),
-              ],
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: descController,
+                    decoration: InputDecoration(
+                      labelText: l10n.dashboardClassDescLabel,
+                      hintText: l10n.dashboardClassDescHint,
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: codeController,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      labelText: l10n.dashboardClassCodeLabel,
+                      hintText: l10n.dashboardClassCodeHint,
+                    ),
+                    validator: (v) {
+                      if (v != null && v.trim().isNotEmpty) {
+                        final clean = v.trim().toUpperCase();
+                        if (clean.length < 6 || clean.length > 12) {
+                          return l10n.dashboardClassCodeLength;
+                        }
+                        if (!RegExp(r'^[A-Z0-9]+$').hasMatch(clean)) {
+                          return l10n.dashboardClassCodeAlphanumeric;
+                        }
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: const Text('Batal'),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            if (!formKey.currentState!.validate()) return;
-            try {
-              final classProvider = context.read<ClassProvider>();
-              await classProvider.createClass(
-                name: nameController.text.trim(),
-                description: descController.text.trim(),
-                customCode: codeController.text.trim().isEmpty ? null : codeController.text.trim(),
-              );
-              if (ctx.mounted) Navigator.pop(ctx, true);
-            } catch (e) {
-              if (ctx.mounted) {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.btnCancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              try {
+                final classProvider = context.read<ClassProvider>();
+                await classProvider.createClass(
+                  name: nameController.text.trim(),
+                  description: descController.text.trim(),
+                  customCode: codeController.text.trim().isEmpty ? null : codeController.text.trim(),
                 );
+                if (ctx.mounted) Navigator.pop(ctx, true);
+              } catch (e) {
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
+                  );
+                }
               }
-            }
-          },
-          child: const Text('Buat Kelas'),
-        ),
-      ],
-    ),
-  ).whenComplete(() {
-    nameController.dispose();
-    descController.dispose();
-    codeController.dispose();
-  });
+            },
+            child: Text(l10n.dashboardCreateClassBtn),
+          ),
+        ],
+      ),
+    ).whenComplete(() {
+      nameController.dispose();
+      descController.dispose();
+      codeController.dispose();
+    });
 
     if (created == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Kelas berhasil dibuat.'),
+        SnackBar(
+          content: Text(l10n.dashboardClassCreatedSuccess),
           backgroundColor: AppTheme.success,
         ),
       );
@@ -147,12 +149,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authProvider = context.watch<AuthProvider>();
 
     // 1. Jika profil sedang dimuat, tampilkan loading indikator
     if (authProvider.profileStatus == ProfileStatus.loading) {
-      return const Scaffold(
-        body: LoadingIndicator(message: 'Memuat profil dan hak akses...'),
+      return Scaffold(
+        body: LoadingIndicator(message: l10n.dashboardLoadingProfile),
       );
     }
 
@@ -173,13 +176,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Profil Belum Berhasil Dimuat',
+                  l10n.dashboardProfileErrorTitle,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  authProvider.profileErrorMessage ??
-                      'Terjadi kendala saat menyinkronkan profil Anda dari server. Silakan coba lagi.',
+                  DashboardProfileErrorLocalization.message(authProvider, l10n),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
@@ -200,7 +202,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(110, 44),
                       ),
-                      child: const Text('Keluar'),
+                      child: Text(l10n.btnLogout),
                     ),
                     ElevatedButton.icon(
                       onPressed: () => authProvider.retryLoadSession(),
@@ -208,7 +210,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         minimumSize: const Size(130, 44),
                       ),
                       icon: const Icon(Icons.refresh_rounded),
-                      label: const Text('Coba Lagi'),
+                      label: Text(l10n.labelRetry),
                     ),
                   ],
                 ),
@@ -246,19 +248,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (isStaff)
             IconButton(
               icon: const Icon(Icons.add_business_rounded),
-              tooltip: 'Buat Kelas Baru',
+              tooltip: l10n.dashboardCreateClassTitle,
               onPressed: _showCreateClassDialog,
             ),
           IconButton(
             icon: const Icon(Icons.key_rounded),
-            tooltip: 'Gabung Kelas',
+            tooltip: l10n.meetingJoinClassBtn,
             onPressed: () => context.push(AppConstants.joinClassRoute),
           ),
           const SizedBox(width: 8),
         ],
       ),
       body: classProvider.isLoading && classProvider.allClasses.isEmpty
-          ? const LoadingIndicator(message: 'Memuat kelas Anda...')
+          ? LoadingIndicator(message: l10n.dashboardLoadingClasses)
           : RefreshIndicator(
               onRefresh: () => classProvider.loadClasses(),
               child: ListView(
@@ -275,7 +277,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   // Section: Kelas yang Dikelola (Dosen / Pengajar)
                   if (isStaff) ...[
                     Text(
-                      'Kelas yang Anda Kelola',
+                      l10n.dashboardManagedClassesSection,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
@@ -290,7 +292,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Row(
                     children: [
                       Text(
-                        'Kelas yang Anda Ikuti',
+                        l10n.dashboardJoinedClassesSection,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const Spacer(),
@@ -298,7 +300,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         TextButton.icon(
                           onPressed: () => context.push(AppConstants.joinClassRoute),
                           icon: const Icon(Icons.add_link_rounded, size: 16),
-                          label: const Text('Gabung Kode', style: TextStyle(fontSize: 12)),
+                          label: Text(l10n.dashboardJoinCodeBtn, style: const TextStyle(fontSize: 12)),
                         ),
                     ],
                   ),
@@ -314,6 +316,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildWelcomeCard(BuildContext context, ClassProvider classProvider) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -328,9 +331,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     color: AppTheme.primary.withAlpha(25),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
-                    'Farlean LMS • Multi-Class Active',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.dashboardWelcomeBadge,
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.primary,
@@ -341,12 +344,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Selamat Datang di Farlean LMS',
+              l10n.dashboardWelcomeTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
-              'Akses materi terstruktur, kuis pretest berpenilaian server, video pembelajaran, dan forum belajar dalam satu platform.',
+              l10n.dashboardWelcomeBody,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
@@ -356,6 +359,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildSyncWarningBanner(BuildContext context, AuthProvider authProvider) {
+    final l10n = AppLocalizations.of(context);
     final appUser = authProvider.appUser!;
     return Container(
       padding: const EdgeInsets.all(12),
@@ -372,12 +376,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Peran Akun Belum Sinkron',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.warning),
+                Text(
+                  l10n.dashboardRoleOutOfSyncTitle,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.warning),
                 ),
                 Text(
-                  'Token: ${appUser.claimsRole?.value ?? "USER"} vs Profil: ${appUser.role.value}. Tekan Perbarui untuk menyelaraskan hak akses.',
+                  l10n.dashboardRoleOutOfSyncBody(
+                    appUser.claimsRole?.value ?? "USER",
+                    appUser.role.value,
+                  ),
                   style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                 ),
               ],
@@ -392,7 +399,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               minimumSize: const Size(60, 32),
             ),
-            child: const Text('Perbarui', style: TextStyle(fontSize: 11)),
+            child: Text(l10n.dashboardRefreshRoleBtn, style: const TextStyle(fontSize: 11)),
           ),
         ],
       ),
@@ -400,6 +407,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildClassCard(BuildContext context, Classroom classroom, {required bool isOwner}) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -453,7 +461,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onTap: () {
                       Clipboard.setData(ClipboardData(text: classroom.code));
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Kode ${classroom.code} disalin.'), duration: const Duration(seconds: 1)),
+                        SnackBar(content: Text(l10n.dashboardCodeCopied(classroom.code)), duration: const Duration(seconds: 1)),
                       );
                     },
                     borderRadius: BorderRadius.circular(6),
@@ -493,7 +501,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        '$count Pertemuan',
+                        l10n.dashboardMeetingCount(count),
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -514,7 +522,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     minimumSize: const Size(110, 36),
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                   ),
-                  child: Text(isOwner ? 'Kelola Kelas' : 'Buka Kelas'),
+                  child: Text(isOwner ? l10n.dashboardManageClassBtn : l10n.dashboardOpenClassBtn),
                 ),
               ],
             ),
@@ -525,6 +533,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildEmptyOwnedCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -532,18 +541,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Icon(Icons.add_business_outlined, size: 40, color: AppTheme.textSecondary.withAlpha(128)),
             const SizedBox(height: 8),
-            const Text('Belum ada kelas yang Anda kelola.', style: TextStyle(fontWeight: FontWeight.w600)),
+            Text(l10n.dashboardEmptyOwnedTitle, style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
-            const Text(
-              'Buat kelas baru untuk mulai mengunggah materi dan membuat pertemuan.',
+            Text(
+              l10n.dashboardEmptyOwnedBody,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: _showCreateClassDialog,
               icon: const Icon(Icons.add_rounded, size: 16),
-              label: const Text('Buat Kelas Pertama'),
+              label: Text(l10n.dashboardCreateFirstClassBtn),
             ),
           ],
         ),
@@ -552,6 +561,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildEmptyJoinedCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -559,18 +569,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Icon(Icons.group_add_outlined, size: 40, color: AppTheme.textSecondary.withAlpha(128)),
             const SizedBox(height: 8),
-            const Text('Belum tergabung ke kelas pembelajaran.', style: TextStyle(fontWeight: FontWeight.w600)),
+            Text(l10n.dashboardEmptyJoinedTitle, style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
-            const Text(
-              'Minta kode kelas dari Dosen/Pengajar Anda untuk bergabung ke kelas.',
+            Text(
+              l10n.dashboardEmptyJoinedBody,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: () => context.push(AppConstants.joinClassRoute),
               icon: const Icon(Icons.key_rounded, size: 16),
-              label: const Text('Gabung Kelas'),
+              label: Text(l10n.meetingJoinClassBtn),
             ),
           ],
         ),

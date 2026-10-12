@@ -2665,6 +2665,258 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Tulis tanggapan atau balasan...'**
   String get discussionReplyGeneralHint;
+
+  /// Judul dialog buat kelas baru
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Kelas Baru'**
+  String get dashboardCreateClassTitle;
+
+  /// Label input nama kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Nama Kelas'**
+  String get dashboardClassNameLabel;
+
+  /// Hint input nama kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Contoh: Pemrograman Mobile'**
+  String get dashboardClassNameHint;
+
+  /// Validasi nama kelas minimal 3 karakter
+  ///
+  /// In id, this message translates to:
+  /// **'Nama kelas minimal 3 karakter'**
+  String get dashboardClassNameMinLength;
+
+  /// Validasi nama kelas maksimal 100 karakter
+  ///
+  /// In id, this message translates to:
+  /// **'Nama kelas maksimal 100 karakter'**
+  String get dashboardClassNameMaxLength;
+
+  /// Label input deskripsi kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Deskripsi (Opsional)'**
+  String get dashboardClassDescLabel;
+
+  /// Hint input deskripsi kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Deskripsi singkat silabus kelas'**
+  String get dashboardClassDescHint;
+
+  /// Label input kode kelas kustom
+  ///
+  /// In id, this message translates to:
+  /// **'Kode Kelas Khusus (Opsional)'**
+  String get dashboardClassCodeLabel;
+
+  /// Hint input kode kelas kustom
+  ///
+  /// In id, this message translates to:
+  /// **'Kosongkan untuk kode acak 8 karakter'**
+  String get dashboardClassCodeHint;
+
+  /// Validasi panjang kode kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Kode harus 6-12 karakter'**
+  String get dashboardClassCodeLength;
+
+  /// Validasi format karakter kode kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Kode hanya huruf kapital dan angka'**
+  String get dashboardClassCodeAlphanumeric;
+
+  /// Tombol buat kelas pada dialog
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Kelas'**
+  String get dashboardCreateClassBtn;
+
+  /// Snackbar sukses buat kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Kelas berhasil dibuat.'**
+  String get dashboardClassCreatedSuccess;
+
+  /// Indikator loading profil pengguna
+  ///
+  /// In id, this message translates to:
+  /// **'Memuat profil dan hak akses...'**
+  String get dashboardLoadingProfile;
+
+  /// Judul error sinkronisasi profil
+  ///
+  /// In id, this message translates to:
+  /// **'Profil Belum Berhasil Dimuat'**
+  String get dashboardProfileErrorTitle;
+
+  /// Pesan error jaringan pada profil
+  ///
+  /// In id, this message translates to:
+  /// **'Koneksi ke database gagal. Periksa jaringan internet atau emulator Anda.'**
+  String get dashboardProfileErrorNetwork;
+
+  /// Pesan error profil tidak ditemukan
+  ///
+  /// In id, this message translates to:
+  /// **'Profil pengguna belum berhasil dimuat. Silakan tekan tombol Coba Lagi.'**
+  String get dashboardProfileErrorNotFound;
+
+  /// Pesan error permission-denied pada profil
+  ///
+  /// In id, this message translates to:
+  /// **'Akses ditolak saat membaca profil.'**
+  String get dashboardProfileErrorPermission;
+
+  /// Pesan error profil default/fallback
+  ///
+  /// In id, this message translates to:
+  /// **'Terjadi kendala saat menyinkronkan profil Anda dari server. Silakan coba lagi.'**
+  String get dashboardProfileErrorDefault;
+
+  /// Indikator loading daftar kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Memuat kelas Anda...'**
+  String get dashboardLoadingClasses;
+
+  /// Badge selamat datang dashboard
+  ///
+  /// In id, this message translates to:
+  /// **'Farlean LMS • Multi-Class Active'**
+  String get dashboardWelcomeBadge;
+
+  /// Judul kartu selamat datang dashboard
+  ///
+  /// In id, this message translates to:
+  /// **'Selamat Datang di Farlean LMS'**
+  String get dashboardWelcomeTitle;
+
+  /// Isi kartu selamat datang dashboard
+  ///
+  /// In id, this message translates to:
+  /// **'Akses materi terstruktur, kuis pretest berpenilaian server, video pembelajaran, dan forum belajar dalam satu platform.'**
+  String get dashboardWelcomeBody;
+
+  /// Judul peringatan peran akun belum sinkron
+  ///
+  /// In id, this message translates to:
+  /// **'Peran Akun Belum Sinkron'**
+  String get dashboardRoleOutOfSyncTitle;
+
+  /// Deskripsi peran belum sinkron dengan nilai role token dan profil
+  ///
+  /// In id, this message translates to:
+  /// **'Token: {claimsRole} vs Profil: {profileRole}. Tekan Perbarui untuk menyelaraskan hak akses.'**
+  String dashboardRoleOutOfSyncBody(String claimsRole, String profileRole);
+
+  /// Tombol perbarui peran akun
+  ///
+  /// In id, this message translates to:
+  /// **'Perbarui'**
+  String get dashboardRefreshRoleBtn;
+
+  /// Judul bagian kelas yang dikelola staf
+  ///
+  /// In id, this message translates to:
+  /// **'Kelas yang Anda Kelola'**
+  String get dashboardManagedClassesSection;
+
+  /// Judul kosong kelas yang dikelola
+  ///
+  /// In id, this message translates to:
+  /// **'Belum ada kelas yang Anda kelola.'**
+  String get dashboardEmptyOwnedTitle;
+
+  /// Deskripsi kosong kelas yang dikelola
+  ///
+  /// In id, this message translates to:
+  /// **'Buat kelas baru untuk mulai mengunggah materi dan membuat pertemuan.'**
+  String get dashboardEmptyOwnedBody;
+
+  /// Tombol buat kelas pertama kali
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Kelas Pertama'**
+  String get dashboardCreateFirstClassBtn;
+
+  /// Judul bagian kelas yang diikuti
+  ///
+  /// In id, this message translates to:
+  /// **'Kelas yang Anda Ikuti'**
+  String get dashboardJoinedClassesSection;
+
+  /// Tombol gabung kode kelas di header bagian
+  ///
+  /// In id, this message translates to:
+  /// **'Gabung Kode'**
+  String get dashboardJoinCodeBtn;
+
+  /// Judul kosong kelas yang diikuti
+  ///
+  /// In id, this message translates to:
+  /// **'Belum tergabung ke kelas pembelajaran.'**
+  String get dashboardEmptyJoinedTitle;
+
+  /// Deskripsi kosong kelas yang diikuti
+  ///
+  /// In id, this message translates to:
+  /// **'Minta kode kelas dari Dosen/Pengajar Anda untuk bergabung ke kelas.'**
+  String get dashboardEmptyJoinedBody;
+
+  /// Snackbar kode kelas berhasil disalin
+  ///
+  /// In id, this message translates to:
+  /// **'Kode {code} disalin.'**
+  String dashboardCodeCopied(String code);
+
+  /// Jumlah pertemuan pada kartu kelas di dashboard
+  ///
+  /// In id, this message translates to:
+  /// **'{count, plural, other{{count} Pertemuan}}'**
+  String dashboardMeetingCount(int count);
+
+  /// Tombol kelola kelas bagi pemilik
+  ///
+  /// In id, this message translates to:
+  /// **'Kelola Kelas'**
+  String get dashboardManageClassBtn;
+
+  /// Tombol buka kelas bagi peserta
+  ///
+  /// In id, this message translates to:
+  /// **'Buka Kelas'**
+  String get dashboardOpenClassBtn;
+
+  /// Snackbar navigasi cerdas saat belum ada kelas dipilih
+  ///
+  /// In id, this message translates to:
+  /// **'Pilih salah satu kelas terlebih dahulu untuk melihat pertemuan & materi.'**
+  String get navSelectClassFirst;
+
+  /// Label tab navigasi materi
+  ///
+  /// In id, this message translates to:
+  /// **'Materi'**
+  String get navMaterials;
+
+  /// Label tab navigasi AI Tutor
+  ///
+  /// In id, this message translates to:
+  /// **'AI Tutor'**
+  String get navAiTutor;
+
+  /// Label tab navigasi diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Diskusi'**
+  String get navDiscussion;
 }
 
 class _AppLocalizationsDelegate

@@ -1561,4 +1561,151 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get discussionReplyGeneralHint => 'Tulis tanggapan atau balasan...';
+
+  @override
+  String get dashboardCreateClassTitle => 'Buat Kelas Baru';
+
+  @override
+  String get dashboardClassNameLabel => 'Nama Kelas';
+
+  @override
+  String get dashboardClassNameHint => 'Contoh: Pemrograman Mobile';
+
+  @override
+  String get dashboardClassNameMinLength => 'Nama kelas minimal 3 karakter';
+
+  @override
+  String get dashboardClassNameMaxLength => 'Nama kelas maksimal 100 karakter';
+
+  @override
+  String get dashboardClassDescLabel => 'Deskripsi (Opsional)';
+
+  @override
+  String get dashboardClassDescHint => 'Deskripsi singkat silabus kelas';
+
+  @override
+  String get dashboardClassCodeLabel => 'Kode Kelas Khusus (Opsional)';
+
+  @override
+  String get dashboardClassCodeHint => 'Kosongkan untuk kode acak 8 karakter';
+
+  @override
+  String get dashboardClassCodeLength => 'Kode harus 6-12 karakter';
+
+  @override
+  String get dashboardClassCodeAlphanumeric =>
+      'Kode hanya huruf kapital dan angka';
+
+  @override
+  String get dashboardCreateClassBtn => 'Buat Kelas';
+
+  @override
+  String get dashboardClassCreatedSuccess => 'Kelas berhasil dibuat.';
+
+  @override
+  String get dashboardLoadingProfile => 'Memuat profil dan hak akses...';
+
+  @override
+  String get dashboardProfileErrorTitle => 'Profil Belum Berhasil Dimuat';
+
+  @override
+  String get dashboardProfileErrorNetwork =>
+      'Koneksi ke database gagal. Periksa jaringan internet atau emulator Anda.';
+
+  @override
+  String get dashboardProfileErrorNotFound =>
+      'Profil pengguna belum berhasil dimuat. Silakan tekan tombol Coba Lagi.';
+
+  @override
+  String get dashboardProfileErrorPermission =>
+      'Akses ditolak saat membaca profil.';
+
+  @override
+  String get dashboardProfileErrorDefault =>
+      'Terjadi kendala saat menyinkronkan profil Anda dari server. Silakan coba lagi.';
+
+  @override
+  String get dashboardLoadingClasses => 'Memuat kelas Anda...';
+
+  @override
+  String get dashboardWelcomeBadge => 'Farlean LMS • Multi-Class Active';
+
+  @override
+  String get dashboardWelcomeTitle => 'Selamat Datang di Farlean LMS';
+
+  @override
+  String get dashboardWelcomeBody =>
+      'Akses materi terstruktur, kuis pretest berpenilaian server, video pembelajaran, dan forum belajar dalam satu platform.';
+
+  @override
+  String get dashboardRoleOutOfSyncTitle => 'Peran Akun Belum Sinkron';
+
+  @override
+  String dashboardRoleOutOfSyncBody(String claimsRole, String profileRole) {
+    return 'Token: $claimsRole vs Profil: $profileRole. Tekan Perbarui untuk menyelaraskan hak akses.';
+  }
+
+  @override
+  String get dashboardRefreshRoleBtn => 'Perbarui';
+
+  @override
+  String get dashboardManagedClassesSection => 'Kelas yang Anda Kelola';
+
+  @override
+  String get dashboardEmptyOwnedTitle => 'Belum ada kelas yang Anda kelola.';
+
+  @override
+  String get dashboardEmptyOwnedBody =>
+      'Buat kelas baru untuk mulai mengunggah materi dan membuat pertemuan.';
+
+  @override
+  String get dashboardCreateFirstClassBtn => 'Buat Kelas Pertama';
+
+  @override
+  String get dashboardJoinedClassesSection => 'Kelas yang Anda Ikuti';
+
+  @override
+  String get dashboardJoinCodeBtn => 'Gabung Kode';
+
+  @override
+  String get dashboardEmptyJoinedTitle =>
+      'Belum tergabung ke kelas pembelajaran.';
+
+  @override
+  String get dashboardEmptyJoinedBody =>
+      'Minta kode kelas dari Dosen/Pengajar Anda untuk bergabung ke kelas.';
+
+  @override
+  String dashboardCodeCopied(String code) {
+    return 'Kode $code disalin.';
+  }
+
+  @override
+  String dashboardMeetingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Pertemuan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardManageClassBtn => 'Kelola Kelas';
+
+  @override
+  String get dashboardOpenClassBtn => 'Buka Kelas';
+
+  @override
+  String get navSelectClassFirst =>
+      'Pilih salah satu kelas terlebih dahulu untuk melihat pertemuan & materi.';
+
+  @override
+  String get navMaterials => 'Materi';
+
+  @override
+  String get navAiTutor => 'AI Tutor';
+
+  @override
+  String get navDiscussion => 'Diskusi';
 }

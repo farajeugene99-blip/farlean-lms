@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/class_provider.dart';
 
 class MainShell extends StatelessWidget {
@@ -48,11 +49,12 @@ class MainShell extends StatelessWidget {
           context.go('${AppConstants.materiRoute}?classId=$targetClassId');
         } else {
           // Arahkan ke Beranda agar pengguna memilih kelas terlebih dahulu
+          final l10n = AppLocalizations.of(context);
           context.go(AppConstants.dashboardRoute);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Pilih salah satu kelas terlebih dahulu untuk melihat pertemuan & materi.'),
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: Text(l10n.navSelectClassFirst),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -81,6 +83,7 @@ class MainShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final selectedIndex = _calculateSelectedIndex(context);
 
     return Scaffold(
@@ -109,21 +112,21 @@ class MainShell extends StatelessWidget {
                 index: 0,
                 selectedIndex: selectedIndex,
                 icon: Icons.grid_view_rounded,
-                label: 'Beranda',
+                label: l10n.navHome,
               ),
               _buildNavItem(
                 context,
                 index: 1,
                 selectedIndex: selectedIndex,
                 icon: Icons.menu_book_rounded,
-                label: 'Materi',
+                label: l10n.navMaterials,
               ),
               _buildNavItem(
                 context,
                 index: 2,
                 selectedIndex: selectedIndex,
                 icon: Icons.auto_awesome_rounded,
-                label: 'AI Tutor',
+                label: l10n.navAiTutor,
                 isHighlight: true,
               ),
               _buildNavItem(
@@ -131,14 +134,14 @@ class MainShell extends StatelessWidget {
                 index: 3,
                 selectedIndex: selectedIndex,
                 icon: Icons.forum_rounded,
-                label: 'Diskusi',
+                label: l10n.navDiscussion,
               ),
               _buildNavItem(
                 context,
                 index: 4,
                 selectedIndex: selectedIndex,
                 icon: Icons.person_rounded,
-                label: 'Profil',
+                label: l10n.navProfile,
               ),
             ],
           ),
@@ -158,29 +161,35 @@ class MainShell extends StatelessWidget {
     final isSelected = index == selectedIndex;
     final primaryColor = isHighlight ? AppTheme.secondary : AppTheme.primary;
 
-    return InkWell(
-      onTap: () => _onItemTapped(index, context),
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 22,
-              color: isSelected ? primaryColor : AppTheme.textSecondary,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+    return Expanded(
+      child: InkWell(
+        onTap: () => _onItemTapped(index, context),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 22,
                 color: isSelected ? primaryColor : AppTheme.textSecondary,
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected ? primaryColor : AppTheme.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

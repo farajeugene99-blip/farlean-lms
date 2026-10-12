@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/core/theme/app_theme.dart';
+import 'package:mobile/l10n/generated/app_localizations.dart';
 import 'package:mobile/presentation/main/dashboard_screen.dart';
 import 'package:mobile/services/auth_provider.dart';
 import 'package:mobile/services/class_provider.dart';
@@ -39,6 +40,9 @@ void main() {
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
+            locale: const Locale('id'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: const DashboardScreen(),
           ),
         ),

@@ -1561,4 +1561,155 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discussionReplyGeneralHint => 'Write a reply or response...';
+
+  @override
+  String get dashboardCreateClassTitle => 'Create New Class';
+
+  @override
+  String get dashboardClassNameLabel => 'Class Name';
+
+  @override
+  String get dashboardClassNameHint => 'Example: Mobile Programming';
+
+  @override
+  String get dashboardClassNameMinLength =>
+      'Class name must be at least 3 characters';
+
+  @override
+  String get dashboardClassNameMaxLength =>
+      'Class name must be at most 100 characters';
+
+  @override
+  String get dashboardClassDescLabel => 'Description (Optional)';
+
+  @override
+  String get dashboardClassDescHint => 'Brief description of class syllabus';
+
+  @override
+  String get dashboardClassCodeLabel => 'Custom Class Code (Optional)';
+
+  @override
+  String get dashboardClassCodeHint =>
+      'Leave blank for random 8-character code';
+
+  @override
+  String get dashboardClassCodeLength => 'Code must be 6-12 characters';
+
+  @override
+  String get dashboardClassCodeAlphanumeric =>
+      'Code must be uppercase letters and numbers only';
+
+  @override
+  String get dashboardCreateClassBtn => 'Create Class';
+
+  @override
+  String get dashboardClassCreatedSuccess => 'Class successfully created.';
+
+  @override
+  String get dashboardLoadingProfile => 'Loading profile and permissions...';
+
+  @override
+  String get dashboardProfileErrorTitle => 'Profile Failed to Load';
+
+  @override
+  String get dashboardProfileErrorNetwork =>
+      'Database connection failed. Check your internet connection or emulator.';
+
+  @override
+  String get dashboardProfileErrorNotFound =>
+      'User profile could not be loaded. Please tap Try Again.';
+
+  @override
+  String get dashboardProfileErrorPermission =>
+      'Access denied when loading profile.';
+
+  @override
+  String get dashboardProfileErrorDefault =>
+      'A problem occurred syncing your profile from the server. Please try again.';
+
+  @override
+  String get dashboardLoadingClasses => 'Loading your classes...';
+
+  @override
+  String get dashboardWelcomeBadge => 'Farlean LMS • Multi-Class Active';
+
+  @override
+  String get dashboardWelcomeTitle => 'Welcome to Farlean LMS';
+
+  @override
+  String get dashboardWelcomeBody =>
+      'Access structured materials, server-graded pretest quizzes, learning videos, and discussion forums in one platform.';
+
+  @override
+  String get dashboardRoleOutOfSyncTitle => 'Account Role Out of Sync';
+
+  @override
+  String dashboardRoleOutOfSyncBody(String claimsRole, String profileRole) {
+    return 'Token: $claimsRole vs Profile: $profileRole. Tap Refresh to align permissions.';
+  }
+
+  @override
+  String get dashboardRefreshRoleBtn => 'Refresh';
+
+  @override
+  String get dashboardManagedClassesSection => 'Classes You Manage';
+
+  @override
+  String get dashboardEmptyOwnedTitle => 'No classes managed yet.';
+
+  @override
+  String get dashboardEmptyOwnedBody =>
+      'Create a new class to start uploading materials and creating meetings.';
+
+  @override
+  String get dashboardCreateFirstClassBtn => 'Create First Class';
+
+  @override
+  String get dashboardJoinedClassesSection => 'Classes You Joined';
+
+  @override
+  String get dashboardJoinCodeBtn => 'Join with Code';
+
+  @override
+  String get dashboardEmptyJoinedTitle =>
+      'Not enrolled in any learning classes yet.';
+
+  @override
+  String get dashboardEmptyJoinedBody =>
+      'Ask for a class code from your Lecturer/Instructor to join a class.';
+
+  @override
+  String dashboardCodeCopied(String code) {
+    return 'Code $code copied.';
+  }
+
+  @override
+  String dashboardMeetingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Meetings',
+      one: '1 Meeting',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardManageClassBtn => 'Manage Class';
+
+  @override
+  String get dashboardOpenClassBtn => 'Open Class';
+
+  @override
+  String get navSelectClassFirst =>
+      'Please select a class first to view meetings & materials.';
+
+  @override
+  String get navMaterials => 'Materials';
+
+  @override
+  String get navAiTutor => 'AI Tutor';
+
+  @override
+  String get navDiscussion => 'Discussion';
 }

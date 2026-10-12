@@ -1663,5 +1663,147 @@
   },
 
   "discussionReplyGeneralHint": "Tulis tanggapan atau balasan...",
-  "@discussionReplyGeneralHint": { "description": "Hint input umum balasan diskusi" }
+  "@discussionReplyGeneralHint": { "description": "Hint input umum balasan diskusi" },
+
+  "dashboardCreateClassTitle": "Buat Kelas Baru",
+  "@dashboardCreateClassTitle": { "description": "Judul dialog buat kelas baru" },
+
+  "dashboardClassNameLabel": "Nama Kelas",
+  "@dashboardClassNameLabel": { "description": "Label input nama kelas" },
+
+  "dashboardClassNameHint": "Contoh: Pemrograman Mobile",
+  "@dashboardClassNameHint": { "description": "Hint input nama kelas" },
+
+  "dashboardClassNameMinLength": "Nama kelas minimal 3 karakter",
+  "@dashboardClassNameMinLength": { "description": "Validasi nama kelas minimal 3 karakter" },
+
+  "dashboardClassNameMaxLength": "Nama kelas maksimal 100 karakter",
+  "@dashboardClassNameMaxLength": { "description": "Validasi nama kelas maksimal 100 karakter" },
+
+  "dashboardClassDescLabel": "Deskripsi (Opsional)",
+  "@dashboardClassDescLabel": { "description": "Label input deskripsi kelas" },
+
+  "dashboardClassDescHint": "Deskripsi singkat silabus kelas",
+  "@dashboardClassDescHint": { "description": "Hint input deskripsi kelas" },
+
+  "dashboardClassCodeLabel": "Kode Kelas Khusus (Opsional)",
+  "@dashboardClassCodeLabel": { "description": "Label input kode kelas kustom" },
+
+  "dashboardClassCodeHint": "Kosongkan untuk kode acak 8 karakter",
+  "@dashboardClassCodeHint": { "description": "Hint input kode kelas kustom" },
+
+  "dashboardClassCodeLength": "Kode harus 6-12 karakter",
+  "@dashboardClassCodeLength": { "description": "Validasi panjang kode kelas" },
+
+  "dashboardClassCodeAlphanumeric": "Kode hanya huruf kapital dan angka",
+  "@dashboardClassCodeAlphanumeric": { "description": "Validasi format karakter kode kelas" },
+
+  "dashboardCreateClassBtn": "Buat Kelas",
+  "@dashboardCreateClassBtn": { "description": "Tombol buat kelas pada dialog" },
+
+  "dashboardClassCreatedSuccess": "Kelas berhasil dibuat.",
+  "@dashboardClassCreatedSuccess": { "description": "Snackbar sukses buat kelas" },
+
+  "dashboardLoadingProfile": "Memuat profil dan hak akses...",
+  "@dashboardLoadingProfile": { "description": "Indikator loading profil pengguna" },
+
+  "dashboardProfileErrorTitle": "Profil Belum Berhasil Dimuat",
+  "@dashboardProfileErrorTitle": { "description": "Judul error sinkronisasi profil" },
+
+  "dashboardProfileErrorNetwork": "Koneksi ke database gagal. Periksa jaringan internet atau emulator Anda.",
+  "@dashboardProfileErrorNetwork": { "description": "Pesan error jaringan pada profil" },
+
+  "dashboardProfileErrorNotFound": "Profil pengguna belum berhasil dimuat. Silakan tekan tombol Coba Lagi.",
+  "@dashboardProfileErrorNotFound": { "description": "Pesan error profil tidak ditemukan" },
+
+  "dashboardProfileErrorPermission": "Akses ditolak saat membaca profil.",
+  "@dashboardProfileErrorPermission": { "description": "Pesan error permission-denied pada profil" },
+
+  "dashboardProfileErrorDefault": "Terjadi kendala saat menyinkronkan profil Anda dari server. Silakan coba lagi.",
+  "@dashboardProfileErrorDefault": { "description": "Pesan error profil default/fallback" },
+
+  "dashboardLoadingClasses": "Memuat kelas Anda...",
+  "@dashboardLoadingClasses": { "description": "Indikator loading daftar kelas" },
+
+  "dashboardWelcomeBadge": "Farlean LMS • Multi-Class Active",
+  "@dashboardWelcomeBadge": { "description": "Badge selamat datang dashboard" },
+
+  "dashboardWelcomeTitle": "Selamat Datang di Farlean LMS",
+  "@dashboardWelcomeTitle": { "description": "Judul kartu selamat datang dashboard" },
+
+  "dashboardWelcomeBody": "Akses materi terstruktur, kuis pretest berpenilaian server, video pembelajaran, dan forum belajar dalam satu platform.",
+  "@dashboardWelcomeBody": { "description": "Isi kartu selamat datang dashboard" },
+
+  "dashboardRoleOutOfSyncTitle": "Peran Akun Belum Sinkron",
+  "@dashboardRoleOutOfSyncTitle": { "description": "Judul peringatan peran akun belum sinkron" },
+
+  "dashboardRoleOutOfSyncBody": "Token: {claimsRole} vs Profil: {profileRole}. Tekan Perbarui untuk menyelaraskan hak akses.",
+  "@dashboardRoleOutOfSyncBody": {
+    "description": "Deskripsi peran belum sinkron dengan nilai role token dan profil",
+    "placeholders": {
+      "claimsRole": { "type": "String" },
+      "profileRole": { "type": "String" }
+    }
+  },
+
+  "dashboardRefreshRoleBtn": "Perbarui",
+  "@dashboardRefreshRoleBtn": { "description": "Tombol perbarui peran akun" },
+
+  "dashboardManagedClassesSection": "Kelas yang Anda Kelola",
+  "@dashboardManagedClassesSection": { "description": "Judul bagian kelas yang dikelola staf" },
+
+  "dashboardEmptyOwnedTitle": "Belum ada kelas yang Anda kelola.",
+  "@dashboardEmptyOwnedTitle": { "description": "Judul kosong kelas yang dikelola" },
+
+  "dashboardEmptyOwnedBody": "Buat kelas baru untuk mulai mengunggah materi dan membuat pertemuan.",
+  "@dashboardEmptyOwnedBody": { "description": "Deskripsi kosong kelas yang dikelola" },
+
+  "dashboardCreateFirstClassBtn": "Buat Kelas Pertama",
+  "@dashboardCreateFirstClassBtn": { "description": "Tombol buat kelas pertama kali" },
+
+  "dashboardJoinedClassesSection": "Kelas yang Anda Ikuti",
+  "@dashboardJoinedClassesSection": { "description": "Judul bagian kelas yang diikuti" },
+
+  "dashboardJoinCodeBtn": "Gabung Kode",
+  "@dashboardJoinCodeBtn": { "description": "Tombol gabung kode kelas di header bagian" },
+
+  "dashboardEmptyJoinedTitle": "Belum tergabung ke kelas pembelajaran.",
+  "@dashboardEmptyJoinedTitle": { "description": "Judul kosong kelas yang diikuti" },
+
+  "dashboardEmptyJoinedBody": "Minta kode kelas dari Dosen/Pengajar Anda untuk bergabung ke kelas.",
+  "@dashboardEmptyJoinedBody": { "description": "Deskripsi kosong kelas yang diikuti" },
+
+  "dashboardCodeCopied": "Kode {code} disalin.",
+  "@dashboardCodeCopied": {
+    "description": "Snackbar kode kelas berhasil disalin",
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+
+  "dashboardMeetingCount": "{count, plural, other{{count} Pertemuan}}",
+  "@dashboardMeetingCount": {
+    "description": "Jumlah pertemuan pada kartu kelas di dashboard",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "dashboardManageClassBtn": "Kelola Kelas",
+  "@dashboardManageClassBtn": { "description": "Tombol kelola kelas bagi pemilik" },
+
+  "dashboardOpenClassBtn": "Buka Kelas",
+  "@dashboardOpenClassBtn": { "description": "Tombol buka kelas bagi peserta" },
+
+  "navSelectClassFirst": "Pilih salah satu kelas terlebih dahulu untuk melihat pertemuan & materi.",
+  "@navSelectClassFirst": { "description": "Snackbar navigasi cerdas saat belum ada kelas dipilih" },
+
+  "navMaterials": "Materi",
+  "@navMaterials": { "description": "Label tab navigasi materi" },
+
+  "navAiTutor": "AI Tutor",
+  "@navAiTutor": { "description": "Label tab navigasi AI Tutor" },
+
+  "navDiscussion": "Diskusi",
+  "@navDiscussion": { "description": "Label tab navigasi diskusi" }
 }
