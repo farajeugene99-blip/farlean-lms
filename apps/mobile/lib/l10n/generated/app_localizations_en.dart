@@ -1360,4 +1360,205 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get joinClassSubmitBtn => 'Join Now';
+
+  @override
+  String get discussionErrorPermissionStaff =>
+      'Access denied: You are not authorized to manage this class forum.';
+
+  @override
+  String get discussionErrorPermissionStudent =>
+      'Access denied: You are not enrolled as an active member in this class.';
+
+  @override
+  String discussionErrorLoadFailed(String detail) {
+    return 'Failed to load discussion forum: $detail';
+  }
+
+  @override
+  String get discussionSelectClassFirst =>
+      'Please select a class first to create a discussion.';
+
+  @override
+  String get discussionCreateTitle => 'Create New Discussion';
+
+  @override
+  String get discussionTitleLabel => 'Discussion Title *';
+
+  @override
+  String get discussionTitleHint => 'E.g., Question on Chapter 2...';
+
+  @override
+  String get discussionTitleMinLength => 'Title must be at least 3 characters';
+
+  @override
+  String get discussionTitleMaxLength => 'Title must be at most 200 characters';
+
+  @override
+  String get discussionBodyLabel => 'Question / Discussion Content *';
+
+  @override
+  String get discussionBodyHint => 'Write your question or topic clearly...';
+
+  @override
+  String get discussionBodyMinLength =>
+      'Discussion content must be at least 3 characters';
+
+  @override
+  String get discussionBodyMaxLength =>
+      'Discussion content must be at most 5000 characters';
+
+  @override
+  String get discussionSendBtn => 'Post Discussion';
+
+  @override
+  String get discussionForumTitle => 'Discussion Forum';
+
+  @override
+  String get discussionCreateFab => 'Create Discussion';
+
+  @override
+  String get discussionNoClassTitle => 'Select Class to Discuss';
+
+  @override
+  String get discussionNoClassBody =>
+      'You haven\'t selected a class. Please join a class or select one from Home.';
+
+  @override
+  String get discussionLoading => 'Loading class discussions...';
+
+  @override
+  String get discussionFilterAll => 'All Discussions';
+
+  @override
+  String get discussionFilterUnanswered => 'Unanswered';
+
+  @override
+  String get discussionFilterUnread => 'Unread';
+
+  @override
+  String get discussionEmptyAllTitle => 'No Discussions Yet';
+
+  @override
+  String get discussionEmptyAllDesc =>
+      'Be the first to start a Q&A and collaboration thread in this class.';
+
+  @override
+  String get discussionEmptyUnansweredTitle => 'No Unanswered Discussions';
+
+  @override
+  String get discussionEmptyUnansweredDesc =>
+      'All discussion topics have received replies from the instructor or peers.';
+
+  @override
+  String get discussionEmptyUnreadTitle => 'All Discussions Read';
+
+  @override
+  String get discussionEmptyUnreadDesc =>
+      'No new activity or unread replies on this page.';
+
+  @override
+  String discussionReplyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Replies',
+      one: '1 Reply',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discussionNotFound => 'Discussion not found or has been deleted.';
+
+  @override
+  String discussionLoadDetailFailed(String detail) {
+    return 'Failed to load discussion details: $detail';
+  }
+
+  @override
+  String get discussionArchivedSendBlocked =>
+      'This discussion is archived. Sending replies is disabled.';
+
+  @override
+  String discussionSendReplyFailed(String detail) {
+    return 'Failed to send reply: $detail';
+  }
+
+  @override
+  String get discussionArchiveConfirmTitle => 'Archive Discussion?';
+
+  @override
+  String get discussionArchiveConfirmBody =>
+      'Archived discussions will be locked from new replies and hidden from the class members list.';
+
+  @override
+  String get discussionArchiveSuccess => 'Discussion successfully archived.';
+
+  @override
+  String discussionArchiveFailed(String detail) {
+    return 'Failed to archive: $detail';
+  }
+
+  @override
+  String get discussionEditTitle => 'Edit Discussion';
+
+  @override
+  String get discussionEditTitleLabel => 'Discussion Title';
+
+  @override
+  String get discussionEditBodyLabel => 'Discussion Content';
+
+  @override
+  String discussionUpdateFailed(String detail) {
+    return 'Failed to update: $detail';
+  }
+
+  @override
+  String get discussionArchiveReplyTooltip => 'Archive Reply';
+
+  @override
+  String get discussionReplyAction => 'Reply';
+
+  @override
+  String get discussionThreadLoading => 'Loading discussion thread...';
+
+  @override
+  String get discussionDetailTitle => 'Discussion Details';
+
+  @override
+  String get discussionEditTooltip => 'Edit Discussion';
+
+  @override
+  String get discussionArchiveTooltip => 'Archive Discussion';
+
+  @override
+  String get discussionStatusArchivedTag => 'Status: Archived';
+
+  @override
+  String get discussionStatusActiveTag => 'Active Discussion Thread';
+
+  @override
+  String discussionDetailReplyCount(int count) {
+    return 'Replies ($count)';
+  }
+
+  @override
+  String get discussionNoRepliesYet => 'No replies on this discussion yet.';
+
+  @override
+  String discussionReplyingTo(String author, String snippet) {
+    return 'Replying to @$author: \"$snippet\"';
+  }
+
+  @override
+  String get discussionArchivedBanner =>
+      'Discussion archived. Sending replies is disabled.';
+
+  @override
+  String discussionReplyToHint(String author) {
+    return 'Write a reply to @$author...';
+  }
+
+  @override
+  String get discussionReplyGeneralHint => 'Write a reply or response...';
 }

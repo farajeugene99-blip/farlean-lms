@@ -1452,5 +1452,216 @@
   "@joinClassCodeLabel": { "description": "Label field input kode kelas" },
 
   "joinClassSubmitBtn": "Gabung Sekarang",
-  "@joinClassSubmitBtn": { "description": "Tombol submit formulir gabung kelas" }
+  "@joinClassSubmitBtn": { "description": "Tombol submit formulir gabung kelas" },
+
+  "discussionErrorPermissionStaff": "Akses ditolak: Anda tidak memiliki wewenang untuk mengelola forum kelas ini.",
+  "@discussionErrorPermissionStaff": { "description": "Pesan error permission-denied diskusi untuk pengajar" },
+
+  "discussionErrorPermissionStudent": "Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini.",
+  "@discussionErrorPermissionStudent": { "description": "Pesan error permission-denied diskusi untuk siswa" },
+
+  "discussionErrorLoadFailed": "Gagal memuat forum diskusi: {detail}",
+  "@discussionErrorLoadFailed": {
+    "description": "Pesan error gagal memuat diskusi",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "discussionSelectClassFirst": "Pilih kelas terlebih dahulu untuk membuat diskusi.",
+  "@discussionSelectClassFirst": { "description": "Snackbar peringatan belum memilih kelas saat buat diskusi" },
+
+  "discussionCreateTitle": "Buat Diskusi Baru",
+  "@discussionCreateTitle": { "description": "Judul dialog buat diskusi baru" },
+
+  "discussionTitleLabel": "Judul Diskusi *",
+  "@discussionTitleLabel": { "description": "Label field judul diskusi" },
+
+  "discussionTitleHint": "Misal: Tanya materi Bab 2...",
+  "@discussionTitleHint": { "description": "Hint field judul diskusi" },
+
+  "discussionTitleMinLength": "Judul minimal 3 karakter",
+  "@discussionTitleMinLength": { "description": "Validasi judul diskusi terlalu pendek" },
+
+  "discussionTitleMaxLength": "Judul maksimal 200 karakter",
+  "@discussionTitleMaxLength": { "description": "Validasi judul diskusi melebihi batas" },
+
+  "discussionBodyLabel": "Isi Pertanyaan / Topik Diskusi *",
+  "@discussionBodyLabel": { "description": "Label field isi diskusi" },
+
+  "discussionBodyHint": "Tuliskan pertanyaan atau topik dengan jelas...",
+  "@discussionBodyHint": { "description": "Hint field isi diskusi" },
+
+  "discussionBodyMinLength": "Isi diskusi minimal 3 karakter",
+  "@discussionBodyMinLength": { "description": "Validasi isi diskusi terlalu pendek" },
+
+  "discussionBodyMaxLength": "Isi diskusi maksimal 5000 karakter",
+  "@discussionBodyMaxLength": { "description": "Validasi isi diskusi melebihi batas" },
+
+  "discussionSendBtn": "Kirim Diskusi",
+  "@discussionSendBtn": { "description": "Tombol kirim topik diskusi baru" },
+
+  "discussionForumTitle": "Forum Diskusi",
+  "@discussionForumTitle": { "description": "Judul AppBar forum diskusi" },
+
+  "discussionCreateFab": "Buat Diskusi",
+  "@discussionCreateFab": { "description": "Label tombol FAB buat diskusi" },
+
+  "discussionNoClassTitle": "Pilih Kelas untuk Berdiskusi",
+  "@discussionNoClassTitle": { "description": "Judul status belum memilih kelas pada forum diskusi" },
+
+  "discussionNoClassBody": "Anda belum memilih kelas. Silakan bergabung ke kelas atau pilih kelas dari Beranda.",
+  "@discussionNoClassBody": { "description": "Deskripsi status belum memilih kelas pada forum diskusi" },
+
+  "discussionLoading": "Memuat diskusi kelas...",
+  "@discussionLoading": { "description": "Teks indikator loading forum diskusi" },
+
+  "discussionFilterAll": "Semua Diskusi",
+  "@discussionFilterAll": { "description": "Filter chip semua diskusi" },
+
+  "discussionFilterUnanswered": "Belum Dibalas",
+  "@discussionFilterUnanswered": { "description": "Filter chip diskusi belum dibalas" },
+
+  "discussionFilterUnread": "Belum Dibaca",
+  "@discussionFilterUnread": { "description": "Filter chip diskusi belum dibaca" },
+
+  "discussionEmptyAllTitle": "Belum Ada Diskusi",
+  "@discussionEmptyAllTitle": { "description": "Judul status kosong semua diskusi" },
+
+  "discussionEmptyAllDesc": "Jadilah yang pertama memulai tanya jawab dan ruang kolaborasi di kelas ini.",
+  "@discussionEmptyAllDesc": { "description": "Deskripsi status kosong semua diskusi" },
+
+  "discussionEmptyUnansweredTitle": "Tidak Ada Diskusi Belum Dibalas",
+  "@discussionEmptyUnansweredTitle": { "description": "Judul status kosong filter belum dibalas" },
+
+  "discussionEmptyUnansweredDesc": "Semua topik diskusi telah memiliki balasan dari pengajar atau sesama anggota.",
+  "@discussionEmptyUnansweredDesc": { "description": "Deskripsi status kosong filter belum dibalas" },
+
+  "discussionEmptyUnreadTitle": "Semua Diskusi Sudah Dibaca",
+  "@discussionEmptyUnreadTitle": { "description": "Judul status kosong filter belum dibaca" },
+
+  "discussionEmptyUnreadDesc": "Tidak ada aktivitas atau balasan baru yang belum Anda baca pada halaman ini.",
+  "@discussionEmptyUnreadDesc": { "description": "Deskripsi status kosong filter belum dibaca" },
+
+  "discussionReplyCount": "{count, plural, other{{count} Balasan}}",
+  "@discussionReplyCount": {
+    "description": "Badge jumlah balasan pada kartu diskusi",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "discussionNotFound": "Diskusi tidak ditemukan atau telah dihapus.",
+  "@discussionNotFound": { "description": "Pesan error diskusi tidak ditemukan" },
+
+  "discussionLoadDetailFailed": "Gagal memuat detail diskusi: {detail}",
+  "@discussionLoadDetailFailed": {
+    "description": "Pesan error gagal memuat detail thread diskusi",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "discussionArchivedSendBlocked": "Diskusi ini telah diarsipkan. Pengiriman balasan dinonaktifkan.",
+  "@discussionArchivedSendBlocked": { "description": "Snackbar penolakan kirim balasan pada thread arsip" },
+
+  "discussionSendReplyFailed": "Gagal mengirim balasan: {detail}",
+  "@discussionSendReplyFailed": {
+    "description": "Snackbar gagal mengirim balasan diskusi",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "discussionArchiveConfirmTitle": "Arsipkan Diskusi?",
+  "@discussionArchiveConfirmTitle": { "description": "Judul dialog konfirmasi arsipkan thread diskusi" },
+
+  "discussionArchiveConfirmBody": "Diskusi yang diarsipkan akan dikunci dari pengiriman balasan baru dan disembunyikan dari daftar anggota kelas.",
+  "@discussionArchiveConfirmBody": { "description": "Isi dialog konfirmasi arsipkan thread diskusi" },
+
+  "discussionArchiveSuccess": "Diskusi berhasil diarsipkan.",
+  "@discussionArchiveSuccess": { "description": "Snackbar sukses arsipkan thread diskusi" },
+
+  "discussionArchiveFailed": "Gagal mengarsipkan: {detail}",
+  "@discussionArchiveFailed": {
+    "description": "Snackbar gagal arsipkan diskusi",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "discussionEditTitle": "Edit Diskusi",
+  "@discussionEditTitle": { "description": "Judul dialog edit thread diskusi" },
+
+  "discussionEditTitleLabel": "Judul Diskusi",
+  "@discussionEditTitleLabel": { "description": "Label field edit judul diskusi" },
+
+  "discussionEditBodyLabel": "Isi Diskusi",
+  "@discussionEditBodyLabel": { "description": "Label field edit isi diskusi" },
+
+  "discussionUpdateFailed": "Gagal update: {detail}",
+  "@discussionUpdateFailed": {
+    "description": "Snackbar gagal update diskusi",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "discussionArchiveReplyTooltip": "Arsipkan Balasan",
+  "@discussionArchiveReplyTooltip": { "description": "Tooltip ikon arsipkan butir balasan" },
+
+  "discussionReplyAction": "Balas",
+  "@discussionReplyAction": { "description": "Tombol aksi balas pada butir balasan" },
+
+  "discussionThreadLoading": "Memuat thread diskusi...",
+  "@discussionThreadLoading": { "description": "Teks loading thread diskusi" },
+
+  "discussionDetailTitle": "Detail Diskusi",
+  "@discussionDetailTitle": { "description": "Judul AppBar layar detail diskusi" },
+
+  "discussionEditTooltip": "Edit Diskusi",
+  "@discussionEditTooltip": { "description": "Tooltip ikon edit diskusi" },
+
+  "discussionArchiveTooltip": "Arsipkan Diskusi",
+  "@discussionArchiveTooltip": { "description": "Tooltip ikon arsipkan diskusi" },
+
+  "discussionStatusArchivedTag": "Status: Diarsipkan",
+  "@discussionStatusArchivedTag": { "description": "Tag status diskusi diarsipkan pada kartu thread" },
+
+  "discussionStatusActiveTag": "Thread Diskusi Aktif",
+  "@discussionStatusActiveTag": { "description": "Tag status thread diskusi aktif pada kartu thread" },
+
+  "discussionDetailReplyCount": "Balasan ({count})",
+  "@discussionDetailReplyCount": {
+    "description": "Header seksi daftar balasan",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "discussionNoRepliesYet": "Belum ada tanggapan pada diskusi ini.",
+  "@discussionNoRepliesYet": { "description": "Teks status kosong belum ada balasan pada thread" },
+
+  "discussionReplyingTo": "Membalas @{author}: \"{snippet}\"",
+  "@discussionReplyingTo": {
+    "description": "Banner konteks membalas komentar tertentu",
+    "placeholders": {
+      "author": { "type": "String" },
+      "snippet": { "type": "String" }
+    }
+  },
+
+  "discussionArchivedBanner": "Diskusi diarsipkan. Pengiriman balasan dinonaktifkan.",
+  "@discussionArchivedBanner": { "description": "Banner kotak input balasan saat thread diarsipkan" },
+
+  "discussionReplyToHint": "Tulis balasan untuk @{author}...",
+  "@discussionReplyToHint": {
+    "description": "Hint input saat membalas komentar spesifik",
+    "placeholders": {
+      "author": { "type": "String" }
+    }
+  },
+
+  "discussionReplyGeneralHint": "Tulis tanggapan atau balasan...",
+  "@discussionReplyGeneralHint": { "description": "Hint input umum balasan diskusi" }
 }

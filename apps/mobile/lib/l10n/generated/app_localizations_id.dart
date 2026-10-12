@@ -1360,4 +1360,205 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get joinClassSubmitBtn => 'Gabung Sekarang';
+
+  @override
+  String get discussionErrorPermissionStaff =>
+      'Akses ditolak: Anda tidak memiliki wewenang untuk mengelola forum kelas ini.';
+
+  @override
+  String get discussionErrorPermissionStudent =>
+      'Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini.';
+
+  @override
+  String discussionErrorLoadFailed(String detail) {
+    return 'Gagal memuat forum diskusi: $detail';
+  }
+
+  @override
+  String get discussionSelectClassFirst =>
+      'Pilih kelas terlebih dahulu untuk membuat diskusi.';
+
+  @override
+  String get discussionCreateTitle => 'Buat Diskusi Baru';
+
+  @override
+  String get discussionTitleLabel => 'Judul Diskusi *';
+
+  @override
+  String get discussionTitleHint => 'Misal: Tanya materi Bab 2...';
+
+  @override
+  String get discussionTitleMinLength => 'Judul minimal 3 karakter';
+
+  @override
+  String get discussionTitleMaxLength => 'Judul maksimal 200 karakter';
+
+  @override
+  String get discussionBodyLabel => 'Isi Pertanyaan / Topik Diskusi *';
+
+  @override
+  String get discussionBodyHint =>
+      'Tuliskan pertanyaan atau topik dengan jelas...';
+
+  @override
+  String get discussionBodyMinLength => 'Isi diskusi minimal 3 karakter';
+
+  @override
+  String get discussionBodyMaxLength => 'Isi diskusi maksimal 5000 karakter';
+
+  @override
+  String get discussionSendBtn => 'Kirim Diskusi';
+
+  @override
+  String get discussionForumTitle => 'Forum Diskusi';
+
+  @override
+  String get discussionCreateFab => 'Buat Diskusi';
+
+  @override
+  String get discussionNoClassTitle => 'Pilih Kelas untuk Berdiskusi';
+
+  @override
+  String get discussionNoClassBody =>
+      'Anda belum memilih kelas. Silakan bergabung ke kelas atau pilih kelas dari Beranda.';
+
+  @override
+  String get discussionLoading => 'Memuat diskusi kelas...';
+
+  @override
+  String get discussionFilterAll => 'Semua Diskusi';
+
+  @override
+  String get discussionFilterUnanswered => 'Belum Dibalas';
+
+  @override
+  String get discussionFilterUnread => 'Belum Dibaca';
+
+  @override
+  String get discussionEmptyAllTitle => 'Belum Ada Diskusi';
+
+  @override
+  String get discussionEmptyAllDesc =>
+      'Jadilah yang pertama memulai tanya jawab dan ruang kolaborasi di kelas ini.';
+
+  @override
+  String get discussionEmptyUnansweredTitle =>
+      'Tidak Ada Diskusi Belum Dibalas';
+
+  @override
+  String get discussionEmptyUnansweredDesc =>
+      'Semua topik diskusi telah memiliki balasan dari pengajar atau sesama anggota.';
+
+  @override
+  String get discussionEmptyUnreadTitle => 'Semua Diskusi Sudah Dibaca';
+
+  @override
+  String get discussionEmptyUnreadDesc =>
+      'Tidak ada aktivitas atau balasan baru yang belum Anda baca pada halaman ini.';
+
+  @override
+  String discussionReplyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Balasan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discussionNotFound =>
+      'Diskusi tidak ditemukan atau telah dihapus.';
+
+  @override
+  String discussionLoadDetailFailed(String detail) {
+    return 'Gagal memuat detail diskusi: $detail';
+  }
+
+  @override
+  String get discussionArchivedSendBlocked =>
+      'Diskusi ini telah diarsipkan. Pengiriman balasan dinonaktifkan.';
+
+  @override
+  String discussionSendReplyFailed(String detail) {
+    return 'Gagal mengirim balasan: $detail';
+  }
+
+  @override
+  String get discussionArchiveConfirmTitle => 'Arsipkan Diskusi?';
+
+  @override
+  String get discussionArchiveConfirmBody =>
+      'Diskusi yang diarsipkan akan dikunci dari pengiriman balasan baru dan disembunyikan dari daftar anggota kelas.';
+
+  @override
+  String get discussionArchiveSuccess => 'Diskusi berhasil diarsipkan.';
+
+  @override
+  String discussionArchiveFailed(String detail) {
+    return 'Gagal mengarsipkan: $detail';
+  }
+
+  @override
+  String get discussionEditTitle => 'Edit Diskusi';
+
+  @override
+  String get discussionEditTitleLabel => 'Judul Diskusi';
+
+  @override
+  String get discussionEditBodyLabel => 'Isi Diskusi';
+
+  @override
+  String discussionUpdateFailed(String detail) {
+    return 'Gagal update: $detail';
+  }
+
+  @override
+  String get discussionArchiveReplyTooltip => 'Arsipkan Balasan';
+
+  @override
+  String get discussionReplyAction => 'Balas';
+
+  @override
+  String get discussionThreadLoading => 'Memuat thread diskusi...';
+
+  @override
+  String get discussionDetailTitle => 'Detail Diskusi';
+
+  @override
+  String get discussionEditTooltip => 'Edit Diskusi';
+
+  @override
+  String get discussionArchiveTooltip => 'Arsipkan Diskusi';
+
+  @override
+  String get discussionStatusArchivedTag => 'Status: Diarsipkan';
+
+  @override
+  String get discussionStatusActiveTag => 'Thread Diskusi Aktif';
+
+  @override
+  String discussionDetailReplyCount(int count) {
+    return 'Balasan ($count)';
+  }
+
+  @override
+  String get discussionNoRepliesYet => 'Belum ada tanggapan pada diskusi ini.';
+
+  @override
+  String discussionReplyingTo(String author, String snippet) {
+    return 'Membalas @$author: \"$snippet\"';
+  }
+
+  @override
+  String get discussionArchivedBanner =>
+      'Diskusi diarsipkan. Pengiriman balasan dinonaktifkan.';
+
+  @override
+  String discussionReplyToHint(String author) {
+    return 'Tulis balasan untuk @$author...';
+  }
+
+  @override
+  String get discussionReplyGeneralHint => 'Tulis tanggapan atau balasan...';
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth/role_guard.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/discussion.dart';
 import '../../repositories/discussion_repository.dart';
 import '../../services/auth_provider.dart';
@@ -63,8 +64,9 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
       final thread = await _discussionRepository.getDiscussion(widget.discussionId);
       if (thread == null) {
         if (mounted) {
+          final l10n = AppLocalizations.of(context);
           setState(() {
-            _errorMessage = 'Diskusi tidak ditemukan atau telah dihapus.';
+            _errorMessage = l10n.discussionNotFound;
             _isLoading = false;
           });
         }
@@ -89,8 +91,9 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
-          _errorMessage = 'Gagal memuat detail diskusi: $e';
+          _errorMessage = l10n.discussionLoadDetailFailed(e.toString());
           _isLoading = false;
         });
       }
@@ -100,11 +103,12 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
   Future<void> _sendReply() async {
     final text = _replyController.text.trim();
     if (text.isEmpty || _isSending || _thread == null) return;
+    final l10n = AppLocalizations.of(context);
 
     if (_thread!.status == DiscussionStatus.archived) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Diskusi ini telah diarsipkan. Pengiriman balasan dinonaktifkan.'),
+        SnackBar(
+          content: Text(l10n.discussionArchivedSendBlocked),
           backgroundColor: AppTheme.warning,
         ),
       );
@@ -131,7 +135,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengirim balasan: $e'), backgroundColor: AppTheme.error),
+          SnackBar(content: Text(l10n.discussionSendReplyFailed(e.toString())), backgroundColor: AppTheme.error),
         );
       }
     } finally {
@@ -142,19 +146,20 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
   }
 
   Future<void> _confirmArchiveThread() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Arsipkan Diskusi?'),
-        content: const Text(
-          'Diskusi yang diarsipkan akan dikunci dari pengiriman balasan baru dan disembunyikan dari daftar anggota kelas.',
+        title: Text(l10n.discussionArchiveConfirmTitle),
+        content: Text(
+          l10n.discussionArchiveConfirmBody,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.btnCancel)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.warning),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Arsipkan'),
+            child: Text(l10n.classArchiveBtn),
           ),
         ],
       ),
@@ -166,13 +171,13 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
         await _loadThreadAndReplies();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Diskusi berhasil diarsipkan.'), backgroundColor: AppTheme.success),
+            SnackBar(content: Text(l10n.discussionArchiveSuccess), backgroundColor: AppTheme.success),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal mengarsipkan: $e'), backgroundColor: AppTheme.error),
+            SnackBar(content: Text(l10n.discussionArchiveFailed(e.toString())), backgroundColor: AppTheme.error),
           );
         }
       }
@@ -181,6 +186,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
 
   Future<void> _showEditThreadDialog() async {
     if (_thread == null) return;
+    final l10n = AppLocalizations.of(context);
     final titleCtrl = TextEditingController(text: _thread!.title);
     final bodyCtrl = TextEditingController(text: _thread!.body);
     final formKey = GlobalKey<FormState>();
@@ -188,7 +194,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
     final updated = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Edit Diskusi'),
+        title: Text(l10n.discussionEditTitle),
         content: SizedBox(
           width: 460,
           child: Form(
@@ -198,22 +204,22 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
               children: [
                 TextFormField(
                   controller: titleCtrl,
-                  decoration: const InputDecoration(labelText: 'Judul Diskusi'),
-                  validator: (v) => v == null || v.trim().length < 3 ? 'Judul minimal 3 karakter' : null,
+                  decoration: InputDecoration(labelText: l10n.discussionEditTitleLabel),
+                  validator: (v) => v == null || v.trim().length < 3 ? l10n.discussionTitleMinLength : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: bodyCtrl,
-                  decoration: const InputDecoration(labelText: 'Isi Diskusi'),
+                  decoration: InputDecoration(labelText: l10n.discussionEditBodyLabel),
                   maxLines: 4,
-                  validator: (v) => v == null || v.trim().length < 3 ? 'Isi diskusi minimal 3 karakter' : null,
+                  validator: (v) => v == null || v.trim().length < 3 ? l10n.discussionBodyMinLength : null,
                 ),
               ],
             ),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.btnCancel)),
           ElevatedButton(
             onPressed: () async {
               if (!formKey.currentState!.validate()) return;
@@ -227,12 +233,12 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
               } catch (e) {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text('Gagal update: $e'), backgroundColor: AppTheme.error),
+                    SnackBar(content: Text(l10n.discussionUpdateFailed(e.toString())), backgroundColor: AppTheme.error),
                   );
                 }
               }
             },
-            child: const Text('Simpan'),
+            child: Text(l10n.btnSave),
           ),
         ],
       ),
@@ -253,6 +259,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
     required bool isStaff,
     required dynamic currentUser,
   }) {
+    final l10n = AppLocalizations.of(context);
     final isReplyAuthor = currentUser?.uid == reply.authorId;
     return Card(
       margin: EdgeInsets.only(bottom: isChild ? 6 : 10),
@@ -306,7 +313,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                 if (!isArchived && (isReplyAuthor || isStaff))
                   IconButton(
                     icon: const Icon(Icons.archive_outlined, size: 16, color: AppTheme.textSecondary),
-                    tooltip: 'Arsipkan Balasan',
+                    tooltip: l10n.discussionArchiveReplyTooltip,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: () async {
@@ -319,7 +326,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                       } catch (e) {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+                            SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
                           );
                         }
                       }
@@ -342,16 +349,16 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                     setState(() => _replyingTo = reply);
                     _replyFocusNode.requestFocus();
                   },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.reply_rounded, size: 14, color: AppTheme.primary),
-                        SizedBox(width: 4),
+                        const Icon(Icons.reply_rounded, size: 14, color: AppTheme.primary),
+                        const SizedBox(width: 4),
                         Text(
-                          'Balas',
-                          style: TextStyle(
+                          l10n.discussionReplyAction,
+                          style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: AppTheme.primary,
@@ -371,17 +378,19 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (_isLoading) {
-      return const Scaffold(
-        body: LoadingIndicator(message: 'Memuat thread diskusi...'),
+      return Scaffold(
+        body: LoadingIndicator(message: l10n.discussionThreadLoading),
       );
     }
 
     if (_errorMessage != null || _thread == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Detail Diskusi')),
+        appBar: AppBar(title: Text(l10n.discussionDetailTitle)),
         body: ErrorView(
-          message: _errorMessage ?? 'Diskusi tidak ditemukan.',
+          message: _errorMessage ?? l10n.discussionNotFound,
           onRetry: _loadThreadAndReplies,
         ),
       );
@@ -396,23 +405,23 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detail Diskusi'),
+        title: Text(l10n.discussionDetailTitle),
         actions: [
           if (!isArchived && isAuthor)
             IconButton(
               icon: const Icon(Icons.edit_outlined),
-              tooltip: 'Edit Diskusi',
+              tooltip: l10n.discussionEditTooltip,
               onPressed: _showEditThreadDialog,
             ),
           if (!isArchived && (isAuthor || isStaff))
             IconButton(
               icon: const Icon(Icons.archive_outlined),
-              tooltip: 'Arsipkan Diskusi',
+              tooltip: l10n.discussionArchiveTooltip,
               onPressed: _confirmArchiveThread,
             ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Segarkan',
+            tooltip: l10n.meetingRefreshTooltip,
             onPressed: _loadThreadAndReplies,
           ),
         ],
@@ -455,7 +464,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                     ),
                                     Text(
-                                      isArchived ? 'Status: Diarsipkan' : 'Thread Diskusi Aktif',
+                                      isArchived ? l10n.discussionStatusArchivedTag : l10n.discussionStatusActiveTag,
                                       style: TextStyle(
                                         fontSize: 11,
                                         color: isArchived ? AppTheme.warning : AppTheme.success,
@@ -491,7 +500,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                       const Icon(Icons.chat_bubble_outline_rounded, size: 18, color: AppTheme.primary),
                       const SizedBox(width: 8),
                       Text(
-                        'Balasan (${_replies.length})',
+                        l10n.discussionDetailReplyCount(_replies.length),
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                       ),
                     ],
@@ -506,9 +515,9 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                           children: [
                             Icon(Icons.mark_chat_read_outlined, size: 40, color: AppTheme.textSecondary.withAlpha(100)),
                             const SizedBox(height: 8),
-                            const Text(
-                              'Belum ada tanggapan pada diskusi ini.',
-                              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                            Text(
+                              l10n.discussionNoRepliesYet,
+                              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
                             ),
                           ],
                         ),
@@ -595,7 +604,10 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Membalas @${_replyingTo!.authorDisplayName}: "${_replyingTo!.body.length > 30 ? '${_replyingTo!.body.substring(0, 30)}...' : _replyingTo!.body}"',
+                      l10n.discussionReplyingTo(
+                        _replyingTo!.authorDisplayName,
+                        _replyingTo!.body.length > 30 ? '${_replyingTo!.body.substring(0, 30)}...' : _replyingTo!.body,
+                      ),
                       style: const TextStyle(fontSize: 12, color: AppTheme.primary, fontWeight: FontWeight.w500),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -628,14 +640,14 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                         color: AppTheme.warning.withAlpha(20),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.lock_outline_rounded, size: 16, color: AppTheme.warning),
-                          SizedBox(width: 8),
+                          const Icon(Icons.lock_outline_rounded, size: 16, color: AppTheme.warning),
+                          const SizedBox(width: 8),
                           Text(
-                            'Diskusi diarsipkan. Pengiriman balasan dinonaktifkan.',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.warning),
+                            l10n.discussionArchivedBanner,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.warning),
                           ),
                         ],
                       ),
@@ -648,8 +660,8 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                             focusNode: _replyFocusNode,
                             decoration: InputDecoration(
                               hintText: _replyingTo != null
-                                  ? 'Tulis balasan untuk @${_replyingTo!.authorDisplayName}...'
-                                  : 'Tulis tanggapan atau balasan...',
+                                  ? l10n.discussionReplyToHint(_replyingTo!.authorDisplayName)
+                                  : l10n.discussionReplyGeneralHint,
                               isDense: true,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                             ),

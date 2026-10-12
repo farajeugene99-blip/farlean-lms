@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/core/theme/app_theme.dart';
+import 'package:mobile/l10n/generated/app_localizations.dart';
 import 'package:mobile/models/discussion.dart';
 import 'package:mobile/presentation/discussion/discussion_list_screen.dart';
 import 'package:mobile/presentation/discussion/thread_detail_screen.dart';
@@ -65,6 +66,9 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
+          locale: const Locale('id'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: const MainShell(
             child: Scaffold(body: Text('Content Area')),
           ),
@@ -103,8 +107,12 @@ void main() {
             ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
             ChangeNotifierProvider<ClassProvider>(create: (_) => ClassProvider()),
           ],
-          child: const MaterialApp(
-            home: DiscussionListScreen(classId: ''),
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            locale: const Locale('id'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const DiscussionListScreen(classId: ''),
           ),
         ),
       );
@@ -150,6 +158,10 @@ void main() {
             ChangeNotifierProvider<ClassProvider>(create: (_) => ClassProvider()),
           ],
           child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            locale: const Locale('id'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: DiscussionListScreen(classId: 'c1', discussionRepository: repo),
           ),
         ),
@@ -219,6 +231,9 @@ void main() {
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
+            locale: const Locale('id'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: ThreadDetailScreen(
               discussionId: 'd1',
               classId: 'c1',
@@ -285,6 +300,9 @@ void main() {
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
+            locale: const Locale('id'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: ThreadDetailScreen(
               discussionId: 'd1',
               classId: 'c1',
@@ -349,6 +367,9 @@ void main() {
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
+            locale: const Locale('id'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: ThreadDetailScreen(
               discussionId: 'd_arch',
               classId: 'c1',
@@ -381,6 +402,9 @@ void main() {
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
+            locale: const Locale('id'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: DiscussionListScreen(classId: 'c1', discussionRepository: repo),
           ),
         ),

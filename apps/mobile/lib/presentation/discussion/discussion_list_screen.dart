@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/auth/role_guard.dart';
 import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/discussion.dart';
 import '../../repositories/discussion_repository.dart';
 import '../../services/auth_provider.dart';
@@ -125,16 +126,17 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
       }
     } catch (e) {
       if (mounted && currentGen == _discussionsGen) {
+        final l10n = AppLocalizations.of(context);
         String friendlyMessage;
         final errorString = e.toString().toLowerCase();
         if (errorString.contains('permission-denied') || errorString.contains('evaluation error')) {
           friendlyMessage = isStaff
-              ? 'Akses ditolak: Anda tidak memiliki wewenang untuk mengelola forum kelas ini.'
-              : 'Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini.';
+              ? l10n.discussionErrorPermissionStaff
+              : l10n.discussionErrorPermissionStudent;
         } else if (errorString.contains('network') || errorString.contains('unavailable')) {
-          friendlyMessage = 'Koneksi ke server bermasalah. Periksa jaringan internet atau emulator Anda.';
+          friendlyMessage = l10n.meetingErrorNetwork;
         } else {
-          friendlyMessage = 'Gagal memuat forum diskusi: $e';
+          friendlyMessage = l10n.discussionErrorLoadFailed(e.toString());
         }
 
         setState(() {
@@ -146,11 +148,12 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
   }
 
   Future<void> _showCreateThreadDialog() async {
+    final l10n = AppLocalizations.of(context);
     final effectiveClassId = _getEffectiveClassId();
     if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pilih kelas terlebih dahulu untuk membuat diskusi.'),
+        SnackBar(
+          content: Text(l10n.discussionSelectClassFirst),
           backgroundColor: AppTheme.error,
         ),
       );
@@ -171,7 +174,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
           return PopScope(
             canPop: !isSubmitting,
             child: AlertDialog(
-              title: const Text('Buat Diskusi Baru'),
+              title: Text(l10n.discussionCreateTitle),
               content: SizedBox(
                 width: 460,
                 child: Form(
@@ -184,13 +187,13 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
                         TextFormField(
                           controller: titleController,
                           enabled: !isSubmitting,
-                          decoration: const InputDecoration(
-                            labelText: 'Judul Diskusi *',
-                            hintText: 'Misal: Tanya materi Bab 2...',
+                          decoration: InputDecoration(
+                            labelText: l10n.discussionTitleLabel,
+                            hintText: l10n.discussionTitleHint,
                           ),
                           validator: (v) {
-                            if (v == null || v.trim().length < 3) return 'Judul minimal 3 karakter';
-                            if (v.trim().length > 200) return 'Judul maksimal 200 karakter';
+                            if (v == null || v.trim().length < 3) return l10n.discussionTitleMinLength;
+                            if (v.trim().length > 200) return l10n.discussionTitleMaxLength;
                             return null;
                           },
                         ),
@@ -198,14 +201,14 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
                         TextFormField(
                           controller: bodyController,
                           enabled: !isSubmitting,
-                          decoration: const InputDecoration(
-                            labelText: 'Isi Pertanyaan / Topik Diskusi *',
-                            hintText: 'Tuliskan pertanyaan atau topik dengan jelas...',
+                          decoration: InputDecoration(
+                            labelText: l10n.discussionBodyLabel,
+                            hintText: l10n.discussionBodyHint,
                           ),
                           maxLines: 4,
                           validator: (v) {
-                            if (v == null || v.trim().length < 3) return 'Isi diskusi minimal 3 karakter';
-                            if (v.trim().length > 5000) return 'Isi diskusi maksimal 5000 karakter';
+                            if (v == null || v.trim().length < 3) return l10n.discussionBodyMinLength;
+                            if (v.trim().length > 5000) return l10n.discussionBodyMaxLength;
                             return null;
                           },
                         ),
@@ -217,7 +220,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
               actions: [
                 TextButton(
                   onPressed: isSubmitting ? null : () => Navigator.pop(ctx, false),
-                  child: const Text('Batal'),
+                  child: Text(l10n.btnCancel),
                 ),
                 ElevatedButton(
                   onPressed: isSubmitting
@@ -239,7 +242,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
                             if (ctx.mounted) {
                               setDialogState(() => isSubmitting = false);
                               ScaffoldMessenger.of(ctx).showSnackBar(
-                                SnackBar(content: Text('Gagal: $e'), backgroundColor: AppTheme.error),
+                                SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
                               );
                             }
                           }
@@ -250,7 +253,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('Kirim Diskusi'),
+                      : Text(l10n.discussionSendBtn),
                 ),
               ],
             ),
@@ -269,13 +272,15 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Forum Diskusi'),
+        title: Text(l10n.discussionForumTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Segarkan',
+            tooltip: l10n.meetingRefreshTooltip,
             onPressed: _loadDiscussions,
           ),
           const SizedBox(width: 8),
@@ -284,7 +289,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showCreateThreadDialog,
         icon: const Icon(Icons.add_comment_rounded),
-        label: const Text('Buat Diskusi'),
+        label: Text(l10n.discussionCreateFab),
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
       ),
@@ -293,6 +298,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     final classProvider = context.watch<ClassProvider>();
     final effectiveClassId = _getEffectiveClassId();
 
@@ -310,20 +316,20 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Pilih Kelas untuk Berdiskusi',
+                l10n.discussionNoClassTitle,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Anda belum memilih kelas. Silakan bergabung ke kelas atau pilih kelas dari Beranda.',
+              Text(
+                l10n.discussionNoClassBody,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
               ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: () => context.push(AppConstants.joinClassRoute),
                 icon: const Icon(Icons.key_rounded),
-                label: const Text('Gabung Kelas'),
+                label: Text(l10n.meetingJoinClassBtn),
               ),
             ],
           ),
@@ -338,7 +344,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
         _buildFilterBar(),
         Expanded(
           child: _isLoading
-              ? const LoadingIndicator(message: 'Memuat diskusi kelas...')
+              ? LoadingIndicator(message: l10n.discussionLoading)
               : _errorMessage != null
                   ? ErrorView(message: _errorMessage!, onRetry: _loadDiscussions)
                   : _discussions.isEmpty
@@ -361,6 +367,8 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
   }
 
   Widget _buildClassSelectorBar(ClassProvider classProvider, String effectiveClassId) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -371,7 +379,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
         children: [
           const Icon(Icons.school_outlined, size: 20, color: AppTheme.primary),
           const SizedBox(width: 8),
-          const Text('Kelas:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(l10n.meetingClassLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           const SizedBox(width: 8),
           Expanded(
             child: DropdownButtonHideUnderline(
@@ -406,6 +414,8 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
   }
 
   Widget _buildFilterBar() {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: SingleChildScrollView(
@@ -413,7 +423,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
         child: Row(
           children: [
             ChoiceChip(
-              label: const Text('Semua Diskusi'),
+              label: Text(l10n.discussionFilterAll),
               selected: _selectedFilterIndex == 0,
               onSelected: (selected) {
                 if (selected && _selectedFilterIndex != 0) {
@@ -424,7 +434,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
             ),
             const SizedBox(width: 8),
             ChoiceChip(
-              label: const Text('Belum Dibalas'),
+              label: Text(l10n.discussionFilterUnanswered),
               selected: _selectedFilterIndex == 1,
               onSelected: (selected) {
                 if (selected && _selectedFilterIndex != 1) {
@@ -435,7 +445,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
             ),
             const SizedBox(width: 8),
             ChoiceChip(
-              label: const Text('Belum Dibaca'),
+              label: Text(l10n.discussionFilterUnread),
               selected: _selectedFilterIndex == 2,
               onSelected: (selected) {
                 if (selected && _selectedFilterIndex != 2) {
@@ -451,15 +461,16 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
   }
 
   Widget _buildEmptyDiscussionView() {
-    String emptyTitle = 'Belum Ada Diskusi';
-    String emptyDesc = 'Jadilah yang pertama memulai tanya jawab dan ruang kolaborasi di kelas ini.';
+    final l10n = AppLocalizations.of(context);
+    String emptyTitle = l10n.discussionEmptyAllTitle;
+    String emptyDesc = l10n.discussionEmptyAllDesc;
 
     if (_selectedFilterIndex == 1) {
-      emptyTitle = 'Tidak Ada Diskusi Belum Dibalas';
-      emptyDesc = 'Semua topik diskusi telah memiliki balasan dari pengajar atau sesama anggota.';
+      emptyTitle = l10n.discussionEmptyUnansweredTitle;
+      emptyDesc = l10n.discussionEmptyUnansweredDesc;
     } else if (_selectedFilterIndex == 2) {
-      emptyTitle = 'Semua Diskusi Sudah Dibaca';
-      emptyDesc = 'Tidak ada aktivitas atau balasan baru yang belum Anda baca pada halaman ini.';
+      emptyTitle = l10n.discussionEmptyUnreadTitle;
+      emptyDesc = l10n.discussionEmptyUnreadDesc;
     }
 
     return Center(
@@ -491,6 +502,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
   }
 
   Widget _buildThreadCard(Discussion thread, String classId) {
+    final l10n = AppLocalizations.of(context);
     final isArchived = thread.status == DiscussionStatus.archived;
     final uid = context.read<AuthProvider>().appUser?.uid;
     final readTime = _readTimes[thread.id];
@@ -554,9 +566,9 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
                         color: AppTheme.warning.withAlpha(20),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text(
-                        'Diarsipkan',
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.warning),
+                      child: Text(
+                        l10n.meetingStatusArchived,
+                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.warning),
                       ),
                     ),
                 ],
@@ -590,7 +602,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
                         const Icon(Icons.chat_bubble_outline_rounded, size: 13, color: AppTheme.primary),
                         const SizedBox(width: 4),
                         Text(
-                          '${thread.replyCount} Balasan',
+                          l10n.discussionReplyCount(thread.replyCount),
                           style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primary),
                         ),
                       ],

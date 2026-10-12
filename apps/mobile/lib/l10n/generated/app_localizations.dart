@@ -2335,6 +2335,336 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Gabung Sekarang'**
   String get joinClassSubmitBtn;
+
+  /// Pesan error permission-denied diskusi untuk pengajar
+  ///
+  /// In id, this message translates to:
+  /// **'Akses ditolak: Anda tidak memiliki wewenang untuk mengelola forum kelas ini.'**
+  String get discussionErrorPermissionStaff;
+
+  /// Pesan error permission-denied diskusi untuk siswa
+  ///
+  /// In id, this message translates to:
+  /// **'Akses ditolak: Anda belum terdaftar sebagai anggota aktif di kelas ini.'**
+  String get discussionErrorPermissionStudent;
+
+  /// Pesan error gagal memuat diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memuat forum diskusi: {detail}'**
+  String discussionErrorLoadFailed(String detail);
+
+  /// Snackbar peringatan belum memilih kelas saat buat diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Pilih kelas terlebih dahulu untuk membuat diskusi.'**
+  String get discussionSelectClassFirst;
+
+  /// Judul dialog buat diskusi baru
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Diskusi Baru'**
+  String get discussionCreateTitle;
+
+  /// Label field judul diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Judul Diskusi *'**
+  String get discussionTitleLabel;
+
+  /// Hint field judul diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Misal: Tanya materi Bab 2...'**
+  String get discussionTitleHint;
+
+  /// Validasi judul diskusi terlalu pendek
+  ///
+  /// In id, this message translates to:
+  /// **'Judul minimal 3 karakter'**
+  String get discussionTitleMinLength;
+
+  /// Validasi judul diskusi melebihi batas
+  ///
+  /// In id, this message translates to:
+  /// **'Judul maksimal 200 karakter'**
+  String get discussionTitleMaxLength;
+
+  /// Label field isi diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Isi Pertanyaan / Topik Diskusi *'**
+  String get discussionBodyLabel;
+
+  /// Hint field isi diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Tuliskan pertanyaan atau topik dengan jelas...'**
+  String get discussionBodyHint;
+
+  /// Validasi isi diskusi terlalu pendek
+  ///
+  /// In id, this message translates to:
+  /// **'Isi diskusi minimal 3 karakter'**
+  String get discussionBodyMinLength;
+
+  /// Validasi isi diskusi melebihi batas
+  ///
+  /// In id, this message translates to:
+  /// **'Isi diskusi maksimal 5000 karakter'**
+  String get discussionBodyMaxLength;
+
+  /// Tombol kirim topik diskusi baru
+  ///
+  /// In id, this message translates to:
+  /// **'Kirim Diskusi'**
+  String get discussionSendBtn;
+
+  /// Judul AppBar forum diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Forum Diskusi'**
+  String get discussionForumTitle;
+
+  /// Label tombol FAB buat diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Diskusi'**
+  String get discussionCreateFab;
+
+  /// Judul status belum memilih kelas pada forum diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Pilih Kelas untuk Berdiskusi'**
+  String get discussionNoClassTitle;
+
+  /// Deskripsi status belum memilih kelas pada forum diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Anda belum memilih kelas. Silakan bergabung ke kelas atau pilih kelas dari Beranda.'**
+  String get discussionNoClassBody;
+
+  /// Teks indikator loading forum diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Memuat diskusi kelas...'**
+  String get discussionLoading;
+
+  /// Filter chip semua diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Semua Diskusi'**
+  String get discussionFilterAll;
+
+  /// Filter chip diskusi belum dibalas
+  ///
+  /// In id, this message translates to:
+  /// **'Belum Dibalas'**
+  String get discussionFilterUnanswered;
+
+  /// Filter chip diskusi belum dibaca
+  ///
+  /// In id, this message translates to:
+  /// **'Belum Dibaca'**
+  String get discussionFilterUnread;
+
+  /// Judul status kosong semua diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Belum Ada Diskusi'**
+  String get discussionEmptyAllTitle;
+
+  /// Deskripsi status kosong semua diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Jadilah yang pertama memulai tanya jawab dan ruang kolaborasi di kelas ini.'**
+  String get discussionEmptyAllDesc;
+
+  /// Judul status kosong filter belum dibalas
+  ///
+  /// In id, this message translates to:
+  /// **'Tidak Ada Diskusi Belum Dibalas'**
+  String get discussionEmptyUnansweredTitle;
+
+  /// Deskripsi status kosong filter belum dibalas
+  ///
+  /// In id, this message translates to:
+  /// **'Semua topik diskusi telah memiliki balasan dari pengajar atau sesama anggota.'**
+  String get discussionEmptyUnansweredDesc;
+
+  /// Judul status kosong filter belum dibaca
+  ///
+  /// In id, this message translates to:
+  /// **'Semua Diskusi Sudah Dibaca'**
+  String get discussionEmptyUnreadTitle;
+
+  /// Deskripsi status kosong filter belum dibaca
+  ///
+  /// In id, this message translates to:
+  /// **'Tidak ada aktivitas atau balasan baru yang belum Anda baca pada halaman ini.'**
+  String get discussionEmptyUnreadDesc;
+
+  /// Badge jumlah balasan pada kartu diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'{count, plural, other{{count} Balasan}}'**
+  String discussionReplyCount(int count);
+
+  /// Pesan error diskusi tidak ditemukan
+  ///
+  /// In id, this message translates to:
+  /// **'Diskusi tidak ditemukan atau telah dihapus.'**
+  String get discussionNotFound;
+
+  /// Pesan error gagal memuat detail thread diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memuat detail diskusi: {detail}'**
+  String discussionLoadDetailFailed(String detail);
+
+  /// Snackbar penolakan kirim balasan pada thread arsip
+  ///
+  /// In id, this message translates to:
+  /// **'Diskusi ini telah diarsipkan. Pengiriman balasan dinonaktifkan.'**
+  String get discussionArchivedSendBlocked;
+
+  /// Snackbar gagal mengirim balasan diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal mengirim balasan: {detail}'**
+  String discussionSendReplyFailed(String detail);
+
+  /// Judul dialog konfirmasi arsipkan thread diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Arsipkan Diskusi?'**
+  String get discussionArchiveConfirmTitle;
+
+  /// Isi dialog konfirmasi arsipkan thread diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Diskusi yang diarsipkan akan dikunci dari pengiriman balasan baru dan disembunyikan dari daftar anggota kelas.'**
+  String get discussionArchiveConfirmBody;
+
+  /// Snackbar sukses arsipkan thread diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Diskusi berhasil diarsipkan.'**
+  String get discussionArchiveSuccess;
+
+  /// Snackbar gagal arsipkan diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal mengarsipkan: {detail}'**
+  String discussionArchiveFailed(String detail);
+
+  /// Judul dialog edit thread diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Edit Diskusi'**
+  String get discussionEditTitle;
+
+  /// Label field edit judul diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Judul Diskusi'**
+  String get discussionEditTitleLabel;
+
+  /// Label field edit isi diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Isi Diskusi'**
+  String get discussionEditBodyLabel;
+
+  /// Snackbar gagal update diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal update: {detail}'**
+  String discussionUpdateFailed(String detail);
+
+  /// Tooltip ikon arsipkan butir balasan
+  ///
+  /// In id, this message translates to:
+  /// **'Arsipkan Balasan'**
+  String get discussionArchiveReplyTooltip;
+
+  /// Tombol aksi balas pada butir balasan
+  ///
+  /// In id, this message translates to:
+  /// **'Balas'**
+  String get discussionReplyAction;
+
+  /// Teks loading thread diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Memuat thread diskusi...'**
+  String get discussionThreadLoading;
+
+  /// Judul AppBar layar detail diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Detail Diskusi'**
+  String get discussionDetailTitle;
+
+  /// Tooltip ikon edit diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Edit Diskusi'**
+  String get discussionEditTooltip;
+
+  /// Tooltip ikon arsipkan diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Arsipkan Diskusi'**
+  String get discussionArchiveTooltip;
+
+  /// Tag status diskusi diarsipkan pada kartu thread
+  ///
+  /// In id, this message translates to:
+  /// **'Status: Diarsipkan'**
+  String get discussionStatusArchivedTag;
+
+  /// Tag status thread diskusi aktif pada kartu thread
+  ///
+  /// In id, this message translates to:
+  /// **'Thread Diskusi Aktif'**
+  String get discussionStatusActiveTag;
+
+  /// Header seksi daftar balasan
+  ///
+  /// In id, this message translates to:
+  /// **'Balasan ({count})'**
+  String discussionDetailReplyCount(int count);
+
+  /// Teks status kosong belum ada balasan pada thread
+  ///
+  /// In id, this message translates to:
+  /// **'Belum ada tanggapan pada diskusi ini.'**
+  String get discussionNoRepliesYet;
+
+  /// Banner konteks membalas komentar tertentu
+  ///
+  /// In id, this message translates to:
+  /// **'Membalas @{author}: \"{snippet}\"'**
+  String discussionReplyingTo(String author, String snippet);
+
+  /// Banner kotak input balasan saat thread diarsipkan
+  ///
+  /// In id, this message translates to:
+  /// **'Diskusi diarsipkan. Pengiriman balasan dinonaktifkan.'**
+  String get discussionArchivedBanner;
+
+  /// Hint input saat membalas komentar spesifik
+  ///
+  /// In id, this message translates to:
+  /// **'Tulis balasan untuk @{author}...'**
+  String discussionReplyToHint(String author);
+
+  /// Hint input umum balasan diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Tulis tanggapan atau balasan...'**
+  String get discussionReplyGeneralHint;
 }
 
 class _AppLocalizationsDelegate
