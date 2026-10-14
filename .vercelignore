@@ -1,0 +1,9 @@
+apps/
+build/
+.git/
+.idea/
+.vscode/
+backend/node_modules/
+backend/test/
+backend/.dump/
+backend/*.log
