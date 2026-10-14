@@ -16,12 +16,49 @@ export interface BootstrapUserResult {
   emailVerified: boolean;
   role: string;
   message: string;
+  nim?: string | null;
+}
+
+/**
+ * Memeriksa dan mengisi otomatis nim_nip ke users/{uid}/private/identity
+ * untuk mahasiswa UNESA jika email terverifikasi dan memiliki format NIM:
+ * Contoh: 25050974183@mhs.unesa.ac.id -> NIM: 25050974183
+ * Tidak akan menimpa nim_nip manual yang sudah ada sebelumnya.
+ */
+async function checkAndAutofillUnesaNim(
+  userRef: FirebaseFirestore.DocumentReference,
+  email: string,
+  emailVerified: boolean
+): Promise<string | null> {
+  if (!emailVerified || !email) return null;
+  const match = email.trim().match(/^(\d{8,15})@mhs\.unesa\.ac\.id$/i);
+  if (!match) return null;
+
+  const autoNim = match[1];
+  const identityRef = userRef.collection('private').doc('identity');
+  const identityDoc = await identityRef.get();
+
+  if (!identityDoc.exists || !identityDoc.data()?.nim_nip) {
+    await identityRef.set(
+      {
+        nim_nip: autoNim,
+        updated_at: FieldValue.serverTimestamp(),
+        auto_filled: true,
+      },
+      { merge: true }
+    );
+    return autoNim;
+  }
+
+  return identityDoc.data()?.nim_nip || null;
 }
 
 /**
  * Logika murni inisialisasi dokumen `users/{uid}` via Admin SDK langsung:
  * - Menentukan account_type berdasarkan status verifikasi dan domain institusi
  * - Idempoten: mempertahankan role yang sudah ada (tidak menimpa GURU/ADMIN)
+ * - Self-healing: memperbarui account_type jika email terverifikasi sesuai domain institusi
+ * - Auto-fill NIM: mengekstrak NIM dari email mhs.unesa.ac.id ke private/identity
  * - Dipanggil oleh endpoint HTTP `/api/bootstrap` dan script provisioning testing
  */
 export async function bootstrapUser(params: BootstrapUserParams): Promise<BootstrapUserResult> {
@@ -49,11 +86,14 @@ export async function bootstrapUser(params: BootstrapUserParams): Promise<Bootst
 
     await userRef.set(newUserData);
 
+    const autofilledNim = await checkAndAutofillUnesaNim(userRef, email, emailVerified);
+
     return {
       isNew: true,
       accountType: calculatedAccountType,
       emailVerified,
       role: initialRole,
+      nim: autofilledNim,
       message: 'Profil pengguna berhasil diinisialisasi.',
     };
   } else {
@@ -63,11 +103,16 @@ export async function bootstrapUser(params: BootstrapUserParams): Promise<Bootst
       last_active: FieldValue.serverTimestamp(),
     };
 
-    // Jika user baru saja verifikasi email, tingkatkan account_type jika sesuai domain
-    if (emailVerified && currentData.account_type === 'UMUM') {
-      const upgradedType = resolveAccountType(email);
-      if (upgradedType !== 'UMUM') {
-        updates.account_type = upgradedType;
+    let finalAccountType: 'MAHASISWA' | 'DOSEN' | 'UMUM' = currentData.account_type || 'UMUM';
+
+    // Self-healing: Jika email terverifikasi dan akun masih UMUM atau belum sesuai domain institusi resmi
+    if (emailVerified) {
+      const resolved = resolveAccountType(email);
+      if (resolved !== 'UMUM' && currentData.account_type !== resolved) {
+        if (currentData.account_type === 'UMUM' || !currentData.account_type) {
+          updates.account_type = resolved;
+          finalAccountType = resolved;
+        }
       }
     }
 
@@ -77,12 +122,17 @@ export async function bootstrapUser(params: BootstrapUserParams): Promise<Bootst
 
     await userRef.update(updates);
 
+    const autofilledNim = await checkAndAutofillUnesaNim(userRef, email, emailVerified);
+
     return {
       isNew: false,
-      accountType: updates.account_type || currentData.account_type || 'UMUM',
+      accountType: finalAccountType,
       emailVerified,
       role: currentData.role || 'USER',
-      message: 'Profil pengguna berhasil diperbarui.',
+      nim: autofilledNim,
+      message: updates.account_type
+        ? 'Tipe akun berhasil diperbarui sesuai domain institusi.'
+        : 'Profil pengguna berhasil diperbarui.',
     };
   }
 }

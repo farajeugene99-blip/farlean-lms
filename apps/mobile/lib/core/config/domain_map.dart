@@ -13,6 +13,8 @@ class DomainMap {
   static const List<DomainEntry> institutionDomains = [
     DomainEntry(domain: 'dosen.farlean.edu', type: AccountType.dosen),
     DomainEntry(domain: 'farlean.edu', type: AccountType.mahasiswa),
+    DomainEntry(domain: 'mhs.unesa.ac.id', type: AccountType.mahasiswa),
+    DomainEntry(domain: 'unesa.ac.id', type: AccountType.dosen),
   ];
 
   /// Menyelesaikan AccountType dari alamat email dengan aturan Longest-Match & Label Boundary ketat.

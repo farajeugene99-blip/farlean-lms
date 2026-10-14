@@ -13,6 +13,8 @@ export interface DomainEntry {
 export const INSTITUTION_DOMAINS: DomainEntry[] = [
   { domain: 'dosen.farlean.edu', type: 'DOSEN' },
   { domain: 'farlean.edu', type: 'MAHASISWA' },
+  { domain: 'mhs.unesa.ac.id', type: 'MAHASISWA' },
+  { domain: 'unesa.ac.id', type: 'DOSEN' },
 ];
 
 export function resolveAccountType(email?: string): 'MAHASISWA' | 'DOSEN' | 'UMUM' {

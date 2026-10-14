@@ -205,6 +205,123 @@ async function runTestingAccountsTests() {
     });
   });
 
+  const unesaMhsUid = 'unesa_mhs_' + Date.now();
+  const unesaDosenUid = 'unesa_dosen_' + Date.now();
+  const unesaHealingUid = 'unesa_healing_' + Date.now();
+  const unesaManualNimUid = 'unesa_manual_' + Date.now();
+
+  await test('1b. bootstrapUser: email 25050974183@mhs.unesa.ac.id baru menghasilkan MAHASISWA & auto-fill nim_nip', async () => {
+    const res = await bootstrapUser({
+      uid: unesaMhsUid,
+      email: '25050974183@mhs.unesa.ac.id',
+      emailVerified: true,
+      name: 'Mahasiswa Unesa',
+    });
+
+    if (res.accountType !== 'MAHASISWA') throw new Error(`Expected MAHASISWA, got ${res.accountType}`);
+    if (res.role !== 'USER') throw new Error(`Expected role USER, got ${res.role}`);
+    if (res.nim !== '25050974183') throw new Error(`Expected nim 25050974183 in result, got ${res.nim}`);
+
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const adminDb = context.firestore();
+      const uDoc = await adminDb.collection('users').doc(unesaMhsUid).get();
+      if (uDoc.data()?.account_type !== 'MAHASISWA') throw new Error('account_type in Firestore must be MAHASISWA');
+
+      const idDoc = await adminDb.collection('users').doc(unesaMhsUid).collection('private').doc('identity').get();
+      if (!idDoc.exists || idDoc.data()?.nim_nip !== '25050974183') {
+        throw new Error(`Expected nim_nip 25050974183 in private/identity, got: ${idDoc.data()?.nim_nip}`);
+      }
+    });
+  });
+
+  await test('1c. bootstrapUser: email dosen@unesa.ac.id baru menghasilkan DOSEN', async () => {
+    const res = await bootstrapUser({
+      uid: unesaDosenUid,
+      email: 'dosen@unesa.ac.id',
+      emailVerified: true,
+      name: 'Dosen Unesa',
+    });
+
+    if (res.accountType !== 'DOSEN') throw new Error(`Expected DOSEN, got ${res.accountType}`);
+    if (res.role !== 'USER') throw new Error(`Expected role USER, got ${res.role}`);
+
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const adminDb = context.firestore();
+      const uDoc = await adminDb.collection('users').doc(unesaDosenUid).get();
+      if (uDoc.data()?.account_type !== 'DOSEN') throw new Error('account_type in Firestore must be DOSEN');
+    });
+  });
+
+  await test('1d. bootstrapUser: self-healing akun UMUM dengan email @mhs.unesa.ac.id menjadi MAHASISWA & return value terbaru', async () => {
+    // Seed user lama yang telanjur UMUM
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const adminDb = context.firestore();
+      await adminDb.collection('users').doc(unesaHealingUid).set({
+        uid: unesaHealingUid,
+        email: '25050974183@mhs.unesa.ac.id',
+        account_type: 'UMUM',
+        role: 'USER',
+        name: 'Unesa Healing User',
+      });
+    });
+
+    // Panggil bootstrapUser dengan emailVerified = true
+    const res = await bootstrapUser({
+      uid: unesaHealingUid,
+      email: '25050974183@mhs.unesa.ac.id',
+      emailVerified: true,
+    });
+
+    if (res.isNew !== false) throw new Error('Expected isNew to be false');
+    if (res.accountType !== 'MAHASISWA') throw new Error(`Expected return accountType MAHASISWA, got ${res.accountType}`);
+    if (res.nim !== '25050974183') throw new Error(`Expected nim 25050974183, got ${res.nim}`);
+
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const adminDb = context.firestore();
+      const uDoc = await adminDb.collection('users').doc(unesaHealingUid).get();
+      if (uDoc.data()?.account_type !== 'MAHASISWA') throw new Error('Firestore account_type must be healed to MAHASISWA');
+
+      const idDoc = await adminDb.collection('users').doc(unesaHealingUid).collection('private').doc('identity').get();
+      if (!idDoc.exists || idDoc.data()?.nim_nip !== '25050974183') {
+        throw new Error('Identity nim_nip must be autofilled during self-healing');
+      }
+    });
+  });
+
+  await test('1e. bootstrapUser: nim_nip manual yang sudah ada TIDAK tertimpa oleh autofill', async () => {
+    // Seed user dengan nim_nip manual yang sudah diisi pengguna
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const adminDb = context.firestore();
+      await adminDb.collection('users').doc(unesaManualNimUid).set({
+        uid: unesaManualNimUid,
+        email: '25050974183@mhs.unesa.ac.id',
+        account_type: 'MAHASISWA',
+        role: 'USER',
+        name: 'Manual NIM User',
+      });
+      await adminDb.collection('users').doc(unesaManualNimUid).collection('private').doc('identity').set({
+        nim_nip: 'NIM_MANUAL_99999',
+        updated_at: new Date(),
+      });
+    });
+
+    const res = await bootstrapUser({
+      uid: unesaManualNimUid,
+      email: '25050974183@mhs.unesa.ac.id',
+      emailVerified: true,
+    });
+
+    if (res.nim !== 'NIM_MANUAL_99999') throw new Error(`Expected existing NIM preserved, got ${res.nim}`);
+
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const adminDb = context.firestore();
+      const idDoc = await adminDb.collection('users').doc(unesaManualNimUid).collection('private').doc('identity').get();
+      if (idDoc.data()?.nim_nip !== 'NIM_MANUAL_99999') {
+        throw new Error(`Manual NIM must not be overwritten! Got: ${idDoc.data()?.nim_nip}`);
+      }
+    });
+  });
+
   // ============================================================================
   // PENGUJIAN 2: SKENARIO UNVERIFIED USER
   // ============================================================================
@@ -279,9 +396,20 @@ async function runTestingAccountsTests() {
   // ============================================================================
   await testEnv.withSecurityRulesDisabled(async (context) => {
     const adminDb = context.firestore();
-    const uids = [studentUid, teacherUid, generalUid, unverifiedUid, removedUid];
+    const uids = [
+      studentUid,
+      teacherUid,
+      generalUid,
+      unverifiedUid,
+      removedUid,
+      unesaMhsUid,
+      unesaDosenUid,
+      unesaHealingUid,
+      unesaManualNimUid,
+    ];
     for (const uid of uids) {
-      await adminDb.collection('users').doc(uid).delete();
+      await adminDb.collection('users').doc(uid).collection('private').doc('identity').delete().catch(() => {});
+      await adminDb.collection('users').doc(uid).delete().catch(() => {});
     }
     const memSnap = await adminDb.collection('classes').doc(classId).collection('members').get();
     for (const d of memSnap.docs) await d.ref.delete();

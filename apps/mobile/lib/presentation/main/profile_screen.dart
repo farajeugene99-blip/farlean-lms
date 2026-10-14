@@ -821,6 +821,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     tooltip: l10n.profileRefreshSessionTooltip,
                     onPressed: () async {
                       await authProvider.refreshSession();
+                      await _loadPrivateIdentity();
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
