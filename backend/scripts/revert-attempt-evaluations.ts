@@ -35,7 +35,10 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-export async function runAttemptEvaluationRevert() {
+export async function runAttemptEvaluationRevert(options?: { live?: boolean }) {
+  const live = options?.live ?? (process.argv.includes('--live') || process.env.LIVE === 'true');
+  const isDryRun = !live;
+
   console.log('🔄 ========================================================');
   console.log(`⚠️ MEMULAI ROLLBACK ATTEMPT EVALUATION ${isDryRun ? '(DRY-RUN MODE)' : '(LIVE MODE)'}`);
   console.log(`Target: Firestore (${hasFirestoreEmulator ? process.env.FIRESTORE_EMULATOR_HOST : 'PRODUCTION'}) | Project: ${projectId}`);

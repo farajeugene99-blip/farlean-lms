@@ -36,7 +36,10 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-export async function runAttemptEvaluationIsolation() {
+export async function runAttemptEvaluationIsolation(options?: { live?: boolean }) {
+  const live = options?.live ?? (process.argv.includes('--live') || process.env.LIVE === 'true');
+  const isDryRun = !live;
+
   console.log('🔄 ========================================================');
   console.log(`📦 MEMULAI IDEMPOTENT ATTEMPT EVALUATION ISOLATION ${isDryRun ? '(DRY-RUN MODE)' : '(LIVE MODE)'}`);
   console.log(`Target: Firestore (${hasFirestoreEmulator ? process.env.FIRESTORE_EMULATOR_HOST : 'PRODUCTION'}) | Project: ${projectId}`);
@@ -46,6 +49,7 @@ export async function runAttemptEvaluationIsolation() {
   let totalNeedingIsolation = 0;
   let totalIsolated = 0;
   let totalAlreadyClean = 0;
+  let totalEmptyClassIdRecovered = 0;
   let totalErrors = 0;
 
   const BATCH_ATTEMPT_LIMIT = 250; // 250 attempt * 2 ops = 500 operasi per batch (batas Firestore)
@@ -72,6 +76,11 @@ export async function runAttemptEvaluationIsolation() {
 
     totalNeedingIsolation++;
 
+    let classId = data.class_id || '';
+    if (!classId) {
+      totalEmptyClassIdRecovered++;
+    }
+
     try {
       const evalRef = doc.ref.collection('evaluation').doc('summary');
       const evalSnap = await evalRef.get();
@@ -79,8 +88,6 @@ export async function runAttemptEvaluationIsolation() {
       if (!isDryRun) {
         // Jika dokumen evaluation belum ada, salin snapshot ke subkoleksi
         if (!evalSnap.exists) {
-          let classId = data.class_id || '';
-
           // Jika class_id kosong, coba pulihkan dari dokumen test
           if (!classId && data.test_id) {
             try {
@@ -142,6 +149,7 @@ export async function runAttemptEvaluationIsolation() {
   console.log('📊 RINGKASAN HASIL ISOLASI EVALUASI:');
   console.log(`Total Attempt Graded Dipindai : ${totalScanned}`);
   console.log(`Attempt Memuat key_snapshot   : ${totalNeedingIsolation}`);
+  console.log(`Attempt dengan class_id Kosong: ${totalEmptyClassIdRecovered}`);
   console.log(`Attempt Berhasil Diisolasi    : ${isDryRun ? `${totalNeedingIsolation} (simulasi)` : totalIsolated}`);
   console.log(`Attempt Sudah Bersih          : ${totalAlreadyClean}`);
   console.log(`Total Kesalahan               : ${totalErrors}`);
