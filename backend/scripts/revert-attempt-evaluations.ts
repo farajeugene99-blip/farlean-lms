@@ -1,4 +1,4 @@
-import { initializeApp, getApps } from 'firebase-admin/app';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, WriteBatch } from 'firebase-admin/firestore';
 
 /**
@@ -30,7 +30,21 @@ if (!hasFirestoreEmulator && !allowProduction) {
 const projectId = process.env.FIREBASE_PROJECT_ID || 'farlean-lms';
 
 if (!getApps().length) {
-  initializeApp({ projectId });
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY
+    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+    : undefined;
+
+  if (process.env.FIREBASE_CLIENT_EMAIL && privateKey) {
+    initializeApp({
+      credential: cert({
+        projectId,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey,
+      }),
+    });
+  } else {
+    initializeApp({ projectId });
+  }
 }
 
 const db = getFirestore();
