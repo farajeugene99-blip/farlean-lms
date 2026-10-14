@@ -110,7 +110,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             : new Date(testData.deadline).getTime();
 
         if (now > deadlineMs + GRACE_PERIOD_MS) {
-          throw { status: 400, message: 'Batas waktu pengerjaan (deadline) kuis telah berakhir.' };
+          throw {
+            status: 400,
+            message: 'Batas waktu pengerjaan (deadline) kuis telah berakhir.',
+            code: 'DEADLINE_PASSED',
+            attemptId: attemptDoc.id,
+          };
         }
       }
 
@@ -179,7 +184,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ? Math.round((pointsEarned / totalPoints) * 100 * 10) / 10
           : 0;
 
-      // H. Kunci Attempt (Lock) dalam Transaksi: status menjadi 'graded' + simpan snapshot kunci & penilaian
+      // H. Kunci Attempt (Lock) dalam Transaksi:
+      // 1. Simpan evaluasi & snapshot kunci server-side ke subkoleksi privat staff evaluation/summary
+      const evalRef = attemptRef.collection('evaluation').doc('summary');
+      transaction.set(evalRef, {
+        class_id: classId || '',
+        test_id: testId,
+        user_id: user.uid,
+        key_snapshot: keySnapshotMap,
+        points_earned: pointsEarned,
+        total_points: totalPoints,
+        final_score: finalScore,
+        graded_at: FieldValue.serverTimestamp(),
+      });
+
+      // 2. Update dokumen attempts induk: DILARANG menyimpan key_snapshot agar tidak bocor ke siswa
       transaction.update(attemptRef, {
         status: 'graded',
         score: finalScore,
@@ -191,7 +210,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             : (autoSubmit ? 'timeout' : 'manual'),
         submitted_at: FieldValue.serverTimestamp(),
         graded_at: FieldValue.serverTimestamp(),
-        key_snapshot: keySnapshotMap,
       });
 
       // I. Simpan / Perbarui Best Score Pengguna
@@ -229,8 +247,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ...result,
     });
   } catch (error: any) {
+    // Jika attempt ditolak karena deadline terlewat, kunci status attempt agar tidak berada dalam limbo in_progress
+    if (error && error.code === 'DEADLINE_PASSED' && error.attemptId) {
+      try {
+        await db.collection('attempts').doc(error.attemptId).update({
+          status: 'submitted',
+          submission_reason: 'deadline_passed',
+          submitted_at: FieldValue.serverTimestamp(),
+        });
+      } catch (lockErr) {
+        console.warn('Gagal mengunci attempt expired:', lockErr);
+      }
+    }
+
     if (error && error.status && error.message) {
-      return res.status(error.status).json({ error: error.message });
+      return res.status(error.status).json({
+        error: error.message,
+        code: error.code || undefined,
+      });
     }
     console.error('Error in /api/grade:', error);
     return res.status(500).json({ error: 'Terjadi kesalahan pada server saat menghitung nilai kuis.' });

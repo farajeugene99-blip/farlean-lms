@@ -22,7 +22,10 @@
     "backfill:replies": "tsx scripts/backfill-reply-status.ts",
     "audit:attempts": "tsx scripts/audit-corrupted-attempts.ts",
     "inventory": "tsx scripts/inspect-production-inventory.ts",
-    "seed:staging": "tsx scripts/seed-staging-synthetic.ts"
+    "seed:staging": "tsx scripts/seed-staging-synthetic.ts",
+    "isolate:attempts": "tsx scripts/isolate-attempt-evaluations.ts",
+    "revert:attempts": "tsx scripts/revert-attempt-evaluations.ts",
+    "dump:critical": "tsx scripts/dump-critical-collections.ts"
   },
   "keywords": [],
   "author": "",

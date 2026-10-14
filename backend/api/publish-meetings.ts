@@ -1,50 +1,58 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { timingSafeEqual } from 'crypto';
 import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
 import { applyCors } from '../lib/cors';
 
 const MAX_PROMOTIONS_PER_RUN = 200;
 
+function safeCompare(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
+
 /**
- * POST /api/publish-meetings
+ * GET / POST /api/publish-meetings
  *
  * Mekanisme promosi publikasi terjadwal Farlean LMS (C3):
+ * - Mendukung GET (Vercel Cron bawaan) dan POST (panggilan manual staff).
  * - Memindai meetings berstatus `Scheduled` yang `publish_at`-nya telah lewat (<= now)
  *   lalu mempromosikannya menjadi `Published` secara idempoten.
  * - TIDAK memakai time-gate di Firestore Rules (rules tetap `status in [Published, Scheduled]`
  *   untuk baca mahasiswa; modul materi/pretest/posttest/video tetap mensyaratkan `Published`).
- * - Presisi jujur: promosi terjadi saat endpoint dipanggil (cron eksternal / tombol staff
- *   "Sinkronkan jadwal"), BUKAN tepat-menit otomatis. Doktrin UI: "dalam kisaran jadwal cron".
  *
  * Otorisasi dua mode:
- *  1. Cron terjadwal: header `x-cron-secret` == process.env.MEETING_PUBLISH_CRON_SECRET,
- *     ATAU (Vercel Cron bawaan) `Authorization: Bearer $CRON_SECRET` == process.env.CRON_SECRET
- *     -> sweep global tanpa cek kepemilikan kelas.
+ *  1. Cron terjadwal: (Vercel Cron) `Authorization: Bearer $CRON_SECRET` ATAU `x-cron-secret`
+ *     -> sweep global tanpa cek kepemilikan kelas. Menggunakan timingSafeEqual.
  *  2. Staff manual: Bearer Firebase ID token, role GURU/ADMIN terverifikasi email.
  *     - ADMIN  -> boleh mempromosikan semua kelas.
  *     - GURU   -> hanya pertemuan pada kelas yang dimilikinya (classes/{id}.teacher_id == uid).
- *     - Opsional `classId` di body untuk membatasi sweep ke satu kelas.
+ *     - Opsional `classId` di query/body untuk membatasi sweep ke satu kelas.
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) return;
 
-  if (req.method !== 'POST') {
+  if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   const body = req.body || {};
-  const { classId: rawClassId } = body;
+  const query = req.query || {};
+  const rawClassId = body.classId || query.classId;
   const cleanClassId =
     typeof rawClassId === 'string' && rawClassId.trim().length > 0 ? rawClassId.trim() : null;
 
-  const cronSecret = process.env.MEETING_PUBLISH_CRON_SECRET || '';
-  const providedSecret = (req.headers['x-cron-secret'] as string | undefined) || '';
-  // Vercel Cron bawaan mengirim `Authorization: Bearer $CRON_SECRET` (tanpa header custom).
-  const vercelCronSecret = process.env.CRON_SECRET || '';
+  const cronSecret = process.env.CRON_SECRET || process.env.MEETING_PUBLISH_CRON_SECRET || '';
+  const providedHeaderSecret = (req.headers['x-cron-secret'] as string | undefined) || '';
   const authHeader = (req.headers.authorization as string | undefined) || '';
+  const providedBearerSecret = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+
   const isVercelCronCall =
-    vercelCronSecret.length > 0 && authHeader === `Bearer ${vercelCronSecret}`;
-  const isCronCall =
-    (cronSecret.length > 0 && providedSecret === cronSecret) || isVercelCronCall;
+    cronSecret.length > 0 &&
+    (safeCompare(providedBearerSecret, cronSecret) || safeCompare(providedHeaderSecret, cronSecret));
+  const isCronCall = isVercelCronCall;
 
   let callerUid: string | null = null;
   let callerRole: string | null = null;
