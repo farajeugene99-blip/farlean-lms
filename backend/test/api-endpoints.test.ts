@@ -312,6 +312,61 @@ async function runApiTests() {
     }
   });
 
+  // Skenario 7b: Penegakan max_attempts di Level Server (TEMUAN-3)
+  await test('7b. /api/grade menolak attempt jika batas max_attempts telah tercapai (403)', async () => {
+    const testWithMax1 = 'pretest_max1_test';
+    await db.collection('pretests').doc(testWithMax1).set({
+      class_id: testClassId,
+      title: 'Pretest Max 1',
+      status: 'Published',
+      max_attempts: 1,
+    });
+    await db.collection('answer_keys').doc(testWithMax1).collection('items').doc('q1').set({
+      correct_option: 0,
+      points: 10,
+    });
+
+    await db.collection('attempts').doc('att_max1_graded').set({
+      user_id: studentUid,
+      class_id: testClassId,
+      test_id: testWithMax1,
+      attempt_no: 1,
+      status: 'graded',
+      score: 100,
+      points_earned: 10,
+      total_points: 10,
+      started_at: new Date(),
+    });
+
+    await db.collection('attempts').doc('att_max1_overflow').set({
+      user_id: studentUid,
+      class_id: testClassId,
+      test_id: testWithMax1,
+      attempt_no: 2,
+      status: 'in_progress',
+      answers: { q1: 0 },
+      started_at: new Date(),
+    });
+
+    setTokenVerifier(async () => ({ uid: studentUid, email_verified: true, role: 'USER' }));
+    try {
+      const req = {
+        method: 'POST',
+        headers: { authorization: 'Bearer valid_token' },
+        body: { attemptId: 'att_max1_overflow' },
+      } as any;
+      const res = createMockRes();
+      await gradeHandler(req, res as any);
+
+      if (res.statusCode !== 403) throw new Error(`Expected 403, got ${res.statusCode}`);
+      if (res.jsonData?.code !== 'MAX_ATTEMPTS_EXCEEDED') {
+        throw new Error(`Expected code MAX_ATTEMPTS_EXCEEDED, got: ${res.jsonData?.code}`);
+      }
+    } finally {
+      resetTokenVerifier();
+    }
+  });
+
   // Skenario 8: /api/upload-sign Wewenang Role
   await test('8. /api/upload-sign menolak pengguna dengan role USER (403 Forbidden)', async () => {
     setTokenVerifier(async () => ({

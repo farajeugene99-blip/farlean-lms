@@ -637,7 +637,7 @@ async function runTests() {
     );
   });
 
-  await test('Skenario 36: Guru Owner DAPAT membuat Posttest dan Subkoleksi Questions di kelasnya', async () => {
+  await test('Skenario 36: Guru Owner DAPAT membuat Posttest, tetapi Client SDK DIBLOKIR menulis ke Subkoleksi Questions (D2: Server-Only)', async () => {
     await assertSucceeds(
       guruDb.collection('posttests').doc('posttest_new').set({
         class_id: classId,
@@ -645,7 +645,8 @@ async function runTests() {
         status: 'Draft',
       })
     );
-    await assertSucceeds(
+    // D2: Menulis soal langsung dari Client SDK DIBLOKIR (wajib via /api/save-question)
+    await assertFails(
       guruDb
         .collection('posttests')
         .doc('posttest_new')
@@ -1392,11 +1393,10 @@ async function runTests() {
     );
   });
 
-  // 4d. Create attempt dengan field tambahan (Observasi hasAll vs hasOnly)
-  await test('Skenario 75 (d): Create attempt dengan field tambahan (Observasi hasAll vs hasOnly)', async () => {
-    let writeAllowed = false;
-    try {
-      await verifiedUserDb.collection('attempts').doc('att_extra_field_observation').set({
+  // 4d. Create attempt dengan field tambahan DITOLAK (D4: Penegakan hasOnly)
+  await test('Skenario 75 (d): Create attempt dengan field tambahan DITOLAK (D4: hasOnly)', async () => {
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc('att_extra_field_rejected').set({
         user_id: userVerifiedUid,
         class_id: negClassA,
         test_id: negPretestA,
@@ -1404,17 +1404,45 @@ async function runTests() {
         started_at: serverTimestamp(),
         injected_extra_field: 'unauthorized_data',
         fake_deadline: '2099-01-01',
-      });
-      writeAllowed = true;
-    } catch (_) {
-      writeAllowed = false;
-    }
-    // Catat hasil faktual apa adanya: rules saat ini memakai hasAll, bukan hasOnly
-    if (writeAllowed) {
-      console.log('    ℹ️ [Observasi D4]: Create attempt dengan field tambahan DIIZINKAN (Rules hanya hasAll)');
-    } else {
-      console.log('    ℹ️ [Observasi D4]: Create attempt dengan field tambahan DITOLAK');
-    }
+      })
+    );
+    // Positive control: tanpa field tambahan diizinkan
+    await assertSucceeds(
+      verifiedUserDb.collection('attempts').doc('att_extra_field_positive').set({
+        user_id: userVerifiedUid,
+        class_id: negClassA,
+        test_id: negPretestA,
+        status: 'in_progress',
+        started_at: serverTimestamp(),
+        kind: 'pretest',
+      })
+    );
+  });
+
+  // 4d-2. Create attempt dengan score non-null atau submitted_at non-null DITOLAK (D4: score & submitted_at guard)
+  await test('Skenario 75b: Create attempt dengan score non-null atau submitted_at non-null DITOLAK', async () => {
+    // Mencoba create attempt dengan score: 100
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc('att_score_injected').set({
+        user_id: userVerifiedUid,
+        class_id: negClassA,
+        test_id: negPretestA,
+        status: 'in_progress',
+        started_at: serverTimestamp(),
+        score: 100,
+      })
+    );
+    // Mencoba create attempt dengan submitted_at non-null
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc('att_submitted_at_injected').set({
+        user_id: userVerifiedUid,
+        class_id: negClassA,
+        test_id: negPretestA,
+        status: 'in_progress',
+        started_at: serverTimestamp(),
+        submitted_at: serverTimestamp(),
+      })
+    );
   });
 
   // 4e. Update attempt mengubah status, score, class_id, atau deadline DITOLAK

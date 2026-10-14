@@ -40,8 +40,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         throw { status: 403, message: 'Akses ditolak: Attempt ini bukan milik Anda.' };
       }
 
-      // C. PENEGAKAN IDEMPOTENSI: Jika attempt sudah dinilai sebelumnya, kembalikan hasil yang ada
-      if (attemptData.status === 'graded' || attemptData.status === 'submitted') {
+      // C. PENEGAKAN IDEMPOTENSI: Hanya attempt yang sudah 'graded' yang mengembalikan hasil nilai sebelumnya
+      if (attemptData.status === 'graded') {
         return {
           idempotent: true,
           attemptId: attemptDoc.id,
@@ -53,7 +53,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         };
       }
 
-      if (attemptData.status !== 'in_progress') {
+      // Izinkan status 'in_progress' atau 'submitted' yang belum dinilai untuk diproses
+      if (attemptData.status !== 'in_progress' && attemptData.status !== 'submitted') {
         throw { status: 400, message: `Status attempt tidak valid: ${attemptData.status}` };
       }
 
@@ -116,6 +117,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             code: 'DEADLINE_PASSED',
             attemptId: attemptDoc.id,
           };
+        }
+      }
+
+      // F1b. Validasi Batas Maksimal Percobaan di Level Server (TEMUAN-3)
+      if (testData.max_attempts !== undefined && testData.max_attempts !== null) {
+        const maxAttempts = typeof testData.max_attempts === 'number' ? testData.max_attempts : Number(testData.max_attempts);
+        if (maxAttempts > 0) {
+          const userAttemptsSnap = await transaction.get(
+            db.collection('attempts')
+              .where('user_id', '==', user.uid)
+              .where('test_id', '==', testId)
+          );
+
+          const gradedAttemptsCount = userAttemptsSnap.docs.filter(
+            (doc) => doc.id !== attemptDoc.id && doc.data()?.status === 'graded'
+          ).length;
+
+          if (gradedAttemptsCount >= maxAttempts) {
+            throw {
+              status: 403,
+              code: 'MAX_ATTEMPTS_EXCEEDED',
+              message: `Batas maksimal percobaan kuis (${maxAttempts}x) telah tercapai.`,
+            };
+          }
         }
       }
 
