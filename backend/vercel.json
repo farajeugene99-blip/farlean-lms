@@ -7,6 +7,12 @@
     },
     "api/grade.ts": {
       "maxDuration": 30
+    },
+    "api/classes.ts": {
+      "maxDuration": 30
+    },
+    "api/publish-meetings.ts": {
+      "maxDuration": 30
     }
   },
   "rewrites": [
