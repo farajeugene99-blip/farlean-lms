@@ -71,6 +71,23 @@
       ]
     },
     {
+      "collectionGroup": "discussions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "class_id", "order": "ASCENDING" },
+        { "fieldPath": "last_activity_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "discussions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "class_id", "order": "ASCENDING" },
+        { "fieldPath": "reply_count", "order": "ASCENDING" },
+        { "fieldPath": "last_activity_at", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "replies",
       "queryScope": "COLLECTION",
       "fields": [

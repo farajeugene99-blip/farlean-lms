@@ -354,17 +354,25 @@ async function runQuestionTests() {
     if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}: ${JSON.stringify(res.jsonData)}`);
     if (res.jsonData?.score !== 100) throw new Error(`Expected score 100, got ${res.jsonData?.score}`);
 
-    // Periksa bahwa attempt di Firestore memiliki key_snapshot
+    // Periksa bahwa attempt induk TIDAK MEMBOCORKAN key_snapshot
     const attemptDoc = await db.collection('attempts').doc(attemptId).get();
     const data = attemptDoc.data();
     if (data?.status !== 'graded') throw new Error('Attempt status must be graded');
-    if (!data?.key_snapshot || !data?.key_snapshot[createdQid]) {
-      throw new Error('key_snapshot must be present in attempt document');
+    if (data?.key_snapshot !== undefined) {
+      throw new Error('Security Breach: key_snapshot must NOT be stored in parent attempt document');
     }
-    if (data.key_snapshot[createdQid].correct_option !== 0) {
+
+    // Periksa bahwa subkoleksi privat evaluation/summary menyimpan key_snapshot secara atomik
+    const evalDoc = await db.collection('attempts').doc(attemptId).collection('evaluation').doc('summary').get();
+    if (!evalDoc.exists) throw new Error('evaluation/summary document must be created');
+    const evalData = evalDoc.data();
+    if (!evalData?.key_snapshot || !evalData?.key_snapshot[createdQid]) {
+      throw new Error('key_snapshot must be present in evaluation/summary document');
+    }
+    if (evalData.key_snapshot[createdQid].correct_option !== 0) {
       throw new Error('Snapshot correct_option mismatch');
     }
-    if (data.key_snapshot[createdQid].points !== 25) {
+    if (evalData.key_snapshot[createdQid].points !== 25) {
       throw new Error('Snapshot points mismatch');
     }
   });

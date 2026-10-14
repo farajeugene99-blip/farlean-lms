@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Current Cloud Baseline (Deny-All)
+    // Recorded on Phase 0.5a Audit as confirmed by project owner
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

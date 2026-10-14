@@ -1097,6 +1097,138 @@ async function runTests() {
     );
   });
 
+  // Seed evaluation document via context admin untuk pengujian isolasi kunci jawaban
+  const evalAttemptId = 'att_eval_test_01';
+  const evalEmptyClassAttemptId = 'att_eval_empty_class_02';
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const adminDb = context.firestore();
+    // 1. Attempt dengan class_id valid
+    await adminDb.collection('attempts').doc(evalAttemptId).set({
+      user_id: userVerifiedUid,
+      class_id: classId,
+      test_id: 'pretest_published',
+      status: 'graded',
+      score: 85,
+    });
+    await adminDb.collection('attempts').doc(evalAttemptId).collection('evaluation').doc('summary').set({
+      class_id: classId,
+      test_id: 'pretest_published',
+      user_id: userVerifiedUid,
+      key_snapshot: { q1: { correct_option: 0, points: 25 } },
+      final_score: 85,
+    });
+
+    // 2. Attempt legacy dengan class_id kosong
+    await adminDb.collection('attempts').doc(evalEmptyClassAttemptId).set({
+      user_id: userVerifiedUid,
+      class_id: '',
+      test_id: 'pretest_published',
+      status: 'graded',
+      score: 70,
+    });
+    await adminDb.collection('attempts').doc(evalEmptyClassAttemptId).collection('evaluation').doc('summary').set({
+      class_id: '',
+      test_id: 'pretest_published',
+      user_id: userVerifiedUid,
+      key_snapshot: { q1: { correct_option: 0, points: 25 } },
+      final_score: 70,
+    });
+  });
+
+  await test('Skenario 64: Siswa pemilik attempt DIBLOKIR membaca subkoleksi evaluation/summary (Anti-Leak)', async () => {
+    await assertFails(
+      verifiedUserDb
+        .collection('attempts')
+        .doc(evalAttemptId)
+        .collection('evaluation')
+        .doc('summary')
+        .get()
+    );
+  });
+
+  await test('Skenario 65: Siswa lain DIBLOKIR membaca evaluation/summary', async () => {
+    await assertFails(
+      pendingUserDb
+        .collection('attempts')
+        .doc(evalAttemptId)
+        .collection('evaluation')
+        .doc('summary')
+        .get()
+    );
+  });
+
+  await test('Skenario 66: Guru pemilik kelas DAPAT membaca evaluation/summary di kelasnya', async () => {
+    await assertSucceeds(
+      guruDb
+        .collection('attempts')
+        .doc(evalAttemptId)
+        .collection('evaluation')
+        .doc('summary')
+        .get()
+    );
+  });
+
+  await test('Skenario 67: Guru non-owner DIBLOKIR membaca evaluation/summary di kelas guru lain', async () => {
+    await assertFails(
+      otherGuruDb
+        .collection('attempts')
+        .doc(evalAttemptId)
+        .collection('evaluation')
+        .doc('summary')
+        .get()
+    );
+  });
+
+  await test('Skenario 68: Client SDK DIBLOKIR menulis ke subkoleksi evaluation (Admin-Only Write)', async () => {
+    await assertFails(
+      verifiedUserDb
+        .collection('attempts')
+        .doc(evalAttemptId)
+        .collection('evaluation')
+        .doc('summary')
+        .set({ key_snapshot: {} })
+    );
+    await assertFails(
+      guruDb
+        .collection('attempts')
+        .doc(evalAttemptId)
+        .collection('evaluation')
+        .doc('summary')
+        .set({ key_snapshot: {} })
+    );
+  });
+
+  await test('Skenario 69: Siswa tetap DAPAT membaca dokumen attempts induk miliknya (Skor tidak terdampak)', async () => {
+    await assertSucceeds(
+      verifiedUserDb
+        .collection('attempts')
+        .doc(evalAttemptId)
+        .get()
+    );
+  });
+
+  await test('Skenario 70: Evaluation dengan class_id kosong DIBLOKIR dari pembacaan oleh Guru biasa', async () => {
+    await assertFails(
+      guruDb
+        .collection('attempts')
+        .doc(evalEmptyClassAttemptId)
+        .collection('evaluation')
+        .doc('summary')
+        .get()
+    );
+  });
+
+  await test('Skenario 71: ADMIN DAPAT membaca evaluation dengan class_id kosong untuk audit', async () => {
+    await assertSucceeds(
+      adminDb
+        .collection('attempts')
+        .doc(evalEmptyClassAttemptId)
+        .collection('evaluation')
+        .doc('summary')
+        .get()
+    );
+  });
+
   // Cleanup
   await testEnv.cleanup();
 

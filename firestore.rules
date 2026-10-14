@@ -305,8 +305,19 @@ service cloud.firestore {
     // 10. ATTEMPTS (PENGERJAAN PRETEST & POSTTEST)
     // ============================================================================
     match /attempts/{attemptId} {
-      // Membaca: Pemilik attempt atau Staff
-      allow read: if (isVerified() && request.auth.uid == resource.data.user_id) || isStaff();
+      // Membaca: Pemilik attempt, Guru pemilik kelas, atau Admin
+      allow read: if (isVerified() && request.auth.uid == resource.data.user_id)
+                  || (('class_id' in resource.data) && resource.data.class_id is string && isClassOwner(resource.data.class_id))
+                  || isAdmin();
+
+      // Subkoleksi privat evaluation: menyimpan snapshot kunci jawaban server-side
+      match /evaluation/{evalDoc} {
+        // Siswa DILARANG membaca kunci penilaian (Anti-Leak)
+        // Hanya Guru pemilik kelas atau Admin sistem yang boleh membaca evaluasi
+        allow read: if (('class_id' in resource.data) && resource.data.class_id is string && resource.data.class_id != '' && isClassOwner(resource.data.class_id))
+                    || isAdmin();
+        allow write: if false; // Hanya ditulis secara transaksional oleh Admin SDK Backend
+      }
 
       // Membuat attempt baru:
       // - Wajib active member di kelas tersebut
