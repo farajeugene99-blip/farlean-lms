@@ -9,6 +9,40 @@
       "maxDuration": 30
     }
   },
+  "rewrites": [
+    {
+      "source": "/api/save-question",
+      "destination": "/api/question?__action=save-question"
+    },
+    {
+      "source": "/api/delete-question",
+      "destination": "/api/question?__action=delete-question"
+    },
+    {
+      "source": "/api/discussion-thread",
+      "destination": "/api/discussion?__action=discussion-thread"
+    },
+    {
+      "source": "/api/discussion-reply",
+      "destination": "/api/discussion?__action=discussion-reply"
+    },
+    {
+      "source": "/api/create-class",
+      "destination": "/api/classes?__action=create-class"
+    },
+    {
+      "source": "/api/my-classes",
+      "destination": "/api/classes?__action=my-classes"
+    },
+    {
+      "source": "/api/class-members",
+      "destination": "/api/classes?__action=class-members"
+    },
+    {
+      "source": "/api/class-purge",
+      "destination": "/api/classes?__action=class-purge"
+    }
+  ],
   "crons": [
     {
       "path": "/api/publish-meetings",

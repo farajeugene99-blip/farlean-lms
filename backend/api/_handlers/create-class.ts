@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'crypto';
-import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
-import { applyCors } from '../lib/cors';
+import { db, verifyAuth, FieldValue } from '../../lib/firebaseAdmin';
+import { applyCors } from '../../lib/cors';
 
 function generateRandomCode(): string {
   // Menghasilkan 8 karakter alfanumerik huruf kapital yang mudah dibaca

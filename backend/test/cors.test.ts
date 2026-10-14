@@ -1,6 +1,6 @@
 import { applyCors, getAllowedOrigins, isOriginAllowed } from '../lib/cors';
 import joinClassHandler from '../api/join-class';
-import createClassHandler from '../api/create-class';
+import createClassHandler from '../api/_handlers/create-class';
 
 interface MockResponse {
   statusCode: number;

@@ -1,7 +1,8 @@
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import discussionThreadHandler from '../api/discussion-thread';
-import discussionReplyHandler from '../api/discussion-reply';
+import discussionThreadHandler from '../api/_handlers/discussion-thread';
+import discussionReplyHandler from '../api/_handlers/discussion-reply';
+import discussionDispatcher from '../api/discussion';
 import { setTokenVerifier, resetTokenVerifier } from '../lib/firebaseAdmin';
 
 process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080';
@@ -490,6 +491,27 @@ async function runDiscussionTests() {
     const res = createMockRes();
     await discussionReplyHandler(req, res as any);
     if (res.statusCode !== 404) throw new Error(`Expected 404, got ${res.statusCode}`);
+  });
+
+  // 12. Dispatcher /api/discussion merutekan reply via query param
+  await test('12. discussionDispatcher merutekan discussion-reply via ?__action=discussion-reply', async () => {
+    await db.collection('rate_limits').doc(studentUid).delete();
+
+    const req: any = {
+      method: 'POST',
+      headers: { authorization: 'Bearer mock-token' },
+      query: { __action: 'discussion-reply' },
+      url: '/api/discussion?__action=discussion-reply',
+      body: {
+        discussionId: createdDiscussionId,
+        body: 'Balasan melalui dispatcher query param.',
+      },
+    };
+    const res = createMockRes();
+    await discussionDispatcher(req, res as any);
+    if (res.statusCode !== 200 && res.statusCode !== 201) {
+      throw new Error(`Expected 200/201, got ${res.statusCode}: ${JSON.stringify(res.jsonData)}`);
+    }
   });
 
   resetTokenVerifier();

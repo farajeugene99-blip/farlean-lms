@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
-import { applyCors } from '../lib/cors';
+import { db, verifyAuth, FieldValue } from '../../lib/firebaseAdmin';
+import { applyCors } from '../../lib/cors';
 
 const ALLOWED_BODY_FIELDS = new Set(['testId', 'qid']);
 

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
-import { applyCors } from '../lib/cors';
+import { db, verifyAuth, FieldValue } from '../../lib/firebaseAdmin';
+import { applyCors } from '../../lib/cors';
 
 const ALLOWED_BODY_FIELDS = new Set(['discussionId', 'body', 'client_reply_id', 'parent_id']);
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 menit

@@ -1,7 +1,8 @@
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import saveQuestionHandler from '../api/save-question';
-import deleteQuestionHandler from '../api/delete-question';
+import saveQuestionHandler from '../api/_handlers/save-question';
+import deleteQuestionHandler from '../api/_handlers/delete-question';
+import questionDispatcher from '../api/question';
 import gradeHandler from '../api/grade';
 import { setTokenVerifier, resetTokenVerifier } from '../lib/firebaseAdmin';
 
@@ -581,6 +582,35 @@ async function runQuestionTests() {
     if (!res.jsonData?.error?.includes('soal aktif terakhir pada kuis yang berstatus Published')) {
       throw new Error(`Expected error message about last published question, got: ${res.jsonData?.error}`);
     }
+  });
+
+  // 12. Dispatcher /api/question merutekan save-question via query param
+  await test('12. questionDispatcher merutekan save-question via ?__action=save-question', async () => {
+    setTokenVerifier(async () => ({
+      uid: teacherUid,
+      email: 'guru@farlean.edu',
+      email_verified: true,
+      role: 'GURU',
+    } as any));
+
+    const req: any = {
+      method: 'POST',
+      headers: { authorization: 'Bearer mock-guru-token' },
+      query: { __action: 'save-question' },
+      url: '/api/question?__action=save-question',
+      body: {
+        testId: pretestId,
+        text: 'Soal Dispatcher Test',
+        options: ['Opsi A', 'Opsi B'],
+        correct_option: 0,
+        points: 15,
+      },
+    };
+    const res = createMockRes();
+    await questionDispatcher(req, res as any);
+
+    if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}: ${JSON.stringify(res.jsonData)}`);
+    if (!res.jsonData?.qid) throw new Error('Expected qid in response');
   });
 
   resetTokenVerifier();

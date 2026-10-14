@@ -2,10 +2,11 @@ import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import gradeHandler from '../api/grade';
 import uploadSignHandler from '../api/upload-sign';
-import createClassHandler from '../api/create-class';
-import myClassesHandler from '../api/my-classes';
-import classMembersHandler from '../api/class-members';
-import classPurgeHandler from '../api/class-purge';
+import createClassHandler from '../api/_handlers/create-class';
+import myClassesHandler from '../api/_handlers/my-classes';
+import classMembersHandler from '../api/_handlers/class-members';
+import classPurgeHandler from '../api/_handlers/class-purge';
+import classesDispatcher from '../api/classes';
 import { setTokenVerifier, resetTokenVerifier } from '../lib/firebaseAdmin';
 
 // Set emulator host env
@@ -753,6 +754,44 @@ async function runApiTests() {
       if (classDoc.exists) throw new Error('Class must be deleted');
       const codeDoc = await db.collection('class_codes').doc(createdClassCode).get();
       if (codeDoc.exists) throw new Error('Class code mapping must be deleted');
+    } finally {
+      resetTokenVerifier();
+    }
+  });
+
+  // Skenario 19: Dispatcher /api/classes merutekan my-classes via ?__action=my-classes
+  await test('19. classesDispatcher merutekan request my-classes dengan query __action (200)', async () => {
+    setTokenVerifier(async () => ({ uid: studentUid, email_verified: true, role: 'USER' }));
+    try {
+      const req = {
+        method: 'GET',
+        headers: { authorization: 'Bearer valid_token' },
+        query: { __action: 'my-classes' },
+        url: '/api/classes?__action=my-classes',
+      } as any;
+      const res = createMockRes();
+      await classesDispatcher(req, res as any);
+      if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+      if (!Array.isArray(res.jsonData?.joined)) throw new Error('Response must contain joined array');
+    } finally {
+      resetTokenVerifier();
+    }
+  });
+
+  // Skenario 20: Dispatcher /api/classes merutekan class-members via URL fallback
+  await test('20. classesDispatcher merutekan class-members via url fallback (200)', async () => {
+    setTokenVerifier(async () => ({ uid: studentUid, email_verified: true, role: 'USER' }));
+    try {
+      const req = {
+        method: 'GET',
+        headers: { authorization: 'Bearer valid_token' },
+        query: { classId: testClassId },
+        url: `/api/class-members?classId=${testClassId}`,
+      } as any;
+      const res = createMockRes();
+      await classesDispatcher(req, res as any);
+      if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+      if (!Array.isArray(res.jsonData?.members)) throw new Error('Response must contain members array');
     } finally {
       resetTokenVerifier();
     }
