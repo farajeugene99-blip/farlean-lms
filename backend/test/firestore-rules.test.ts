@@ -1229,6 +1229,269 @@ async function runTests() {
     );
   });
 
+  // ============================================================================
+  // SKENARIO NEGATIF FASE 0.5a (AUDIT KEAMANAN KETAT DENGAN PRASYARAT TERVERIFIKASI)
+  // ============================================================================
+
+  const negClassA = 'class_neg_test_a';
+  const negClassB = 'class_neg_test_b';
+  const negPretestA = 'pretest_neg_a';
+  const negPretestB = 'pretest_neg_b';
+  const negPosttestA = 'posttest_neg_a';
+  const negPosttestB = 'posttest_neg_b';
+  const negAttemptInProgress = 'att_neg_inprogress';
+  const negAttemptSubmitted = 'att_neg_submitted';
+  const negAttemptGraded = 'att_neg_graded';
+
+  // Seeding dokumen prasyarat via withSecurityRulesDisabled
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const adminDb = context.firestore();
+
+    // 1. Kelas A dan B dengan teacher dan member aktif
+    await adminDb.collection('classes').doc(negClassA).set({
+      name: 'Kelas Uji Negatif A',
+      teacher_id: guruUid,
+      status: 'Active',
+    });
+    await adminDb.collection('classes').doc(negClassA).collection('members').doc(userVerifiedUid).set({
+      display_name: 'Budi Test A',
+      status: 'active',
+      account_type: 'MAHASISWA',
+    });
+
+    await adminDb.collection('classes').doc(negClassB).set({
+      name: 'Kelas Uji Negatif B',
+      teacher_id: otherGuruUid,
+      status: 'Active',
+    });
+    await adminDb.collection('classes').doc(negClassB).collection('members').doc(userVerifiedUid).set({
+      display_name: 'Budi Test B',
+      status: 'active',
+      account_type: 'MAHASISWA',
+    });
+
+    // 2. Pretest & Posttest Published di masing-masing kelas
+    await adminDb.collection('pretests').doc(negPretestA).set({
+      class_id: negClassA,
+      title: 'Pretest Negatif A',
+      status: 'Published',
+    });
+    await adminDb.collection('pretests').doc(negPretestB).set({
+      class_id: negClassB,
+      title: 'Pretest Negatif B',
+      status: 'Published',
+    });
+    await adminDb.collection('posttests').doc(negPosttestA).set({
+      class_id: negClassA,
+      title: 'Posttest Negatif A',
+      status: 'Published',
+    });
+    await adminDb.collection('posttests').doc(negPosttestB).set({
+      class_id: negClassB,
+      title: 'Posttest Negatif B',
+      status: 'Published',
+    });
+
+    // 3. Attempt di Kelas A dengan berbagai status
+    await adminDb.collection('attempts').doc(negAttemptInProgress).set({
+      user_id: userVerifiedUid,
+      class_id: negClassA,
+      test_id: negPretestA,
+      status: 'in_progress',
+      started_at: new Date(),
+      answers: {},
+      score: null,
+    });
+    await adminDb.collection('attempts').doc(negAttemptSubmitted).set({
+      user_id: userVerifiedUid,
+      class_id: negClassA,
+      test_id: negPretestA,
+      status: 'submitted',
+      started_at: new Date(),
+      answers: { q1: 1 },
+      score: null,
+    });
+    await adminDb.collection('attempts').doc(negAttemptGraded).set({
+      user_id: userVerifiedUid,
+      class_id: negClassA,
+      test_id: negPretestA,
+      status: 'graded',
+      started_at: new Date(),
+      answers: { q1: 1 },
+      score: 100,
+    });
+  });
+
+  // 4a. Siswa dan Guru DIBLOKIR membaca answer_keys/{id}/items/{qid} (100% Server-Only)
+  await test('Skenario 72 (a): Siswa dan Guru DIBLOKIR membaca answer_keys items (100% Server-Only)', async () => {
+    await assertFails(
+      verifiedUserDb
+        .collection('answer_keys')
+        .doc('pretest_published')
+        .collection('items')
+        .doc('q1')
+        .get()
+    );
+    await assertFails(
+      guruDb
+        .collection('answer_keys')
+        .doc('pretest_published')
+        .collection('items')
+        .doc('q1')
+        .get()
+    );
+  });
+
+  // 4b. Create attempt dengan user_id orang lain ditolak (Anti-Impersonasi)
+  await test('Skenario 73 (b): Create attempt dengan user_id orang lain DITOLAK', async () => {
+    // Penolakan murni karena user_id !== request.auth.uid (semua prasyarat kelas dan test valid)
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc('att_impersonate_victim').set({
+        user_id: otherUserUid, // Mencoba membuat attempt atas nama orang lain
+        class_id: negClassA,
+        test_id: negPretestA,
+        status: 'in_progress',
+        started_at: serverTimestamp(),
+      })
+    );
+    // Positive control: dengan user_id sendiri berhasil
+    await assertSucceeds(
+      verifiedUserDb.collection('attempts').doc('att_positive_own_user').set({
+        user_id: userVerifiedUid,
+        class_id: negClassA,
+        test_id: negPretestA,
+        status: 'in_progress',
+        started_at: serverTimestamp(),
+      })
+    );
+  });
+
+  // 4c. Create attempt dengan class_id yang tidak cocok dengan test ditolak (Pretest & Posttest)
+  await test('Skenario 74 (c): Create attempt dengan class_id yang tidak cocok dengan tes DITOLAK (Pretest & Posttest)', async () => {
+    // Pretest: Siswa aktif di negClassA dan negClassB, tapi kuis negPretestB milik negClassB dipasangkan dengan negClassA
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc('att_mismatched_pretest').set({
+        user_id: userVerifiedUid,
+        class_id: negClassA, // Salah kelas! negPretestB ada di negClassB
+        test_id: negPretestB,
+        status: 'in_progress',
+        started_at: serverTimestamp(),
+        kind: 'pretest',
+      })
+    );
+    // Posttest: kuis negPosttestB milik negClassB dipasangkan dengan negClassA
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc('att_mismatched_posttest').set({
+        user_id: userVerifiedUid,
+        class_id: negClassA, // Salah kelas! negPosttestB ada di negClassB
+        test_id: negPosttestB,
+        status: 'in_progress',
+        started_at: serverTimestamp(),
+        kind: 'posttest',
+      })
+    );
+  });
+
+  // 4d. Create attempt dengan field tambahan (Observasi hasAll vs hasOnly)
+  await test('Skenario 75 (d): Create attempt dengan field tambahan (Observasi hasAll vs hasOnly)', async () => {
+    let writeAllowed = false;
+    try {
+      await verifiedUserDb.collection('attempts').doc('att_extra_field_observation').set({
+        user_id: userVerifiedUid,
+        class_id: negClassA,
+        test_id: negPretestA,
+        status: 'in_progress',
+        started_at: serverTimestamp(),
+        injected_extra_field: 'unauthorized_data',
+        fake_deadline: '2099-01-01',
+      });
+      writeAllowed = true;
+    } catch (_) {
+      writeAllowed = false;
+    }
+    // Catat hasil faktual apa adanya: rules saat ini memakai hasAll, bukan hasOnly
+    if (writeAllowed) {
+      console.log('    ℹ️ [Observasi D4]: Create attempt dengan field tambahan DIIZINKAN (Rules hanya hasAll)');
+    } else {
+      console.log('    ℹ️ [Observasi D4]: Create attempt dengan field tambahan DITOLAK');
+    }
+  });
+
+  // 4e. Update attempt mengubah status, score, class_id, atau deadline DITOLAK
+  await test('Skenario 76 (e): Update attempt mengubah status, score, class_id, atau deadline DITOLAK', async () => {
+    // Positive control: update answers & last_saved_at diizinkan
+    await assertSucceeds(
+      verifiedUserDb.collection('attempts').doc(negAttemptInProgress).update({
+        answers: { q1: 2 },
+        last_saved_at: serverTimestamp(),
+      })
+    );
+    // Mencoba memalsukan status -> ditolak
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc(negAttemptInProgress).update({
+        status: 'graded',
+      })
+    );
+    // Mencoba menginjeksi skor -> ditolak
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc(negAttemptInProgress).update({
+        score: 100,
+      })
+    );
+    // Mencoba memindahkan class_id -> ditolak
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc(negAttemptInProgress).update({
+        class_id: negClassB,
+      })
+    );
+    // Mencoba menginjeksi deadline palsu -> ditolak
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc(negAttemptInProgress).update({
+        deadline: serverTimestamp(),
+      })
+    );
+  });
+
+  // 4f. Update attempt setelah status bukan in_progress DITOLAK
+  await test('Skenario 77 (f): Update attempt setelah status submitted atau graded DITOLAK', async () => {
+    // Pada attempt submitted: update jawaban ditolak
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc(negAttemptSubmitted).update({
+        answers: { q1: 0 },
+        last_saved_at: serverTimestamp(),
+      })
+    );
+    // Pada attempt graded: update jawaban ditolak
+    await assertFails(
+      verifiedUserDb.collection('attempts').doc(negAttemptGraded).update({
+        answers: { q1: 0 },
+        last_saved_at: serverTimestamp(),
+      })
+    );
+  });
+
+  // 4g. Guru kelas lain DIBLOKIR membaca attempts/evaluation
+  await test('Skenario 78 (g): Guru kelas lain DIBLOKIR membaca subkoleksi evaluation', async () => {
+    // evalAttemptId ada di classId (guruUid). otherGuruUid adalah guru di otherClassId.
+    await assertFails(
+      otherGuruDb
+        .collection('attempts')
+        .doc(evalAttemptId)
+        .collection('evaluation')
+        .doc('summary')
+        .get()
+    );
+    // Positive control: guru pemilik kelas diizinkan
+    await assertSucceeds(
+      guruDb
+        .collection('attempts')
+        .doc(evalAttemptId)
+        .collection('evaluation')
+        .doc('summary')
+        .get()
+    );
+  });
+
   // Cleanup
   await testEnv.cleanup();
 
