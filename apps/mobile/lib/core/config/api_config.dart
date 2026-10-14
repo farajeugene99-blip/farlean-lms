@@ -25,6 +25,12 @@ class ApiConfig {
     return 'http://127.0.0.1:$backendPort';
   }
 
+  /// Memvalidasi konfigurasi URL saat startup untuk memastikan kebijakan fail-closed
+  /// melempar StateError segera jika konfigurasi rilis tidak lengkap.
+  static void validate() {
+    final _ = baseUrl;
+  }
+
   static String get bootstrapUrl => '$baseUrl/api/bootstrap';
   static String get joinClassUrl => '$baseUrl/api/join-class';
   static String get createClassUrl => '$baseUrl/api/create-class';

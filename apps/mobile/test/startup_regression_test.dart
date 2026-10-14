@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile/core/config/api_config.dart';
 import 'package:mobile/core/config/firebase_config.dart';
 import 'package:mobile/presentation/common/startup_error_screen.dart';
 import 'package:mobile/services/auth_service.dart';
@@ -102,6 +103,11 @@ void main() {
       final host = FirebaseConfig.resolveEmulatorHost();
       expect(host, isNotEmpty);
       expect(host == '127.0.0.1' || host == '10.0.2.2', isTrue);
+    });
+
+    test('Test (e): ApiConfig.validate() berhasil dieksekusi di debug/test mode', () {
+      expect(() => ApiConfig.validate(), returnsNormally);
+      expect(ApiConfig.baseUrl, isNotEmpty);
     });
   });
 }

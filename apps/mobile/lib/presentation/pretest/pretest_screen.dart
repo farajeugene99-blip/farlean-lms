@@ -336,61 +336,179 @@ class _PretestScreenState extends State<PretestScreen> {
 
       // Pengerjaan disimpan dan berhasil dinilai
       if (!mounted) return;
+      await _showResultDialog(gradeResult);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
 
-      await showDialog<void>(
+      if (e is GradeException && e.code == 'DEADLINE_PASSED') {
+        _showDeadlineExpiredDialog();
+        return;
+      }
+
+      if (e is GradeException && e.isUncertainResult) {
+        await _handleUncertainSubmitResult();
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengumpulkan kuis: $e'), backgroundColor: AppTheme.error),
+      );
+    }
+  }
+
+  Future<void> _handleUncertainSubmitResult() async {
+    TestAttempt? freshAttempt;
+    try {
+      freshAttempt = await _attemptRepository.getAttempt(_currentAttempt!.id);
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    // Cabang A (Graded): Transaksi server ternyata selesai tepat waktu sebelum koneksi terputus
+    if (freshAttempt != null && freshAttempt.status == AttemptStatus.graded) {
+      await _showResultDialog(
+        GradeResult(
+          success: true,
+          attemptId: freshAttempt.id,
+          score: freshAttempt.score ?? 0.0,
+          pointsEarned: 0,
+          totalPoints: 0,
+          status: 'graded',
+          message: 'Hasil kuis telah dinilai oleh server.',
+          isIdempotent: true,
+        ),
+      );
+      return;
+    }
+
+    // Cabang B (In-Progress): Server belum memproses, kuis masih aktif
+    if (freshAttempt != null && freshAttempt.status == AttemptStatus.inProgress) {
+      showDialog<void>(
         context: context,
-        barrierDismissible: false,
         builder: (ctx) => AlertDialog(
           title: const Row(
             children: [
-              Icon(Icons.check_circle_rounded, color: AppTheme.success),
+              Icon(Icons.wifi_tethering_error_rounded, color: AppTheme.warning),
               SizedBox(width: 8),
-              Text('Kuis Selesai Dinilai'),
+              Text('Penilaian Tertunda'),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Skor Akhir: ${gradeResult.score}',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Poin diperoleh: ${gradeResult.pointsEarned} dari ${gradeResult.totalPoints} poin',
-                style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Jawaban Anda telah tersimpan dengan aman dan sesi kuis telah dikunci.',
-                style: TextStyle(color: AppTheme.textSecondary),
-              ),
-            ],
+          content: const Text(
+            'Koneksi ke server penilaian terputus, namun sesi kuis Anda masih aktif di server. '
+            'Jawaban lokal Anda telah tersimpan otomatis. Silakan tekan tombol Kirim Kuis untuk mencoba kembali.',
           ),
           actions: [
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                Navigator.pop(context);
-              },
-              child: const Text('Kembali ke Pertemuan'),
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Mengerti'),
             ),
           ],
         ),
       );
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengumpulkan kuis: $e'), backgroundColor: AppTheme.error),
-        );
-      }
+      return;
     }
+
+    // Cabang C (Tidak Dapat Memastikan): Status tidak dapat dipastikan
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.cloud_off_rounded, color: AppTheme.error),
+            SizedBox(width: 8),
+            Text('Koneksi Terputus'),
+          ],
+        ),
+        content: const Text(
+          'Koneksi jaringan terputus. Status penilaian kuis saat ini tidak dapat dipastikan dari server. '
+          'Harap periksa koneksi internet Anda dan coba kembali.',
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeadlineExpiredDialog() {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.timer_off_rounded, color: AppTheme.error),
+            SizedBox(width: 8),
+            Text('Batas Waktu Berakhir'),
+          ],
+        ),
+        content: const Text(
+          'Batas waktu pengerjaan (deadline) kuis telah berakhir. Sesi pengerjaan kuis telah dikunci oleh server.',
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+            },
+            child: const Text('Kembali ke Pertemuan'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showResultDialog(GradeResult gradeResult) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: AppTheme.success),
+            SizedBox(width: 8),
+            Text('Kuis Selesai Dinilai'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Skor Akhir: ${gradeResult.score}',
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Poin diperoleh: ${gradeResult.pointsEarned} dari ${gradeResult.totalPoints} poin',
+              style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Jawaban Anda telah tersimpan dengan aman dan sesi kuis telah dikunci.',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+            },
+            child: const Text('Kembali ke Pertemuan'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

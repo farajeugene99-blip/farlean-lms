@@ -313,16 +313,128 @@ class _PosttestScreenState extends State<PosttestScreen> {
       if (!mounted) return;
       _showResultDialog(gradeResult);
     } catch (e) {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal mengirim penilaian: $e'),
-            backgroundColor: AppTheme.error,
-          ),
-        );
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+
+      if (e is GradeException && e.code == 'DEADLINE_PASSED') {
+        _showDeadlineExpiredDialog();
+        return;
       }
+
+      if (e is GradeException && e.isUncertainResult) {
+        await _handleUncertainSubmitResult();
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mengirim penilaian: $e'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
     }
+  }
+
+  Future<void> _handleUncertainSubmitResult() async {
+    TestAttempt? freshAttempt;
+    try {
+      freshAttempt = await _attemptRepository.getAttempt(_currentAttempt!.id);
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    if (freshAttempt != null && freshAttempt.status == AttemptStatus.graded) {
+      _showResultDialog(
+        GradeResult(
+          success: true,
+          attemptId: freshAttempt.id,
+          score: freshAttempt.score ?? 0.0,
+          pointsEarned: 0,
+          totalPoints: 0,
+          status: 'graded',
+          message: 'Hasil kuis telah dinilai oleh server.',
+          isIdempotent: true,
+        ),
+      );
+      return;
+    }
+
+    if (freshAttempt != null && freshAttempt.status == AttemptStatus.inProgress) {
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.wifi_tethering_error_rounded, color: AppTheme.warning),
+              SizedBox(width: 8),
+              Text('Penilaian Tertunda'),
+            ],
+          ),
+          content: const Text(
+            'Koneksi ke server penilaian terputus, namun sesi kuis Anda masih aktif di server. '
+            'Jawaban lokal Anda telah tersimpan otomatis. Silakan tekan tombol Kumpulkan untuk mencoba kembali.',
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Mengerti'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.cloud_off_rounded, color: AppTheme.error),
+            SizedBox(width: 8),
+            Text('Koneksi Terputus'),
+          ],
+        ),
+        content: const Text(
+          'Koneksi jaringan terputus. Status penilaian kuis saat ini tidak dapat dipastikan dari server. '
+          'Harap periksa koneksi internet Anda dan coba kembali.',
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeadlineExpiredDialog() {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.timer_off_rounded, color: AppTheme.error),
+            SizedBox(width: 8),
+            Text('Batas Waktu Berakhir'),
+          ],
+        ),
+        content: const Text(
+          'Batas waktu pengerjaan (deadline) kuis telah berakhir. Sesi pengerjaan kuis telah dikunci oleh server.',
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+            },
+            child: const Text('Kembali ke Pertemuan'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _autoSubmitOnTimeUp() {
