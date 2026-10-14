@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 class ApiConfig {
   static const int backendPort = 3001;
+  static const bool allowProductionMode = bool.fromEnvironment('ALLOW_PRODUCTION_MODE', defaultValue: false);
 
   /// Mendapatkan Base URL backend Vercel / local serverless dev
   /// Mendukung override melalui compile-time environment: --dart-define=API_BASE_URL=https://...

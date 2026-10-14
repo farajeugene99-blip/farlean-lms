@@ -230,6 +230,24 @@ abstract class AppLocalizations {
   /// **'Masuk'**
   String get authBtnLogin;
 
+  /// Tombol masuk menggunakan akun Google
+  ///
+  /// In id, this message translates to:
+  /// **'Masuk dengan Google'**
+  String get authBtnGoogleSignIn;
+
+  /// Tombol pendaftaran menggunakan akun Google
+  ///
+  /// In id, this message translates to:
+  /// **'Daftar dengan Google'**
+  String get authBtnGoogleSignUp;
+
+  /// Pemisah 'atau' antara form email dan OAuth
+  ///
+  /// In id, this message translates to:
+  /// **'atau'**
+  String get authOrDivider;
+
   /// Teks prompt daftar di halaman login
   ///
   /// In id, this message translates to:

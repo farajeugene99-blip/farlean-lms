@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import '../../firebase_options.dart';
+import 'api_config.dart';
 
 class FirebaseConfig {
   static const int authEmulatorPort = 9099;
@@ -10,13 +11,16 @@ class FirebaseConfig {
 
   // Konfigurasi override dari --dart-define
   static const String _emulatorHostOverride = String.fromEnvironment('EMULATOR_HOST');
-  static const bool _allowLiveProd = bool.fromEnvironment('ALLOW_PRODUCTION_MODE', defaultValue: false);
+  static const bool useFirebaseEmulator = bool.fromEnvironment('USE_FIREBASE_EMULATOR', defaultValue: false);
 
-  /// Inisialisasi Firebase dan arahkan ke Emulator jika dalam mode debug / testing.
-  static Future<void> initialize({bool useEmulator = kDebugMode}) async {
-    // Penegakan Keputusan Phase 1: Emulator-only
-    // Jangan izinkan akses live production tanpa flag eksplisit
-    if (!useEmulator && !_allowLiveProd) {
+  /// Inisialisasi Firebase dan arahkan ke Emulator jika diaktifkan secara eksplisit.
+  static Future<void> initialize({bool? useEmulator}) async {
+    // Emulator HANYA aktif jika parameter eksplisit bernilai true,
+    // ATAU USE_FIREBASE_EMULATOR=true DAN tidak dalam mode produksi
+    final bool shouldUseEmulator = useEmulator ?? (useFirebaseEmulator && !ApiConfig.allowProductionMode);
+
+    // Penegakan Keputusan: Jangan izinkan akses live production tanpa flag eksplisit
+    if (!shouldUseEmulator && !ApiConfig.allowProductionMode) {
       throw StateError(
         'Safety Guard: Akses ke Firebase Production diblokir pada Phase 1 & 2. '
         'Gunakan Firebase Emulator lokal atau sertakan flag --dart-define=ALLOW_PRODUCTION_MODE=true jika disengaja.',
@@ -30,8 +34,8 @@ class FirebaseConfig {
       );
     }
 
-    // 2. Setup Emulator terisolasi (decoupled agar kegagalan hook emulator tidak menjatuhkan core)
-    if (useEmulator) {
+    // 2. Setup Emulator terisolasi HANYA jika shouldUseEmulator == true DAN !ApiConfig.allowProductionMode
+    if (shouldUseEmulator && !ApiConfig.allowProductionMode) {
       await setupEmulators();
     }
   }

@@ -24,6 +24,9 @@
   "authFieldPassword": "Password",
   "authForgotPasswordLink": "Forgot Password?",
   "authBtnLogin": "Sign In",
+  "authBtnGoogleSignIn": "Sign in with Google",
+  "authBtnGoogleSignUp": "Sign up with Google",
+  "authOrDivider": "or",
   "authNoAccount": "Don't have an account?",
   "authBtnRegisterLink": "Register Now",
 

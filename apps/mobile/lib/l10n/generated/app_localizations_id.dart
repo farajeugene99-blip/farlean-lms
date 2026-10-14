@@ -78,6 +78,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get authBtnLogin => 'Masuk';
 
   @override
+  String get authBtnGoogleSignIn => 'Masuk dengan Google';
+
+  @override
+  String get authBtnGoogleSignUp => 'Daftar dengan Google';
+
+  @override
+  String get authOrDivider => 'atau';
+
+  @override
   String get authNoAccount => 'Belum memiliki akun?';
 
   @override

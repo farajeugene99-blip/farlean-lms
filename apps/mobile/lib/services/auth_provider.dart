@@ -221,6 +221,30 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Masuk dengan Google Sign-In dengan penanganan pembatalan dan pipeline sesi
+  Future<bool> signInWithGoogle() async {
+    if (_isLoading) return false;
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final user = await _authService.signInWithGoogle();
+      if (user == null) {
+        // Dibatalkan oleh pengguna: batalkan state loading dengan bersih tanpa error
+        _setLoading(false);
+        return false;
+      }
+      _firebaseUser = _authService.currentFirebaseUser;
+      await _loadSession(forceRefresh: true);
+      _setLoading(false);
+      return _profileStatus == ProfileStatus.loaded;
+    } catch (e) {
+      _setError(AuthService.translateError(e), code: _extractCode(e));
+      _setLoading(false);
+      return false;
+    }
+  }
+
   /// Pendaftaran dengan proteksi anti-duplicate submit
   Future<bool> register({
     required String name,

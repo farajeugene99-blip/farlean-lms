@@ -78,6 +78,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authBtnLogin => 'Sign In';
 
   @override
+  String get authBtnGoogleSignIn => 'Sign in with Google';
+
+  @override
+  String get authBtnGoogleSignUp => 'Sign up with Google';
+
+  @override
+  String get authOrDivider => 'or';
+
+  @override
   String get authNoAccount => 'Don\'t have an account?';
 
   @override

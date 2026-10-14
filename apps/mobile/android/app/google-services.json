@@ -12,7 +12,20 @@
           "package_name": "com.farlean.mobile"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "944426438548-5a367cinrd8lv7egesv2bvb23cdt8br7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.farlean.mobile",
+            "certificate_hash": "e6ebfb0b8aef1cbf6d37cc434178b549dcc58e2d"
+          }
+        },
+        {
+          "client_id": "944426438548-qthv8fnb38jt8llrne4ks3b1l5a0u677.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAXAermh09KUl_Gf6K9R8DCLTiM4LY1ncg"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "944426438548-qthv8fnb38jt8llrne4ks3b1l5a0u677.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "944426438548-k8n1shgjqbfntu1nqj8tbji50u8masr4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.farlean.mobile"
+              }
+            }
+          ]
         }
       }
     }

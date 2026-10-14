@@ -72,6 +72,15 @@
   "authBtnLogin": "Masuk",
   "@authBtnLogin": { "description": "Tombol masuk/login" },
 
+  "authBtnGoogleSignIn": "Masuk dengan Google",
+  "@authBtnGoogleSignIn": { "description": "Tombol masuk menggunakan akun Google" },
+
+  "authBtnGoogleSignUp": "Daftar dengan Google",
+  "@authBtnGoogleSignUp": { "description": "Tombol pendaftaran menggunakan akun Google" },
+
+  "authOrDivider": "atau",
+  "@authOrDivider": { "description": "Pemisah 'atau' antara form email dan OAuth" },
+
   "authNoAccount": "Belum memiliki akun?",
   "@authNoAccount": { "description": "Teks prompt daftar di halaman login" },
 

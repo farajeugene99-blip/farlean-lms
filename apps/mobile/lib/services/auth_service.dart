@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import '../core/config/api_config.dart';
 import '../models/app_user.dart';
@@ -11,14 +12,17 @@ class AuthService {
   final FirebaseAuth? _auth;
   final FirebaseFirestore? _firestore;
   final http.Client _httpClient;
+  final GoogleSignIn _googleSignIn;
 
   AuthService({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     http.Client? httpClient,
+    GoogleSignIn? googleSignIn,
   })  : _auth = auth ?? (Firebase.apps.isNotEmpty ? FirebaseAuth.instance : null),
         _firestore = firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null),
-        _httpClient = httpClient ?? http.Client();
+        _httpClient = httpClient ?? http.Client(),
+        _googleSignIn = googleSignIn ?? GoogleSignIn();
 
   User? get currentFirebaseUser => _auth?.currentUser;
   Stream<User?> get authStateChanges => _auth?.authStateChanges() ?? const Stream.empty();
@@ -211,8 +215,68 @@ class AuthService {
     await user.updatePassword(newPassword);
   }
 
-  /// Keluar dari sesi aplikasi
+  /// Masuk dengan Google Sign-In, verifikasi kredensial ke Firebase Auth,
+  /// dan bootstrap profil pengguna di server secara idempoten.
+  /// Mengembalikan null jika pengguna membatalkan proses pemilihan akun Google.
+  Future<AppUser?> signInWithGoogle() async {
+    final auth = _auth;
+    if (auth == null) {
+      throw FirebaseAuthException(
+        code: 'not-initialized',
+        message: 'Firebase belum diinisialisasi.',
+      );
+    }
+
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        // Pengguna membatalkan dialog pemilihan akun Google
+        return null;
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = await auth.signInWithCredential(credential);
+      final User? user = userCredential.user;
+      if (user == null) {
+        throw FirebaseAuthException(
+          code: 'user-null',
+          message: 'Gagal mengotentikasi pengguna Google.',
+        );
+      }
+
+      // Panggil backend bootstrap untuk memastikan dokumen users/{uid} terbuat / terupdate
+      final token = await user.getIdToken();
+      if (token != null) {
+        await _callBootstrap(
+          token: token,
+          name: user.displayName ?? googleUser.displayName,
+          photoUrl: user.photoURL ?? googleUser.photoUrl,
+        );
+      }
+
+      return await getUserProfile(user.uid);
+    } on FirebaseAuthException {
+      rethrow;
+    } catch (e) {
+      throw FirebaseAuthException(
+        code: 'google-sign-in-failed',
+        message: 'Gagal masuk dengan Google: $e',
+      );
+    }
+  }
+
+  /// Keluar dari sesi aplikasi (Firebase Auth & Google Sign-In)
   Future<void> signOut() async {
+    try {
+      await _googleSignIn.signOut();
+    } catch (e) {
+      debugPrint('Catatan Google signOut: $e');
+    }
     await _auth?.signOut();
   }
 
@@ -238,27 +302,31 @@ class AuthService {
   }
 
   /// Memanggil endpoint serverless bootstrap Admin SDK secara aman
-  Future<void> callBootstrap({required String token, String? name}) async {
-    await _callBootstrap(token: token, name: name);
+  Future<void> callBootstrap({required String token, String? name, String? photoUrl}) async {
+    await _callBootstrap(token: token, name: name, photoUrl: photoUrl);
   }
 
-  Future<void> _callBootstrap({required String token, String? name}) async {
+  Future<void> _callBootstrap({required String token, String? name, String? photoUrl}) async {
     try {
       final uri = Uri.parse(ApiConfig.bootstrapUrl);
+      final body = <String, dynamic>{};
+      if (name != null && name.trim().isNotEmpty) body['name'] = name.trim();
+      if (photoUrl != null && photoUrl.trim().isNotEmpty) body['photoUrl'] = photoUrl.trim();
+
       final response = await _httpClient.post(
         uri,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode(name != null ? {'name': name} : {}),
+        body: jsonEncode(body),
       );
 
       if (response.statusCode != 200) {
         debugPrint('⚠️ [Bootstrap API] Response code ${response.statusCode}: ${response.body}');
       }
     } catch (e) {
-      debugPrint('⚠️ [Bootstrap API Note] Gagal menghubungi endpoint bootstrap lokal: $e');
+      debugPrint('⚠️ [Bootstrap API Note] Gagal menghubungi endpoint bootstrap: $e');
     }
   }
 
@@ -286,6 +354,8 @@ class AuthService {
           return 'Sesi Anda telah kedaluwarsa. Harap keluar dan masuk kembali sebelum mengubah kata sandi.';
         case 'user-disabled':
           return 'Akun ini telah dinonaktifkan oleh administrator.';
+        case 'google-sign-in-failed':
+          return 'Gagal masuk dengan Google. Silakan coba lagi.';
         default:
           return error.message ?? 'Terjadi kesalahan otentikasi. Silakan coba lagi.';
       }

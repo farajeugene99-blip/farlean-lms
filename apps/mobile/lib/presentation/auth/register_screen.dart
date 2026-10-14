@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../services/auth_provider.dart';
+import '../common/google_logo.dart';
 import 'auth_error_localization.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -41,6 +42,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
       email: _emailController.text,
       password: _passwordController.text,
     );
+
+    if (!mounted) return;
+
+    if (!success && authProvider.errorMessage != null) {
+      final l10n = AppLocalizations.of(context);
+      final msg = AuthErrorLocalization.fromCode(
+        l10n,
+        authProvider.authErrorCode,
+        fallbackMessage: authProvider.errorMessage,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _submitGoogle() async {
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.signInWithGoogle();
 
     if (!mounted) return;
 
@@ -167,6 +190,51 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         )
                       : Text(l10n.authBtnRegisterSubmit),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        l10n.authOrDivider,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+                      ),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton(
+                  onPressed: isLoading ? null : _submitGoogle,
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppTheme.border),
+                    backgroundColor: Colors.white,
+                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.primary,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const GoogleLogo(size: 20),
+                            const SizedBox(width: 12),
+                            Text(
+                              l10n.authBtnGoogleSignUp,
+                              style: const TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ],
             ),
