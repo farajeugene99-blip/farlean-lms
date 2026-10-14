@@ -12,7 +12,15 @@ Thumbs.db
 .env.*
 *.json.secret
 service-account*.json
+serviceAccount*.json
+*serviceAccount*.json
 *firebase-adminsdk*.json
+*serviceAccountKey*.json
+
+# Database Dumps & Local Backups
+backend/.dump/
+**/.dump/
+*.dump.json
 
 # Firebase Emulator
 *-debug.log
