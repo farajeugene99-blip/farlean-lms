@@ -65,6 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _showEditNameDialog(String currentName) async {
     final l10n = AppLocalizations.of(context);
+    final outerMessenger = ScaffoldMessenger.of(context);
     final controller = TextEditingController(text: currentName);
     final formKey = GlobalKey<FormState>();
 
@@ -105,7 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (ctx.mounted) Navigator.pop(ctx, true);
               } catch (e) {
                 if (ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
+                  outerMessenger.showSnackBar(
                     SnackBar(
                       content: Text(l10n.profileNameUpdateFail(e.toString())),
                       backgroundColor: AppTheme.error,
@@ -123,7 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     if (updated == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      outerMessenger.showSnackBar(
         SnackBar(
           content: Text(l10n.profileNameUpdated),
           backgroundColor: AppTheme.success,
@@ -134,6 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _showEditNimDialog(String label) async {
     final l10n = AppLocalizations.of(context);
+    final outerMessenger = ScaffoldMessenger.of(context);
     final controller = TextEditingController(text: _nimNip ?? '');
     final formKey = GlobalKey<FormState>();
 
@@ -188,7 +190,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (ctx.mounted) Navigator.pop(ctx, true);
               } catch (e) {
                 if (ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
+                  outerMessenger.showSnackBar(
                     SnackBar(
                       content: Text(l10n.profileIdentitySaveFail(label, e.toString())),
                       backgroundColor: AppTheme.error,
@@ -207,7 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (updated == true && mounted) {
       setState(() => _nimNip = controller.text.trim());
-      ScaffoldMessenger.of(context).showSnackBar(
+      outerMessenger.showSnackBar(
         SnackBar(
           content: Text(l10n.profileIdentitySaved(label)),
           backgroundColor: AppTheme.success,
@@ -217,6 +219,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showChangePasswordDialog() async {
+    final outerMessenger = ScaffoldMessenger.of(context);
+    final pwUpdatedText = AppLocalizations.of(context).profilePwUpdated;
     final updated = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -235,9 +239,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (updated == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      outerMessenger.showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).profilePwUpdated),
+          content: Text(pwUpdatedText),
           backgroundColor: AppTheme.success,
         ),
       );
@@ -249,6 +253,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final selectedClass = classProvider.selectedClass;
     final selectedClassId = classProvider.selectedClassId;
     final l10n = AppLocalizations.of(context);
+    final outerMessenger = ScaffoldMessenger.of(context);
+    final resetSuccessText = l10n.profileResetClassDone;
 
     await showDialog<void>(
       context: context,
@@ -276,7 +282,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const Icon(Icons.storage_rounded, color: AppTheme.primary),
                   const SizedBox(width: 8),
-                  Text(l10n.profileCacheTitle),
+                  Expanded(
+                    child: Text(
+                      l10n.profileCacheTitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
               content: SizedBox(
@@ -306,9 +318,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 const Icon(Icons.image_outlined, size: 16, color: AppTheme.secondary),
                                 const SizedBox(width: 6),
-                                Text(
-                                  l10n.profileCacheImageSection,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                Expanded(
+                                  child: Text(
+                                    l10n.profileCacheImageSection,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),
@@ -323,22 +339,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.3),
                             ),
                             const SizedBox(height: 10),
-                            OutlinedButton.icon(
+                            OutlinedButton(
                               onPressed: cacheBytes == 0
                                   ? null
                                   : () {
                                       PaintingBinding.instance.imageCache.clear();
                                       PaintingBinding.instance.imageCache.clearLiveImages();
                                       setDialogState(() {});
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      outerMessenger.showSnackBar(
                                         SnackBar(
                                           content: Text(l10n.profileCacheCleared),
                                           backgroundColor: AppTheme.success,
                                         ),
                                       );
                                     },
-                              icon: const Icon(Icons.cleaning_services_outlined, size: 16),
-                              label: Text(l10n.profileCacheClearBtn, style: const TextStyle(fontSize: 12)),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.cleaning_services_outlined, size: 16),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      l10n.profileCacheClearBtn,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -359,9 +386,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 const Icon(Icons.class_outlined, size: 16, color: AppTheme.primary),
                                 const SizedBox(width: 6),
-                                Text(
-                                  l10n.profileClassSavedSection,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                Expanded(
+                                  child: Text(
+                                    l10n.profileClassSavedSection,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),
@@ -376,7 +407,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.3),
                             ),
                             const SizedBox(height: 10),
-                            OutlinedButton.icon(
+                            OutlinedButton(
                               style: OutlinedButton.styleFrom(foregroundColor: AppTheme.error),
                               onPressed: (selectedClassId == null || selectedClassId.isEmpty)
                                   ? null
@@ -451,24 +482,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       );
 
                                       if (confirm == true) {
+                                        if (dialogCtx.mounted) Navigator.of(dialogCtx).pop();
                                         await classProvider.selectClass(null);
                                         MainShell.activeClassId = null;
-                                        if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                                        outerMessenger.showSnackBar(
+                                          SnackBar(
+                                            content: Text(resetSuccessText),
+                                            backgroundColor: AppTheme.success,
+                                          ),
+                                        );
                                         if (mounted) {
                                           try {
                                             context.go(AppConstants.dashboardRoute);
                                           } catch (_) {}
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text(l10n.profileResetClassDone),
-                                              backgroundColor: AppTheme.success,
-                                            ),
-                                          );
                                         }
                                       }
                                     },
-                              icon: const Icon(Icons.restart_alt_rounded, size: 16),
-                              label: Text(l10n.profileResetClassBtn, style: const TextStyle(fontSize: 12)),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.restart_alt_rounded, size: 16),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      l10n.profileResetClassBtn,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -559,7 +601,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 actions: [
                   TextButton(
-                    onPressed: isDialogLoggingOut ? null : () => Navigator.pop(dialogContext, false),
+                    onPressed: isDialogLoggingOut
+                        ? null
+                        : () {
+                            if (dialogContext.mounted) Navigator.pop(dialogContext, false);
+                          },
                     child: Text(l10n.btnCancel),
                   ),
                   ElevatedButton(
@@ -568,7 +614,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ? null
                         : () {
                             setDialogState(() => isDialogLoggingOut = true);
-                            Navigator.pop(dialogContext, true);
+                            if (dialogContext.mounted) Navigator.pop(dialogContext, true);
                           },
                     child: isDialogLoggingOut
                         ? const SizedBox(
