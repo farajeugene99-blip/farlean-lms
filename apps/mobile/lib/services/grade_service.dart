@@ -65,10 +65,9 @@ class GradeService {
   GradeService({
     FirebaseAuth? auth,
     http.Client? httpClient,
-    Future<String?> Function()? tokenProvider,
+    this._tokenProvider,
   })  : _auth = auth ?? (Firebase.apps.isNotEmpty ? FirebaseAuth.instance : null),
-        _httpClient = httpClient ?? http.Client(),
-        _tokenProvider = tokenProvider;
+        _httpClient = httpClient ?? http.Client();
 
   /// Mengirim attempt ke backend serverless /api/grade untuk dinilai secara transaksional
   Future<GradeResult> submitAndGrade(
