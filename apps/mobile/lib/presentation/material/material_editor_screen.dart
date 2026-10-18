@@ -447,7 +447,13 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
 
     if (_initError != null) {
       return Scaffold(
-        appBar: AppBar(title: Text(l10n.materialEditTitle)),
+        appBar: AppBar(
+          title: Text(
+            l10n.materialEditTitle,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
         body: ErrorView(
           message: _initError!,
           onRetry: () {
@@ -469,22 +475,28 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
       },
       child: Scaffold(
       appBar: AppBar(
-        title: Text(_existingMaterial == null ? l10n.materialCreateTitle : l10n.materialEditTitle),
+        title: Text(
+          _existingMaterial == null ? l10n.materialCreateTitle : l10n.materialEditTitle,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.visibility_outlined, size: 20),
             tooltip: l10n.materialPreviewTooltip,
             onPressed: _isSaving ? null : _showStudentPreview,
           ),
-          TextButton(
+          IconButton(
+            icon: const Icon(Icons.save_outlined, size: 20),
+            tooltip: l10n.meetingSaveDraftBtn,
             onPressed: _isSaving ? null : () => _saveMaterial(ContentStatus.draft),
-            child: Text(l10n.meetingSaveDraftBtn),
           ),
           ElevatedButton(
             onPressed: _isSaving ? null : () => _saveMaterial(ContentStatus.published),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.success,
-              minimumSize: const Size(90, 36),
+              minimumSize: const Size(80, 36),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
             ),
             child: _isSaving
                 ? const SizedBox(
@@ -531,27 +543,30 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             color: AppTheme.surface,
-            child: Row(
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _isSaving ? null : _showInsertImageDialog,
-                  icon: const Icon(Icons.add_photo_alternate_outlined, size: 16),
-                  label: Text(l10n.materialImageBtn, style: const TextStyle(fontSize: 12)),
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(90, 32)),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: _isSaving ? null : _insertTemplate,
-                  icon: const Icon(Icons.dashboard_customize_outlined, size: 16),
-                  label: Text(l10n.materialTemplateBtn, style: const TextStyle(fontSize: 12)),
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(90, 32)),
-                ),
-                const Spacer(),
-                Text(
-                  l10n.materialCharCountDeltaJson(_charCount),
-                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-                ),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _isSaving ? null : _showInsertImageDialog,
+                    icon: const Icon(Icons.add_photo_alternate_outlined, size: 16),
+                    label: Text(l10n.materialImageBtn, style: const TextStyle(fontSize: 12)),
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(80, 32)),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: _isSaving ? null : _insertTemplate,
+                    icon: const Icon(Icons.dashboard_customize_outlined, size: 16),
+                    label: Text(l10n.materialTemplateBtn, style: const TextStyle(fontSize: 12)),
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(80, 32)),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    l10n.materialCharCountDeltaJson(_charCount),
+                    style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
             ),
           ),
           const Divider(height: 1),

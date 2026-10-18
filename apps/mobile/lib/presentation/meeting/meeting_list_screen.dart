@@ -13,6 +13,7 @@ import '../../services/auth_provider.dart';
 import '../../services/class_provider.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
+import 'create_meeting_dialog.dart';
 import 'meeting_status_localization.dart';
 
 class MeetingListScreen extends StatefulWidget {
@@ -60,7 +61,7 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
         (classProvider.hasSingleClass ? classProvider.singleClassId ?? '' : '');
   }
 
-  Future<void> _loadMeetings({String? targetClassId}) async {
+  Future<void> _loadMeetings({String? targetClassId, bool isSoftRefresh = false}) async {
     final effectiveClassId = targetClassId ?? _getEffectiveClassId();
 
     if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
@@ -74,10 +75,12 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    if (!isSoftRefresh || _meetings.isEmpty) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
 
     final authProvider = context.read<AuthProvider>();
     final isStaff = RoleGuard.isStaff(authProvider.appUser);
@@ -118,9 +121,10 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
 
   Future<void> _showCreateMeetingDialog() async {
     final l10n = AppLocalizations.of(context);
+    final outerMessenger = ScaffoldMessenger.of(context);
     final effectiveClassId = _getEffectiveClassId();
     if (effectiveClassId.isEmpty || effectiveClassId == 'default_class') {
-      ScaffoldMessenger.of(context).showSnackBar(
+      outerMessenger.showSnackBar(
         SnackBar(
           content: Text(l10n.meetingSelectClassFirst),
           backgroundColor: AppTheme.error,
@@ -129,83 +133,33 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
       return;
     }
 
-    final titleController = TextEditingController();
-    final numberController = TextEditingController(text: '${_meetings.length + 1}');
-    final formKey = GlobalKey<FormState>();
-
-    final created = await showDialog<bool>(
+    final formData = await showDialog<MeetingFormData>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.meetingCreateTitle),
-        content: SizedBox(
-          width: 440,
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: numberController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: l10n.meetingNumberLabel),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return l10n.meetingNumberRequired;
-                    final num = int.tryParse(v.trim());
-                    if (num == null || num <= 0) return l10n.meetingNumberMustBePositive;
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: titleController,
-                  decoration: InputDecoration(labelText: l10n.meetingTitleLabel),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return l10n.meetingTitleRequired;
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.btnCancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              try {
-                final meeting = Meeting(
-                  id: '',
-                  classId: effectiveClassId,
-                  number: int.parse(numberController.text.trim()),
-                  title: titleController.text.trim(),
-                  date: DateTime.now(),
-                  status: ContentStatus.draft,
-                );
-                await _meetingRepository.createMeeting(meeting);
-                if (ctx.mounted) Navigator.pop(ctx, true);
-              } catch (e) {
-                if (ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text(l10n.meetingCreateFailed(e.toString())), backgroundColor: AppTheme.error),
-                  );
-                }
-              }
-            },
-            child: Text(l10n.meetingSaveDraftBtn),
-          ),
-        ],
+      builder: (ctx) => CreateMeetingDialog(
+        initialNumber: _meetings.length + 1,
+        submitButtonText: l10n.meetingSaveDraftBtn,
       ),
-    ).whenComplete(() {
-      titleController.dispose();
-      numberController.dispose();
-    });
+    );
 
-    if (created == true) {
-      _loadMeetings();
+    if (formData != null && mounted) {
+      try {
+        final meeting = Meeting(
+          id: '',
+          classId: effectiveClassId,
+          number: formData.number,
+          title: formData.title,
+          date: DateTime.now(),
+          status: ContentStatus.draft,
+        );
+        await _meetingRepository.createMeeting(meeting);
+        if (mounted) {
+          _loadMeetings(isSoftRefresh: true);
+        }
+      } catch (e) {
+        outerMessenger.showSnackBar(
+          SnackBar(content: Text(l10n.meetingCreateFailed(e.toString())), backgroundColor: AppTheme.error),
+        );
+      }
     }
   }
 

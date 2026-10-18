@@ -241,7 +241,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            const Text(AppConstants.appName),
+            const Flexible(
+              child: Text(
+                AppConstants.appName,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         actions: [
@@ -323,7 +328,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            Wrap(
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -456,62 +461,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                if (classroom.code.isNotEmpty) ...[
-                  InkWell(
-                    onTap: () {
-                      Clipboard.setData(ClipboardData(text: classroom.code));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.dashboardCodeCopied(classroom.code)), duration: const Duration(seconds: 1)),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(6),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.background,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: AppTheme.border),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.key_rounded, size: 12, color: AppTheme.primary),
-                          const SizedBox(width: 4),
-                          Text(
-                            classroom.code,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
+                Expanded(
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      if (classroom.code.isNotEmpty) ...[
+                        InkWell(
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: classroom.code));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.dashboardCodeCopied(classroom.code)), duration: const Duration(seconds: 1)),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppTheme.background,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: AppTheme.border),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.key_rounded, size: 12, color: AppTheme.primary),
+                                const SizedBox(width: 3),
+                                Flexible(
+                                  child: Text(
+                                    classroom.code,
+                                    style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 3),
+                                const Icon(Icons.copy_rounded, size: 12, color: AppTheme.textSecondary),
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.copy_rounded, size: 12, color: AppTheme.textSecondary),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-                const SizedBox(width: 8),
-                FutureBuilder<int>(
-                  future: _meetingRepository.getMeetingCount(classroom.id, isStaff: isOwner),
-                  builder: (context, snapshot) {
-                    final count = snapshot.data;
-                    if (count == null) return const SizedBox.shrink();
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withAlpha(15),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        l10n.dashboardMeetingCount(count),
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primary,
                         ),
+                      ],
+                      FutureBuilder<int>(
+                        future: _meetingRepository.getMeetingCount(classroom.id, isStaff: isOwner),
+                        builder: (context, snapshot) {
+                          final count = snapshot.data;
+                          if (count == null) return const SizedBox.shrink();
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withAlpha(15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              l10n.dashboardMeetingCount(count),
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () {
                     final classProvider = context.read<ClassProvider>();
@@ -519,10 +535,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     context.push('/classes/${classroom.id}');
                   },
                   style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(110, 36),
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    minimumSize: const Size(80, 32),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    textStyle: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
                   ),
-                  child: Text(isOwner ? l10n.dashboardManageClassBtn : l10n.dashboardOpenClassBtn),
+                  child: Text(
+                    isOwner ? l10n.dashboardManageClassBtn : l10n.dashboardOpenClassBtn,
+                    style: const TextStyle(fontSize: 11.5),
+                  ),
                 ),
               ],
             ),

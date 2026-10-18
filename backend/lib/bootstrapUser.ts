@@ -8,6 +8,7 @@ export interface BootstrapUserParams {
   name?: string;
   photoUrl?: string | null;
   initialRole?: 'USER' | 'GURU' | 'ADMIN';
+  initialAccountType?: 'MAHASISWA' | 'DOSEN' | 'UMUM';
 }
 
 export interface BootstrapUserResult {
@@ -62,15 +63,34 @@ async function checkAndAutofillUnesaNim(
  * - Dipanggil oleh endpoint HTTP `/api/bootstrap` dan script provisioning testing
  */
 export async function bootstrapUser(params: BootstrapUserParams): Promise<BootstrapUserResult> {
-  const { uid, email, emailVerified, name, photoUrl, initialRole = 'USER' } = params;
+  const {
+    uid,
+    email,
+    emailVerified,
+    name,
+    photoUrl,
+    initialRole = 'USER',
+    initialAccountType,
+  } = params;
 
   const userRef = db.collection('users').doc(uid);
   const existingDoc = await userRef.get();
 
   // Aturan Addendum Farlean LMS:
+  // - Jika initialAccountType ditentukan: gunakan nilai tersebut
+  // - Jika initialRole === 'ADMIN': default ke 'UMUM' (Admin tidak boleh di-assign MAHASISWA walau pakai @farlean.edu)
   // - Jika email belum diverifikasi: simpan 'UMUM'
   // - Jika email sudah terverifikasi: hitung ulang dari domain (longest match)
-  const calculatedAccountType = emailVerified ? resolveAccountType(email) : 'UMUM';
+  let calculatedAccountType: 'MAHASISWA' | 'DOSEN' | 'UMUM';
+  if (initialAccountType) {
+    calculatedAccountType = initialAccountType;
+  } else if (initialRole === 'ADMIN') {
+    calculatedAccountType = 'UMUM';
+  } else if (emailVerified) {
+    calculatedAccountType = resolveAccountType(email);
+  } else {
+    calculatedAccountType = 'UMUM';
+  }
 
   if (!existingDoc.exists) {
     const newUserData = {
@@ -106,7 +126,8 @@ export async function bootstrapUser(params: BootstrapUserParams): Promise<Bootst
     let finalAccountType: 'MAHASISWA' | 'DOSEN' | 'UMUM' = currentData.account_type || 'UMUM';
 
     // Self-healing: Jika email terverifikasi dan akun masih UMUM atau belum sesuai domain institusi resmi
-    if (emailVerified) {
+    // PENTING: Role ADMIN dikecualikan dari auto-override agar admin@farlean.edu tidak tertimpa menjadi MAHASISWA
+    if (emailVerified && currentData.role !== 'ADMIN') {
       const resolved = resolveAccountType(email);
       if (resolved !== 'UMUM' && currentData.account_type !== resolved) {
         if (currentData.account_type === 'UMUM' || !currentData.account_type) {

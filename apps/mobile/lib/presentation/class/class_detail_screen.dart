@@ -16,6 +16,7 @@ import '../../services/auth_provider.dart';
 import '../../services/class_provider.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
+import '../meeting/create_meeting_dialog.dart';
 
 class ClassDetailScreen extends StatefulWidget {
   final String classId;
@@ -68,10 +69,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Future<void> _loadAllData() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    if (_classroom == null) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
 
     final authProvider = context.read<AuthProvider>();
     final isStaff = RoleGuard.isStaff(authProvider.appUser);
@@ -111,92 +114,51 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       if (mounted) {
         final l10n = AppLocalizations.of(context);
         setState(() {
-          _errorMessage = l10n.classDetailLoadFailed(e.toString());
+          if (_classroom == null) {
+            _errorMessage = l10n.classDetailLoadFailed(e.toString());
+          }
           _isLoading = false;
         });
+        if (_classroom != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.classDetailLoadFailed(e.toString())), backgroundColor: AppTheme.error),
+          );
+        }
       }
     }
   }
 
   Future<void> _showCreateMeetingDialog() async {
     final l10n = AppLocalizations.of(context);
-    final titleController = TextEditingController();
-    final numberController = TextEditingController(text: '${_meetings.length + 1}');
-    final formKey = GlobalKey<FormState>();
+    final outerMessenger = ScaffoldMessenger.of(context);
 
-    final created = await showDialog<bool>(
+    final formData = await showDialog<MeetingFormData>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.meetingCreateTitle),
-        content: SizedBox(
-          width: 440,
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: numberController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: l10n.meetingNumberLabel),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return l10n.meetingNumberRequired;
-                    final num = int.tryParse(v.trim());
-                    if (num == null || num <= 0) return l10n.meetingNumberMustBePositive;
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: titleController,
-                  decoration: InputDecoration(labelText: l10n.meetingTitleLabel),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return l10n.meetingTitleRequired;
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.btnCancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              try {
-                final meeting = Meeting(
-                  id: '',
-                  classId: widget.classId,
-                  number: int.parse(numberController.text.trim()),
-                  title: titleController.text.trim(),
-                  date: DateTime.now(),
-                  status: ContentStatus.draft,
-                );
-                await _meetingRepository.createMeeting(meeting);
-                if (ctx.mounted) Navigator.pop(ctx, true);
-              } catch (e) {
-                if (ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
-                  );
-                }
-              }
-            },
-            child: Text(l10n.classSaveMeetingBtn),
-          ),
-        ],
+      builder: (ctx) => CreateMeetingDialog(
+        initialNumber: _meetings.length + 1,
+        submitButtonText: l10n.classSaveMeetingBtn,
       ),
-    ).whenComplete(() {
-      titleController.dispose();
-      numberController.dispose();
-    });
+    );
 
-    if (created == true) {
-      _loadAllData();
+    if (formData != null && mounted) {
+      try {
+        final meeting = Meeting(
+          id: '',
+          classId: widget.classId,
+          number: formData.number,
+          title: formData.title,
+          date: DateTime.now(),
+          status: ContentStatus.draft,
+        );
+        await _meetingRepository.createMeeting(meeting);
+        if (mounted) {
+          _loadAllData();
+        }
+      } catch (e) {
+        outerMessenger.showSnackBar(
+          SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
+        );
+      }
     }
   }
 
@@ -523,12 +485,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               ),
             ),
             title: Text(meeting.title, style: const TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Row(
+            subtitle: Wrap(
+              spacing: 8,
+              runSpacing: 4,
               children: [
                 _buildModuleIcon(Icons.quiz_outlined, meeting.pretestId != null),
-                const SizedBox(width: 8),
                 _buildModuleIcon(Icons.menu_book_rounded, meeting.materiId != null),
-                const SizedBox(width: 8),
                 _buildModuleIcon(Icons.play_circle_outline_rounded, meeting.videoId != null),
               ],
             ),
@@ -737,11 +699,14 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           ),
           child: Row(
             children: [
-              Text(
-                l10n.classPaginationInfo(totalStudents > 0 ? startIndex + 1 : 0, endIndex, totalStudents),
-                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              Expanded(
+                child: Text(
+                  l10n.classPaginationInfo(totalStudents > 0 ? startIndex + 1 : 0, endIndex, totalStudents),
+                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               IconButton(
                 icon: const Icon(Icons.chevron_left_rounded, size: 20),
                 padding: EdgeInsets.zero,
@@ -949,17 +914,22 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     final l10n = AppLocalizations.of(context);
     if (!hasModule) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(6),
         ),
-        child: Text('$label: -', style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+        child: Text(
+          '$label: -',
+          style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       );
     }
     final isDone = score != null;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
       decoration: BoxDecoration(
         color: isDone ? accentColor.withAlpha(20) : AppTheme.warning.withAlpha(20),
         borderRadius: BorderRadius.circular(6),
@@ -968,14 +938,22 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(isDone ? Icons.check_circle_outline_rounded : Icons.pending_outlined, size: 12, color: isDone ? accentColor : AppTheme.warning),
+          Icon(
+            isDone ? Icons.check_circle_outline_rounded : Icons.pending_outlined,
+            size: 12,
+            color: isDone ? accentColor : AppTheme.warning,
+          ),
           const SizedBox(width: 4),
-          Text(
-            isDone ? '$label: ${score.toStringAsFixed(1)}' : '$label: ${l10n.classScoreNotAvailable}',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: isDone ? accentColor : AppTheme.warning,
+          Flexible(
+            child: Text(
+              isDone ? '$label: ${score.toStringAsFixed(1)}' : '$label: ${l10n.classScoreNotAvailable}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: isDone ? accentColor : AppTheme.warning,
+              ),
             ),
           ),
         ],

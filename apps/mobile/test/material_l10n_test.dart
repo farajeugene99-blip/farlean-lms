@@ -152,7 +152,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Buat Materi Baru'), findsOneWidget);
-      expect(find.text('Simpan Draft'), findsOneWidget);
+      expect(find.byTooltip('Simpan Draft'), findsOneWidget);
       expect(find.text('Publikasikan'), findsOneWidget);
       expect(find.text('Judul Materi Pembelajaran'), findsOneWidget);
       expect(find.text('Gambar'), findsOneWidget);
@@ -166,7 +166,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Create New Material'), findsOneWidget);
-      expect(find.text('Save Draft'), findsOneWidget);
+      expect(find.byTooltip('Save Draft'), findsOneWidget);
       expect(find.text('Publish'), findsOneWidget);
       expect(find.text('Learning Material Title'), findsOneWidget);
       expect(find.text('Image'), findsOneWidget);
@@ -290,9 +290,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Buat Materi Baru'), findsOneWidget);
-      expect(find.text('Simpan Draft'), findsOneWidget);
+      expect(find.byTooltip('Simpan Draft'), findsOneWidget);
       expect(find.text('Create New Material'), findsNothing);
-      expect(find.text('Save Draft'), findsNothing);
+      expect(find.byTooltip('Save Draft'), findsNothing);
     });
   });
 }

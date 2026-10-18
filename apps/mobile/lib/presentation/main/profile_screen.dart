@@ -64,66 +64,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showEditNameDialog(String currentName) async {
+    final authProvider = context.read<AuthProvider>();
+    final uid = authProvider.firebaseUser?.uid;
+    if (uid == null) return;
+
     final l10n = AppLocalizations.of(context);
     final outerMessenger = ScaffoldMessenger.of(context);
-    final controller = TextEditingController(text: currentName);
-    final formKey = GlobalKey<FormState>();
 
-    final updated = await showDialog<bool>(
+    final savedName = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.profileEditNameTitle),
-        content: SizedBox(
-          width: 440,
-          child: Form(
-            key: formKey,
-            child: TextFormField(
-              controller: controller,
-              autofocus: true,
-              decoration: InputDecoration(labelText: l10n.authFieldName),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return l10n.validNameRequired;
-                if (v.trim().length > 100) return l10n.profileNameMaxLength(100);
-                return null;
-              },
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.btnCancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              final authProvider = context.read<AuthProvider>();
-              final uid = authProvider.firebaseUser?.uid;
-              if (uid == null) return;
-
-              try {
-                await _userRepository.updateName(uid, controller.text.trim());
-                if (ctx.mounted) Navigator.pop(ctx, true);
-              } catch (e) {
-                if (ctx.mounted) {
-                  outerMessenger.showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.profileNameUpdateFail(e.toString())),
-                      backgroundColor: AppTheme.error,
-                    ),
-                  );
-                }
-              }
-            },
-            child: Text(l10n.btnSave),
-          ),
-        ],
+      barrierDismissible: false,
+      builder: (dialogCtx) => _EditNameDialog(
+        currentName: currentName,
+        onSave: (name) => _userRepository.updateName(uid, name),
       ),
-    ).whenComplete(() {
-      controller.dispose();
-    });
+    );
 
-    if (updated == true && mounted) {
+    if (savedName != null && mounted) {
       outerMessenger.showSnackBar(
         SnackBar(
           content: Text(l10n.profileNameUpdated),
@@ -134,81 +91,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showEditNimDialog(String label) async {
+    final authProvider = context.read<AuthProvider>();
+    final uid = authProvider.firebaseUser?.uid;
+    if (uid == null) return;
+
     final l10n = AppLocalizations.of(context);
     final outerMessenger = ScaffoldMessenger.of(context);
-    final controller = TextEditingController(text: _nimNip ?? '');
-    final formKey = GlobalKey<FormState>();
 
-    final updated = await showDialog<bool>(
+    final savedNim = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.profileIdentityTitle(label)),
-        content: SizedBox(
-          width: 440,
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.profileIdentityPrivacyNote,
-                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: controller,
-                  autofocus: true,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: label,
-                    prefixIcon: const Icon(Icons.badge_outlined, size: 20),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return l10n.profileIdentityRequired(label);
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.btnCancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              final authProvider = context.read<AuthProvider>();
-              final uid = authProvider.firebaseUser?.uid;
-              if (uid == null) return;
-
-              try {
-                await _userRepository.setPrivateIdentity(uid, controller.text.trim());
-                if (ctx.mounted) Navigator.pop(ctx, true);
-              } catch (e) {
-                if (ctx.mounted) {
-                  outerMessenger.showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.profileIdentitySaveFail(label, e.toString())),
-                      backgroundColor: AppTheme.error,
-                    ),
-                  );
-                }
-              }
-            },
-            child: Text(l10n.btnSave),
-          ),
-        ],
+      barrierDismissible: false,
+      builder: (dialogCtx) => _EditIdentityDialog(
+        label: label,
+        currentValue: _nimNip ?? '',
+        onSave: (nim) => _userRepository.setPrivateIdentity(uid, nim),
       ),
-    ).whenComplete(() {
-      controller.dispose();
-    });
+    );
 
-    if (updated == true && mounted) {
-      setState(() => _nimNip = controller.text.trim());
+    if (savedNim != null && mounted) {
+      setState(() => _nimNip = savedNim);
       outerMessenger.showSnackBar(
         SnackBar(
           content: Text(l10n.profileIdentitySaved(label)),
@@ -688,14 +589,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.profileScreenTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            tooltip: l10n.btnLogout,
-            onPressed: _isLoggingOut ? null : _confirmAndSignOut,
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
@@ -1106,6 +999,242 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
                 : Text(l10n.profileSavePasswordBtn),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EditNameDialog extends StatefulWidget {
+  final String currentName;
+  final Future<void> Function(String name) onSave;
+
+  const _EditNameDialog({
+    required this.currentName,
+    required this.onSave,
+  });
+
+  @override
+  State<_EditNameDialog> createState() => _EditNameDialogState();
+}
+
+class _EditNameDialogState extends State<_EditNameDialog> {
+  late final TextEditingController _controller;
+  final _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.currentName);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return PopScope(
+      canPop: !_isSaving,
+      child: AlertDialog(
+        title: Text(l10n.profileEditNameTitle),
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFormField(
+                  controller: _controller,
+                  autofocus: true,
+                  enabled: !_isSaving,
+                  decoration: InputDecoration(labelText: l10n.authFieldName),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return l10n.validNameRequired;
+                    if (v.trim().length > 100) return l10n.profileNameMaxLength(100);
+                    return null;
+                  },
+                ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: AppTheme.error, fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _isSaving ? null : () => Navigator.pop(context, null),
+            child: Text(l10n.btnCancel),
+          ),
+          ElevatedButton(
+            onPressed: _isSaving
+                ? null
+                : () async {
+                    if (!_formKey.currentState!.validate()) return;
+                    final savedText = _controller.text.trim();
+                    setState(() {
+                      _isSaving = true;
+                      _errorMessage = null;
+                    });
+
+                    try {
+                      await widget.onSave(savedText);
+                      if (context.mounted) {
+                        Navigator.pop(context, savedText);
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        setState(() {
+                          _isSaving = false;
+                          _errorMessage = l10n.profileNameUpdateFail(e.toString());
+                        });
+                      }
+                    }
+                  },
+            child: _isSaving
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : Text(l10n.btnSave),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EditIdentityDialog extends StatefulWidget {
+  final String label;
+  final String currentValue;
+  final Future<void> Function(String value) onSave;
+
+  const _EditIdentityDialog({
+    required this.label,
+    required this.currentValue,
+    required this.onSave,
+  });
+
+  @override
+  State<_EditIdentityDialog> createState() => _EditIdentityDialogState();
+}
+
+class _EditIdentityDialogState extends State<_EditIdentityDialog> {
+  late final TextEditingController _controller;
+  final _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.currentValue);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return PopScope(
+      canPop: !_isSaving,
+      child: AlertDialog(
+        title: Text(l10n.profileIdentityTitle(widget.label)),
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.profileIdentityPrivacyNote,
+                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _controller,
+                  autofocus: true,
+                  enabled: !_isSaving,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: widget.label,
+                    prefixIcon: const Icon(Icons.badge_outlined, size: 20),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return l10n.profileIdentityRequired(widget.label);
+                    return null;
+                  },
+                ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: AppTheme.error, fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _isSaving ? null : () => Navigator.pop(context, null),
+            child: Text(l10n.btnCancel),
+          ),
+          ElevatedButton(
+            onPressed: _isSaving
+                ? null
+                : () async {
+                    if (!_formKey.currentState!.validate()) return;
+                    final savedText = _controller.text.trim();
+                    setState(() {
+                      _isSaving = true;
+                      _errorMessage = null;
+                    });
+
+                    try {
+                      await widget.onSave(savedText);
+                      if (context.mounted) {
+                        Navigator.pop(context, savedText);
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        setState(() {
+                          _isSaving = false;
+                          _errorMessage = l10n.profileIdentitySaveFail(widget.label, e.toString());
+                        });
+                      }
+                    }
+                  },
+            child: _isSaving
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : Text(l10n.btnSave),
           ),
         ],
       ),

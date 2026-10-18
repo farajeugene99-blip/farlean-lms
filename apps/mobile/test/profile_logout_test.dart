@@ -107,19 +107,19 @@ void main() {
       );
     }
 
-    testWidgets('1. Header logout icon dan tombol merah bawah keduanya tampil', (tester) async {
+    testWidgets('1. Tombol logout merah bawah tampil dan dapat diakses', (tester) async {
       final attemptRepo = MockAttemptRepoForLogout(hasActiveCallback: () => false);
 
       await tester.pumpWidget(createProfileWidget(attemptRepo: attemptRepo));
       await tester.pumpAndSettle();
 
-      // Ikon di AppBar
-      expect(find.byTooltip('Keluar'), findsOneWidget);
+      // Ikon di AppBar telah dihapus sesuai permintaan
+      expect(find.byTooltip('Keluar'), findsNothing);
       // Scroll down untuk melihat tombol di bawah ListView
       await tester.drag(find.byType(ListView), const Offset(0, -300));
       await tester.pumpAndSettle();
       expect(find.text('Keluar dari Akun'), findsOneWidget);
-      expect(find.byIcon(Icons.logout_rounded), findsNWidgets(2));
+      expect(find.byIcon(Icons.logout_rounded), findsOneWidget);
     });
 
     testWidgets('2. Menekan tombol keluar memunculkan dialog konfirmasi', (tester) async {
@@ -236,8 +236,10 @@ void main() {
       await tester.pumpWidget(createProfileWidget(attemptRepo: attemptRepo));
       await tester.pumpAndSettle();
 
-      // Akun A logout via AppBar action
-      await tester.tap(find.byTooltip('Keluar'));
+      // Akun A logout via tombol Keluar dari Akun di bawah
+      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Keluar dari Akun'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ElevatedButton, 'Keluar'));
       await tester.pumpAndSettle();
