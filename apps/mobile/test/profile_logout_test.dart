@@ -116,7 +116,7 @@ void main() {
       // Ikon di AppBar telah dihapus sesuai permintaan
       expect(find.byTooltip('Keluar'), findsNothing);
       // Scroll down untuk melihat tombol di bawah ListView
-      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
       await tester.pumpAndSettle();
       expect(find.text('Keluar dari Akun'), findsOneWidget);
       expect(find.byIcon(Icons.logout_rounded), findsOneWidget);
@@ -128,7 +128,7 @@ void main() {
       await tester.pumpWidget(createProfileWidget(attemptRepo: attemptRepo));
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Keluar dari Akun'));
@@ -152,7 +152,7 @@ void main() {
       await tester.pumpWidget(createProfileWidget(attemptRepo: attemptRepo));
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Keluar dari Akun'));
@@ -170,7 +170,7 @@ void main() {
       await tester.pumpWidget(createProfileWidget(attemptRepo: attemptRepo));
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Keluar dari Akun'));
@@ -188,7 +188,7 @@ void main() {
       await tester.pumpWidget(createProfileWidget(attemptRepo: attemptRepo));
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Keluar dari Akun'));
@@ -209,7 +209,7 @@ void main() {
       await tester.pumpWidget(createProfileWidget(attemptRepo: attemptRepo));
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Keluar dari Akun'));
@@ -237,7 +237,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Akun A logout via tombol Keluar dari Akun di bawah
-      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Keluar dari Akun'));
       await tester.pumpAndSettle();
@@ -274,7 +274,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      await tester.drag(find.byType(ListView), const Offset(0, -400));
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
       await tester.pumpAndSettle();
       expect(find.text('Keluar dari Akun'), findsOneWidget);
 

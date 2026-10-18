@@ -33,14 +33,13 @@ class _MockClassRepo extends ClassRepository {
   final List<ClassMember> mockMembers;
   final Map<String, double> mockPreScores;
   final Map<String, double> mockPostScores;
-  final Map<String, double> mockPersonalScores;
+  final Map<String, double> mockPersonalScores = const {};
 
   _MockClassRepo({
     required this.mockClass,
     this.mockMembers = const [],
     this.mockPreScores = const {},
     this.mockPostScores = const {},
-    this.mockPersonalScores = const {},
   });
 
   @override

@@ -3,53 +3,39 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Emulator Safety Guard (Blueprint Phase 1 Rule)
-const isProduction =
-  process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
-const allowLiveProd = process.env.ALLOW_PRODUCTION_MODE === 'true';
-
-// Auto-fallback ke emulator lokal jika berada di environment dev/test
-if (!isProduction && !allowLiveProd) {
-  if (!process.env.FIRESTORE_EMULATOR_HOST) {
-    process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080';
-  }
-  if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
-    process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
-  }
-  if (!process.env.FIREBASE_PROJECT_ID) {
-    process.env.FIREBASE_PROJECT_ID = 'farlean-lms';
-  }
-}
-
+// Emulator HANYA aktif jika secara eksplisit diset di environment variables
+// (misal saat menjalankan automated test suite lokal).
+// Dilarang melakukan auto-fallback ke loopback emulator pada deployment Vercel.
 const hasAuthEmulator = Boolean(process.env.FIREBASE_AUTH_EMULATOR_HOST);
 const hasFirestoreEmulator = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
 
-// Pastikan inisialisasi hanya terjadi sekali (singleton)
+// Inisialisasi Firebase Admin SDK secara singleton
 if (!getApps().length) {
   const projectId = process.env.FIREBASE_PROJECT_ID || 'farlean-lms';
 
-  if (!isProduction && !allowLiveProd && (!hasAuthEmulator || !hasFirestoreEmulator)) {
-    console.warn(
-      '⚠️ [Backend Safety Guard] Emulator host tidak terdeteksi di mode development/test. ' +
-        'Pastikan FIREBASE_AUTH_EMULATOR_HOST dan FIRESTORE_EMULATOR_HOST telah diset, ' +
-        'atau gunakan ALLOW_PRODUCTION_MODE=true jika memang disengaja.'
-    );
-  }
-
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY
-    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+  const rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY;
+  const privateKey = rawPrivateKey
+    ? rawPrivateKey.replace(/\\n/g, '\n').trim()
     : undefined;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
 
-  if (process.env.FIREBASE_CLIENT_EMAIL && privateKey) {
+  if (clientEmail && privateKey) {
+    // Mode Kredensial Produksi / Preview Vercel
     initializeApp({
       credential: cert({
         projectId,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        clientEmail,
         privateKey,
       }),
     });
   } else {
-    // Mode emulator lokal / GCP metadata default
+    // Mode Emulator Lokal atau GCP Metadata Default
+    if (!hasFirestoreEmulator && !hasAuthEmulator) {
+      console.warn(
+        '⚠️ [FirebaseAdmin] Kredensial service account tidak ditemukan dan emulator tidak diset. ' +
+          'Menggunakan default project credential.'
+      );
+    }
     initializeApp({ projectId });
   }
 }

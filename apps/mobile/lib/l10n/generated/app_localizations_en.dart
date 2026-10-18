@@ -894,8 +894,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meetingVideoUrlRequired => 'URL is required';
 
   @override
-  String get meetingVideoUrlInvalid =>
-      'URL must start with http:// or https://';
+  String get meetingVideoUrlInvalid => 'URL must start with https://';
 
   @override
   String get meetingSaveVideoBtn => 'Save Video';
@@ -1065,8 +1064,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Inline base64 images are forbidden.';
 
   @override
-  String get materialImageUrlInvalid =>
-      'URL must start with http:// or https://';
+  String get materialImageUrlInvalid => 'URL must start with https://';
 
   @override
   String get materialInsertBtn => 'Insert';
@@ -1766,7 +1764,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manualBookUrlRequired => 'File URL is required';
 
   @override
-  String get manualBookUrlInvalid => 'URL must start with http:// or https://';
+  String get manualBookUrlInvalid => 'URL must start with https://';
 
   @override
   String get manualBookFileNameLabel => 'File Name (.pdf)';
@@ -1796,4 +1794,134 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get manualBookOpenPdfBtn => 'Open PDF Document';
+
+  @override
+  String get profileThemeTitle => 'Display Theme';
+
+  @override
+  String get profileThemeSubtitle => 'Set light, dark, or system default theme';
+
+  @override
+  String get themeModeLight => 'Light';
+
+  @override
+  String get themeModeDark => 'Dark';
+
+  @override
+  String get themeModeSystem => 'System Default';
+
+  @override
+  String get profileLanguageTitle => 'Language';
+
+  @override
+  String get profileLanguageSubtitle => 'Select application display language';
+
+  @override
+  String get languageId => 'Bahasa Indonesia';
+
+  @override
+  String get languageEn => 'English';
+
+  @override
+  String quizQuestionOf(int current, int total) {
+    return 'Question $current of $total';
+  }
+
+  @override
+  String quizPoints(int points) {
+    return '$points Points';
+  }
+
+  @override
+  String get quizBtnPrev => 'Previous';
+
+  @override
+  String get quizBtnNext => 'Next';
+
+  @override
+  String get quizBtnSubmit => 'Submit';
+
+  @override
+  String get quizGateLockedTitle => 'Pretest Access Locked';
+
+  @override
+  String get quizGateLockedDesc =>
+      'Per Farlean LMS learning guidelines, you must open and read this meeting\'s learning material first before being permitted to take the pretest.\n\nIf you have previously opened the material, tap the button below to reopen it so that your attendance progress is officially synced to the server.';
+
+  @override
+  String get quizGateOpenMaterialBtn => 'Open Learning Material';
+
+  @override
+  String get quizGateBackToMeetingBtn => 'Back to Meeting';
+
+  @override
+  String get quizConfirmSubmitTitle => 'Submit Answers?';
+
+  @override
+  String get quizConfirmSubmitBody =>
+      'Are you sure you want to submit this quiz? Please ensure you have answered all questions carefully.';
+
+  @override
+  String get quizSubmitting => 'Submitting...';
+
+  @override
+  String get quizSubmitSuccessTitle => 'Quiz Graded';
+
+  @override
+  String quizSubmitSuccessBody(String score, int earned, int total) {
+    return 'Your official score: $score ($earned/$total points).\nYour best score has been updated on the server.';
+  }
+
+  @override
+  String get quizConnErrorTitle => 'Connection Lost';
+
+  @override
+  String get quizConnErrorBody =>
+      'Network connection lost. The quiz grading status cannot be verified from the server. Please check your internet connection and try again.';
+
+  @override
+  String get quizDeadlineExpiredTitle => 'Time Expired';
+
+  @override
+  String get quizDeadlineExpiredBody =>
+      'The quiz deadline has expired. The quiz session has been locked by the server.';
+
+  @override
+  String get quizUnderstand => 'Understood';
+
+  @override
+  String get quizDraftBlockedMessage =>
+      'This quiz is still in Draft status and has not been opened by the instructor.';
+
+  @override
+  String videoProviderLabel(String provider) {
+    return 'Provider: $provider';
+  }
+
+  @override
+  String videoDurationLabel(int minutes, int seconds) {
+    return 'Duration: ${minutes}m ${seconds}s';
+  }
+
+  @override
+  String get videoIntegratedTitle => 'Integrated Learning Video';
+
+  @override
+  String videoSourceUrlLabel(String url) {
+    return 'Source URL: $url';
+  }
+
+  @override
+  String get videoStorageNote =>
+      'This video is streamed directly without storing in Firebase Storage for storage efficiency per Blueprint architecture.';
+
+  @override
+  String videoLoadFailed(String error) {
+    return 'Failed to load video: $error';
+  }
+
+  @override
+  String meetingLockedUntilPublish(String date) {
+    return 'This meeting is scheduled to be published on $date. All modules are locked until then.';
+  }
 }

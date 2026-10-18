@@ -321,7 +321,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           // Header Card
           Container(
             padding: const EdgeInsets.all(16),
-            color: AppTheme.surface,
+            color: context.surfaceColor,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -395,11 +395,11 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       children: [
                         Text(
                           l10n.classMemberCount(_members.length),
-                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                          style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
                         ),
                         Text(
                           l10n.classMeetingCount(_meetings.length),
-                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                          style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
                         ),
                       ],
                     ),
@@ -444,7 +444,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.calendar_month_outlined, size: 48, color: AppTheme.textSecondary.withAlpha(128)),
+              Icon(Icons.calendar_month_outlined, size: 48, color: context.textSecondaryColor.withAlpha(128)),
               const SizedBox(height: 12),
               Text(l10n.meetingEmptyTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 6),
@@ -531,7 +531,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               Text(
                 l10n.classGradebookRestrictedBody,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppTheme.textSecondary, height: 1.4),
+                style: TextStyle(color: context.textSecondaryColor, height: 1.4),
               ),
             ],
           ),
@@ -553,9 +553,9 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.analytics_outlined, size: 48, color: AppTheme.textSecondary.withAlpha(128)),
+              Icon(Icons.analytics_outlined, size: 48, color: context.textSecondaryColor.withAlpha(128)),
               const SizedBox(height: 12),
-              Text(l10n.classGradebookNoStudents, style: const TextStyle(color: AppTheme.textSecondary)),
+              Text(l10n.classGradebookNoStudents, style: TextStyle(color: context.textSecondaryColor)),
             ],
           ),
         ),
@@ -612,9 +612,9 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.surfaceColor,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppTheme.border),
+            border: Border.all(color: context.borderColor),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String?>(
@@ -693,16 +693,16 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppTheme.surface,
+            color: context.surfaceColor,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.border.withAlpha(100)),
+            border: Border.all(color: context.borderColor.withAlpha(100)),
           ),
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   l10n.classPaginationInfo(totalStudents > 0 ? startIndex + 1 : 0, endIndex, totalStudents),
-                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -747,7 +747,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             elevation: 0.5,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
-              side: BorderSide(color: AppTheme.border.withAlpha(100)),
+              side: BorderSide(color: context.borderColor.withAlpha(100)),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -774,13 +774,13 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppTheme.surface,
+                          color: context.surfaceColor,
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: AppTheme.border),
+                          border: Border.all(color: context.borderColor),
                         ),
                         child: Text(
                           member.accountType.name,
-                          style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                          style: TextStyle(fontSize: 10, color: context.textSecondaryColor),
                         ),
                       ),
                     ],
@@ -843,7 +843,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                                 const SizedBox(width: 4),
                                 Text(
                                   l10n.classQuizProgress(doneCount, totalModules),
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.textPrimaryColor),
                                 ),
                               ],
                             ),
@@ -904,7 +904,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           const SizedBox(height: 4),
           Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
           const SizedBox(height: 2),
-          Text(subtitle, style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+          Text(subtitle, style: TextStyle(fontSize: 10, color: context.textSecondaryColor)),
         ],
       ),
     );
@@ -916,12 +916,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: context.surfaceColor,
           borderRadius: BorderRadius.circular(6),
         ),
         child: Text(
           '$label: -',
-          style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+          style: TextStyle(fontSize: 10, color: context.textSecondaryColor),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -965,7 +965,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     final l10n = AppLocalizations.of(context);
     if (_meetings.isEmpty) {
       return Center(
-        child: Text(l10n.classNoMeetings, style: const TextStyle(color: AppTheme.textSecondary)),
+        child: Text(l10n.classNoMeetings, style: TextStyle(color: context.textSecondaryColor)),
       );
     }
 
@@ -975,20 +975,20 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppTheme.primary.withAlpha(15),
+            color: context.primaryColor.withAlpha(15),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppTheme.primary.withAlpha(30)),
+            border: Border.all(color: context.primaryColor.withAlpha(30)),
           ),
           child: Row(
             children: [
-              const Icon(Icons.school_outlined, size: 24, color: AppTheme.primary),
+              Icon(Icons.school_outlined, size: 24, color: context.primaryColor),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l10n.classStudentProgressTitle, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.primary)),
-                    Text(l10n.classStudentProgressBody(_classroom?.name ?? ''), style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                    Text(l10n.classStudentProgressTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: context.primaryColor)),
+                    Text(l10n.classStudentProgressBody(_classroom?.name ?? ''), style: TextStyle(fontSize: 11, color: context.textSecondaryColor)),
                   ],
                 ),
               ),
@@ -1005,7 +1005,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             elevation: 0.5,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
-              side: BorderSide(color: AppTheme.border.withAlpha(100)),
+              side: BorderSide(color: context.borderColor.withAlpha(100)),
             ),
             child: Padding(
               padding: const EdgeInsets.all(14),
@@ -1117,7 +1117,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     return Icon(
       icon,
       size: 16,
-      color: active ? AppTheme.primary : AppTheme.textSecondary.withAlpha(80),
+      color: active ? context.primaryColor : context.textSecondaryColor.withAlpha(80),
     );
   }
 

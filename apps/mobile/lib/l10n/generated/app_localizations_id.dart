@@ -896,8 +896,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get meetingVideoUrlRequired => 'URL wajib diisi';
 
   @override
-  String get meetingVideoUrlInvalid =>
-      'URL harus diawali http:// atau https://';
+  String get meetingVideoUrlInvalid => 'URL harus diawali https://';
 
   @override
   String get meetingSaveVideoBtn => 'Simpan Video';
@@ -1067,8 +1066,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get materialImageBase64Forbidden => 'Gambar base64 inline dilarang.';
 
   @override
-  String get materialImageUrlInvalid =>
-      'URL harus diawali dengan http:// atau https://';
+  String get materialImageUrlInvalid => 'URL harus diawali dengan https://';
 
   @override
   String get materialInsertBtn => 'Sisipkan';
@@ -1762,7 +1760,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get manualBookUrlRequired => 'URL berkas wajib diisi';
 
   @override
-  String get manualBookUrlInvalid => 'URL harus diawali http:// atau https://';
+  String get manualBookUrlInvalid => 'URL harus diawali https://';
 
   @override
   String get manualBookFileNameLabel => 'Nama Berkas (.pdf)';
@@ -1792,4 +1790,135 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get manualBookOpenPdfBtn => 'Buka Dokumen PDF';
+
+  @override
+  String get profileThemeTitle => 'Tema Tampilan';
+
+  @override
+  String get profileThemeSubtitle =>
+      'Atur tema terang, gelap, atau ikuti sistem';
+
+  @override
+  String get themeModeLight => 'Terang';
+
+  @override
+  String get themeModeDark => 'Gelap';
+
+  @override
+  String get themeModeSystem => 'Ikuti Sistem';
+
+  @override
+  String get profileLanguageTitle => 'Bahasa Aplikasi';
+
+  @override
+  String get profileLanguageSubtitle => 'Pilih bahasa antarmuka aplikasi';
+
+  @override
+  String get languageId => 'Bahasa Indonesia';
+
+  @override
+  String get languageEn => 'English';
+
+  @override
+  String quizQuestionOf(int current, int total) {
+    return 'Soal $current dari $total';
+  }
+
+  @override
+  String quizPoints(int points) {
+    return '$points Poin';
+  }
+
+  @override
+  String get quizBtnPrev => 'Sebelumnya';
+
+  @override
+  String get quizBtnNext => 'Selanjutnya';
+
+  @override
+  String get quizBtnSubmit => 'Kumpulkan';
+
+  @override
+  String get quizGateLockedTitle => 'Akses Pretest Terkunci';
+
+  @override
+  String get quizGateLockedDesc =>
+      'Sesuai ketentuan alur pembelajaran Farlean LMS, Anda harus membuka dan membaca materi pembelajaran pertemuan ini terlebih dahulu sebelum diperkenankan mengerjakan pretest.\n\nJika sebelumnya Anda sudah pernah membuka materi, ketuk tombol di bawah untuk membuka kembali materi agar progres kehadiran tersinkronisasi secara resmi ke server.';
+
+  @override
+  String get quizGateOpenMaterialBtn => 'Buka Materi Pembelajaran';
+
+  @override
+  String get quizGateBackToMeetingBtn => 'Kembali ke Pertemuan';
+
+  @override
+  String get quizConfirmSubmitTitle => 'Kumpulkan Jawaban?';
+
+  @override
+  String get quizConfirmSubmitBody =>
+      'Apakah Anda yakin ingin mengumpulkan kuis ini? Pastikan seluruh soal telah Anda jawab dengan seksama.';
+
+  @override
+  String get quizSubmitting => 'Mengumpulkan...';
+
+  @override
+  String get quizSubmitSuccessTitle => 'Kuis Selesai Dinilai';
+
+  @override
+  String quizSubmitSuccessBody(String score, int earned, int total) {
+    return 'Nilai resmi Anda: $score ($earned/$total poin).\nNilai terbaik Anda telah diperbarui di server.';
+  }
+
+  @override
+  String get quizConnErrorTitle => 'Koneksi Terputus';
+
+  @override
+  String get quizConnErrorBody =>
+      'Koneksi jaringan terputus. Status penilaian kuis saat ini tidak dapat dipastikan dari server. Harap periksa koneksi internet Anda dan coba kembali.';
+
+  @override
+  String get quizDeadlineExpiredTitle => 'Batas Waktu Berakhir';
+
+  @override
+  String get quizDeadlineExpiredBody =>
+      'Batas waktu pengerjaan (deadline) kuis telah berakhir. Sesi pengerjaan kuis telah dikunci oleh server.';
+
+  @override
+  String get quizUnderstand => 'Mengerti';
+
+  @override
+  String get quizDraftBlockedMessage =>
+      'Kuis ini masih berstatus Draft dan belum dibuka oleh pengajar.';
+
+  @override
+  String videoProviderLabel(String provider) {
+    return 'Penyedia: $provider';
+  }
+
+  @override
+  String videoDurationLabel(int minutes, int seconds) {
+    return 'Durasi: ${minutes}m ${seconds}s';
+  }
+
+  @override
+  String get videoIntegratedTitle => 'Video Materi Terintegrasi';
+
+  @override
+  String videoSourceUrlLabel(String url) {
+    return 'URL Sumber: $url';
+  }
+
+  @override
+  String get videoStorageNote =>
+      'Video ini di-stream langsung tanpa disimpan di Firebase Storage untuk efisiensi penyimpanan sesuai arsitektur Blueprint.';
+
+  @override
+  String videoLoadFailed(String error) {
+    return 'Gagal memuat video: $error';
+  }
+
+  @override
+  String meetingLockedUntilPublish(String date) {
+    return 'Pertemuan ini dijadwalkan terbit pada $date. Seluruh modul terkunci hingga waktu tersebut.';
+  }
 }

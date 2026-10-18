@@ -1,6 +1,15 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
 /**
+ * Daftar origin produksi default sesuai arsitektur resmi Farlean LMS.
+ */
+const DEFAULT_PROD_ORIGINS = [
+  'https://farlean-lms.web.app',
+  'https://farlean-lms.firebaseapp.com',
+  'https://farlean-lms-backend.vercel.app',
+];
+
+/**
  * Daftar origin yang diizinkan untuk keperluan development lokal.
  * Flutter Web secara default menggunakan port tetap 5000 sesuai konfigurasi.
  */
@@ -11,7 +20,7 @@ const DEFAULT_DEV_ORIGINS = [
 
 /**
  * Mengambil daftar origin yang diizinkan dari environment variable CORS_ALLOWED_ORIGINS
- * atau fallback ke default development origin jika di lingkungan non-produksi.
+ * digabungkan dengan origin produksi default dan default development origin jika di lingkungan non-produksi.
  */
 export function getAllowedOrigins(): string[] {
   const envOrigins = process.env.CORS_ALLOWED_ORIGINS;
@@ -25,20 +34,25 @@ export function getAllowedOrigins(): string[] {
   const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 
   if (isProduction) {
-    // Di lingkungan produksi, HANYA izinkan origin yang terdaftar secara eksplisit
-    return configured;
+    // Di lingkungan produksi, gabungkan origin yang terdaftar di env dengan default origin resmi
+    const combined = new Set([...configured, ...DEFAULT_PROD_ORIGINS]);
+    return Array.from(combined);
   }
 
-  // Di lingkungan development/test, gabungkan konfigurasi env dengan default port dev
-  const combined = new Set([...configured, ...DEFAULT_DEV_ORIGINS]);
+  // Di lingkungan development/test, gabungkan konfigurasi env, origin produksi, dan port dev
+  const combined = new Set([...configured, ...DEFAULT_PROD_ORIGINS, ...DEFAULT_DEV_ORIGINS]);
   return Array.from(combined);
 }
 
 /**
  * Memeriksa apakah origin request termasuk dalam daftar yang diizinkan.
+ * Catatan Penting:
+ * Request dari aplikasi mobile native (Android/iOS) tidak mengirimkan header Origin.
+ * Request tanpa origin selalu diizinkan agar kompatibel dengan aplikasi mobile native.
  */
 export function isOriginAllowed(origin: string | undefined): boolean {
-  if (!origin) return false;
+  // Kompatibilitas Native Mobile: Request tanpa origin diizinkan
+  if (!origin) return true;
 
   const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
   if (!isProduction) {
@@ -46,6 +60,12 @@ export function isOriginAllowed(origin: string | undefined): boolean {
     if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
       return true;
     }
+  }
+
+  // Dukungan otomatis untuk deployment preview Vercel project ini
+  if (/^https:\/\/farlean-lms-backend-[a-z0-9-]+-farleans-projects\.vercel\.app$/.test(origin) ||
+      /^https:\/\/farlean-lms-backend-[a-z0-9-]+\.vercel\.app$/.test(origin)) {
+    return true;
   }
 
   const allowed = getAllowedOrigins();

@@ -12,6 +12,8 @@ import '../../repositories/user_repository.dart';
 import '../../services/auth_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/class_provider.dart';
+import '../../services/locale_provider.dart';
+import '../../services/theme_provider.dart';
 import '../auth/auth_error_localization.dart';
 import 'main_shell.dart';
 
@@ -208,9 +210,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppTheme.surface,
+                          color: context.surfaceColor,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppTheme.border),
+                          border: Border.all(color: context.borderColor),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,9 +278,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppTheme.surface,
+                          color: context.surfaceColor,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppTheme.border),
+                          border: Border.all(color: context.borderColor),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -685,6 +687,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const Divider(height: 1),
                 ListTile(
+                  leading: const Icon(Icons.palette_outlined),
+                  title: Text(l10n.profileThemeTitle),
+                  subtitle: Text(_getThemeModeName(context, l10n)),
+                  trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                  onTap: _showThemeSelectionDialog,
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.language_rounded),
+                  title: Text(l10n.profileLanguageTitle),
+                  subtitle: Text(_getLanguageName(context, l10n)),
+                  trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                  onTap: _showLanguageSelectionDialog,
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.security_rounded),
                   title: Text(l10n.profileEmailVerificationTitle),
                   subtitle: Text(isVerified ? l10n.profileEmailVerified : l10n.profileEmailPending),
@@ -759,6 +777,163 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  String _getThemeModeName(BuildContext context, AppLocalizations l10n) {
+    AppThemeMode mode = AppThemeMode.system;
+    try {
+      mode = Provider.of<ThemeProvider>(context, listen: true).appThemeMode;
+    } catch (_) {
+      mode = AppThemeMode.system;
+    }
+    switch (mode) {
+      case AppThemeMode.light:
+        return l10n.themeModeLight;
+      case AppThemeMode.dark:
+        return l10n.themeModeDark;
+      case AppThemeMode.system:
+        return l10n.themeModeSystem;
+    }
+  }
+
+  String _getLanguageName(BuildContext context, AppLocalizations l10n) {
+    String code = 'id';
+    try {
+      code = Provider.of<LocaleProvider>(context, listen: true).locale.languageCode;
+    } catch (_) {
+      code = 'id';
+    }
+    return code == 'en' ? l10n.languageEn : l10n.languageId;
+  }
+
+  void _showThemeSelectionDialog() {
+    final l10n = AppLocalizations.of(context);
+    ThemeProvider? themeProvider;
+    try {
+      themeProvider = context.read<ThemeProvider>();
+    } catch (_) {}
+    if (themeProvider == null) return;
+    final currentMode = themeProvider.appThemeMode;
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          title: Text(l10n.profileThemeTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ignore: deprecated_member_use
+              RadioListTile<AppThemeMode>(
+                title: Text(l10n.themeModeSystem),
+                value: AppThemeMode.system,
+                // ignore: deprecated_member_use
+                groupValue: currentMode,
+                // ignore: deprecated_member_use
+                onChanged: (val) {
+                  if (val != null) {
+                    themeProvider?.setThemeMode(val);
+                    Navigator.pop(dialogCtx);
+                  }
+                },
+              ),
+              // ignore: deprecated_member_use
+              RadioListTile<AppThemeMode>(
+                title: Text(l10n.themeModeLight),
+                value: AppThemeMode.light,
+                // ignore: deprecated_member_use
+                groupValue: currentMode,
+                // ignore: deprecated_member_use
+                onChanged: (val) {
+                  if (val != null) {
+                    themeProvider?.setThemeMode(val);
+                    Navigator.pop(dialogCtx);
+                  }
+                },
+              ),
+              // ignore: deprecated_member_use
+              RadioListTile<AppThemeMode>(
+                title: Text(l10n.themeModeDark),
+                value: AppThemeMode.dark,
+                // ignore: deprecated_member_use
+                groupValue: currentMode,
+                // ignore: deprecated_member_use
+                onChanged: (val) {
+                  if (val != null) {
+                    themeProvider?.setThemeMode(val);
+                    Navigator.pop(dialogCtx);
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: Text(l10n.btnCancel),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showLanguageSelectionDialog() {
+    final l10n = AppLocalizations.of(context);
+    LocaleProvider? localeProvider;
+    try {
+      localeProvider = context.read<LocaleProvider>();
+    } catch (_) {}
+    if (localeProvider == null) return;
+    final currentCode = localeProvider.locale.languageCode;
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          title: Text(l10n.profileLanguageTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ignore: deprecated_member_use
+              RadioListTile<String>(
+                title: Text(l10n.languageId),
+                value: 'id',
+                // ignore: deprecated_member_use
+                groupValue: currentCode,
+                // ignore: deprecated_member_use
+                onChanged: (val) {
+                  if (val != null) {
+                    localeProvider?.setLocale(Locale(val));
+                    Navigator.pop(dialogCtx);
+                  }
+                },
+              ),
+              // ignore: deprecated_member_use
+              RadioListTile<String>(
+                title: Text(l10n.languageEn),
+                value: 'en',
+                // ignore: deprecated_member_use
+                groupValue: currentCode,
+                // ignore: deprecated_member_use
+                onChanged: (val) {
+                  if (val != null) {
+                    localeProvider?.setLocale(Locale(val));
+                    Navigator.pop(dialogCtx);
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: Text(l10n.btnCancel),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildBadge(String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -828,7 +1003,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       child: AlertDialog(
         title: Row(
           children: [
-            const Icon(Icons.lock_reset_rounded, color: AppTheme.primary),
+            Icon(Icons.lock_reset_rounded, color: context.primaryColor),
             const SizedBox(width: 8),
             Text(l10n.profileChangePasswordTitle),
           ],
@@ -844,7 +1019,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                 children: [
                   Text(
                     l10n.profileChangePasswordNote(_newPasswordMinLength),
-                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4),
+                    style: TextStyle(fontSize: 12, color: context.textSecondaryColor, height: 1.4),
                   ),
                   const SizedBox(height: 16),
                   if (_serverError != null) ...[
@@ -1170,7 +1345,7 @@ class _EditIdentityDialogState extends State<_EditIdentityDialog> {
               children: [
                 Text(
                   l10n.profileIdentityPrivacyNote,
-                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(

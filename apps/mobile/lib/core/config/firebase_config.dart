@@ -13,19 +13,18 @@ class FirebaseConfig {
   static const String _emulatorHostOverride = String.fromEnvironment('EMULATOR_HOST');
   static const bool useFirebaseEmulator = bool.fromEnvironment('USE_FIREBASE_EMULATOR', defaultValue: false);
 
-  /// Inisialisasi Firebase dan arahkan ke Emulator jika diaktifkan secara eksplisit.
+  /// Inisialisasi Firebase. Default utama adalah Firebase Live Production (farlean-lms).
+  /// Emulator hanya aktif jika parameter eksplisit bernilai true atau flag USE_FIREBASE_EMULATOR/APP_ENV=development diberikan.
   static Future<void> initialize({bool? useEmulator}) async {
-    // Emulator HANYA aktif jika parameter eksplisit bernilai true,
-    // ATAU USE_FIREBASE_EMULATOR=true DAN tidak dalam mode produksi
-    final bool shouldUseEmulator = useEmulator ?? (useFirebaseEmulator && !ApiConfig.allowProductionMode);
-
-    // Penegakan Keputusan: Jangan izinkan akses live production tanpa flag eksplisit
-    if (!shouldUseEmulator && !ApiConfig.allowProductionMode) {
-      throw StateError(
-        'Safety Guard: Akses ke Firebase Production diblokir pada Phase 1 & 2. '
-        'Gunakan Firebase Emulator lokal atau sertakan flag --dart-define=ALLOW_PRODUCTION_MODE=true jika disengaja.',
-      );
+    // Penegakan Keamanan Release: Dilarang keras menggunakan emulator di mode produksi
+    if (kReleaseMode) {
+      if (useEmulator == true || useFirebaseEmulator || ApiConfig.isExplicitDevelopment) {
+        throw StateError('Mode rilis produksi dilarang keras menggunakan Firebase Emulator.');
+      }
     }
+
+    // Emulator HANYA aktif jika secara eksplisit diminta di lingkungan non-release
+    final bool shouldUseEmulator = !kReleaseMode && (useEmulator ?? (useFirebaseEmulator || ApiConfig.isExplicitDevelopment));
 
     // 1. Inisialisasi Core (lempar exception jika platform tidak didukung atau config salah)
     if (Firebase.apps.isEmpty) {
@@ -34,9 +33,11 @@ class FirebaseConfig {
       );
     }
 
-    // 2. Setup Emulator terisolasi HANYA jika shouldUseEmulator == true DAN !ApiConfig.allowProductionMode
-    if (shouldUseEmulator && !ApiConfig.allowProductionMode) {
+    // 2. Setup Emulator terisolasi HANYA jika shouldUseEmulator == true
+    if (shouldUseEmulator) {
       await setupEmulators();
+    } else {
+      debugPrint('🚀 [FirebaseConfig] Terhubung ke Firebase Live Production (farlean-lms)');
     }
   }
 

@@ -390,7 +390,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     appUser.claimsRole?.value ?? "USER",
                     appUser.role.value,
                   ),
-                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                  style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
                 ),
               ],
             ),
@@ -449,7 +449,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           classroom.description,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                          style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
                         ),
                       ],
                     ],
@@ -479,14 +479,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppTheme.background,
+                              color: context.backgroundColor,
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: AppTheme.border),
+                              border: Border.all(color: context.borderColor),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.key_rounded, size: 12, color: AppTheme.primary),
+                                Icon(Icons.key_rounded, size: 12, color: context.primaryColor),
                                 const SizedBox(width: 3),
                                 Flexible(
                                   child: Text(
@@ -496,7 +496,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 3),
-                                const Icon(Icons.copy_rounded, size: 12, color: AppTheme.textSecondary),
+                                Icon(Icons.copy_rounded, size: 12, color: context.textSecondaryColor),
                               ],
                             ),
                           ),
@@ -560,14 +560,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Icon(Icons.add_business_outlined, size: 40, color: AppTheme.textSecondary.withAlpha(128)),
+            Icon(Icons.add_business_outlined, size: 40, color: context.textSecondaryColor.withAlpha(128)),
             const SizedBox(height: 8),
             Text(l10n.dashboardEmptyOwnedTitle, style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
             Text(
               l10n.dashboardEmptyOwnedBody,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
@@ -588,14 +588,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Icon(Icons.group_add_outlined, size: 40, color: AppTheme.textSecondary.withAlpha(128)),
+            Icon(Icons.group_add_outlined, size: 40, color: context.textSecondaryColor.withAlpha(128)),
             const SizedBox(height: 8),
             Text(l10n.dashboardEmptyJoinedTitle, style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
             Text(
               l10n.dashboardEmptyJoinedBody,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
@@ -614,7 +614,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isPublished = status.toLowerCase() == 'published' || status.toLowerCase() == 'active';
     final color = isPublished
         ? AppTheme.success
-        : (isArchived ? AppTheme.textSecondary : AppTheme.warning);
+        : (isArchived ? context.textSecondaryColor : AppTheme.warning);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

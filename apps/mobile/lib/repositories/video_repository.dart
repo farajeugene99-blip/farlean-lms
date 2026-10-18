@@ -31,8 +31,8 @@ class VideoRepository {
     if (video.url.trim().isEmpty) {
       throw ArgumentError('URL video tidak boleh kosong.');
     }
-    if (!video.url.startsWith('http://') && !video.url.startsWith('https://')) {
-      throw ArgumentError('URL video harus diawali http:// atau https://');
+    if (!video.url.trim().startsWith('https://')) {
+      throw ArgumentError('URL video harus diawali https://');
     }
 
     final firestore = _firestore;
@@ -52,6 +52,9 @@ class VideoRepository {
   Future<void> updateVideo(VideoItem video) async {
     if (video.url.trim().isEmpty) {
       throw ArgumentError('URL video tidak boleh kosong.');
+    }
+    if (!video.url.trim().startsWith('https://')) {
+      throw ArgumentError('URL video harus diawali https://');
     }
 
     final firestore = _firestore;

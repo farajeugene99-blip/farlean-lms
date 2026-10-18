@@ -928,8 +928,8 @@
   "meetingVideoUrlRequired": "URL wajib diisi",
   "@meetingVideoUrlRequired": { "description": "Validasi URL video kosong" },
 
-  "meetingVideoUrlInvalid": "URL harus diawali http:// atau https://",
-  "@meetingVideoUrlInvalid": { "description": "Validasi protokol URL video" },
+  "meetingVideoUrlInvalid": "URL harus diawali https://",
+  "@meetingVideoUrlInvalid": { "description": "Validasi protokol URL video harus https" },
 
   "meetingSaveVideoBtn": "Simpan Video",
   "@meetingSaveVideoBtn": { "description": "Tombol simpan video" },
@@ -1119,8 +1119,8 @@
   "materialImageBase64Forbidden": "Gambar base64 inline dilarang.",
   "@materialImageBase64Forbidden": { "description": "Validasi penolakan gambar base64 inline" },
 
-  "materialImageUrlInvalid": "URL harus diawali dengan http:// atau https://",
-  "@materialImageUrlInvalid": { "description": "Validasi protokol URL gambar" },
+  "materialImageUrlInvalid": "URL harus diawali dengan https://",
+  "@materialImageUrlInvalid": { "description": "Validasi protokol URL gambar harus https" },
 
   "materialInsertBtn": "Sisipkan",
   "@materialInsertBtn": { "description": "Tombol aksi sisipkan gambar ke dokumen" },
@@ -1862,8 +1862,8 @@
   "manualBookUrlRequired": "URL berkas wajib diisi",
   "@manualBookUrlRequired": { "description": "Validasi URL berkas kosong" },
 
-  "manualBookUrlInvalid": "URL harus diawali http:// atau https://",
-  "@manualBookUrlInvalid": { "description": "Validasi URL berkas harus protokol http/https" },
+  "manualBookUrlInvalid": "URL harus diawali https://",
+  "@manualBookUrlInvalid": { "description": "Validasi URL berkas harus protokol https" },
 
   "manualBookFileNameLabel": "Nama Berkas (.pdf)",
   "@manualBookFileNameLabel": { "description": "Label field nama berkas pdf" },
@@ -1890,5 +1890,157 @@
   "@manualBookNoDescription": { "description": "Fallback saat deskripsi manual book kosong" },
 
   "manualBookOpenPdfBtn": "Buka Dokumen PDF",
-  "@manualBookOpenPdfBtn": { "description": "Tombol membuka dokumen PDF manual book" }
+  "@manualBookOpenPdfBtn": { "description": "Tombol membuka dokumen PDF manual book" },
+
+  "profileThemeTitle": "Tema Tampilan",
+  "@profileThemeTitle": { "description": "Judul menu pemilihan tema tampilan" },
+
+  "profileThemeSubtitle": "Atur tema terang, gelap, atau ikuti sistem",
+  "@profileThemeSubtitle": { "description": "Subjudul menu pemilihan tema tampilan" },
+
+  "themeModeLight": "Terang",
+  "@themeModeLight": { "description": "Opsi tema terang" },
+
+  "themeModeDark": "Gelap",
+  "@themeModeDark": { "description": "Opsi tema gelap" },
+
+  "themeModeSystem": "Ikuti Sistem",
+  "@themeModeSystem": { "description": "Opsi tema mengikuti sistem operasi" },
+
+  "profileLanguageTitle": "Bahasa Aplikasi",
+  "@profileLanguageTitle": { "description": "Judul menu pemilihan bahasa aplikasi" },
+
+  "profileLanguageSubtitle": "Pilih bahasa antarmuka aplikasi",
+  "@profileLanguageSubtitle": { "description": "Subjudul menu pemilihan bahasa" },
+
+  "languageId": "Bahasa Indonesia",
+  "@languageId": { "description": "Nama bahasa Indonesia" },
+
+  "languageEn": "English",
+  "@languageEn": { "description": "Nama bahasa Inggris" },
+
+  "quizQuestionOf": "Soal {current} dari {total}",
+  "@quizQuestionOf": {
+    "description": "Indikator nomor soal aktif",
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "quizPoints": "{points} Poin",
+  "@quizPoints": {
+    "description": "Bobot poin soal kuis",
+    "placeholders": {
+      "points": { "type": "int" }
+    }
+  },
+
+  "quizBtnPrev": "Sebelumnya",
+  "@quizBtnPrev": { "description": "Tombol navigasi soal sebelumnya" },
+
+  "quizBtnNext": "Selanjutnya",
+  "@quizBtnNext": { "description": "Tombol navigasi soal selanjutnya" },
+
+  "quizBtnSubmit": "Kumpulkan",
+  "@quizBtnSubmit": { "description": "Tombol kumpulkan jawaban kuis" },
+
+  "quizGateLockedTitle": "Akses Pretest Terkunci",
+  "@quizGateLockedTitle": { "description": "Judul layar gate akses pretest terkunci" },
+
+  "quizGateLockedDesc": "Sesuai ketentuan alur pembelajaran Farlean LMS, Anda harus membuka dan membaca materi pembelajaran pertemuan ini terlebih dahulu sebelum diperkenankan mengerjakan pretest.\n\nJika sebelumnya Anda sudah pernah membuka materi, ketuk tombol di bawah untuk membuka kembali materi agar progres kehadiran tersinkronisasi secara resmi ke server.",
+  "@quizGateLockedDesc": { "description": "Instruksi edukatif gerbang pretest saat materi belum dibuka" },
+
+  "quizGateOpenMaterialBtn": "Buka Materi Pembelajaran",
+  "@quizGateOpenMaterialBtn": { "description": "Tombol membuka materi pembelajaran" },
+
+  "quizGateBackToMeetingBtn": "Kembali ke Pertemuan",
+  "@quizGateBackToMeetingBtn": { "description": "Tombol kembali ke layar pertemuan" },
+
+  "quizConfirmSubmitTitle": "Kumpulkan Jawaban?",
+  "@quizConfirmSubmitTitle": { "description": "Judul dialog konfirmasi pengumpulan kuis" },
+
+  "quizConfirmSubmitBody": "Apakah Anda yakin ingin mengumpulkan kuis ini? Pastikan seluruh soal telah Anda jawab dengan seksama.",
+  "@quizConfirmSubmitBody": { "description": "Isi dialog konfirmasi pengumpulan kuis" },
+
+  "quizSubmitting": "Mengumpulkan...",
+  "@quizSubmitting": { "description": "Teks indikator saat kuis sedang dikirim ke server" },
+
+  "quizSubmitSuccessTitle": "Kuis Selesai Dinilai",
+  "@quizSubmitSuccessTitle": { "description": "Judul dialog sukses penilaian kuis" },
+
+  "quizSubmitSuccessBody": "Nilai resmi Anda: {score} ({earned}/{total} poin).\nNilai terbaik Anda telah diperbarui di server.",
+  "@quizSubmitSuccessBody": {
+    "description": "Isi pesan sukses penilaian kuis resmi",
+    "placeholders": {
+      "score": { "type": "String" },
+      "earned": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "quizConnErrorTitle": "Koneksi Terputus",
+  "@quizConnErrorTitle": { "description": "Judul dialog error koneksi kuis" },
+
+  "quizConnErrorBody": "Koneksi jaringan terputus. Status penilaian kuis saat ini tidak dapat dipastikan dari server. Harap periksa koneksi internet Anda dan coba kembali.",
+  "@quizConnErrorBody": { "description": "Isi dialog error koneksi kuis" },
+
+  "quizDeadlineExpiredTitle": "Batas Waktu Berakhir",
+  "@quizDeadlineExpiredTitle": { "description": "Judul dialog batas waktu kuis kedaluwarsa" },
+
+  "quizDeadlineExpiredBody": "Batas waktu pengerjaan (deadline) kuis telah berakhir. Sesi pengerjaan kuis telah dikunci oleh server.",
+  "@quizDeadlineExpiredBody": { "description": "Isi dialog batas waktu pengerjaan kuis kedaluwarsa" },
+
+  "quizUnderstand": "Mengerti",
+  "@quizUnderstand": { "description": "Tombol aksi mengerti pada dialog" },
+
+  "quizDraftBlockedMessage": "Kuis ini masih berstatus Draft dan belum dibuka oleh pengajar.",
+  "@quizDraftBlockedMessage": { "description": "Pesan penolakan saat kuis berstatus draft" },
+
+  "videoProviderLabel": "Penyedia: {provider}",
+  "@videoProviderLabel": {
+    "description": "Label penyedia video pembelajaran",
+    "placeholders": {
+      "provider": { "type": "String" }
+    }
+  },
+
+  "videoDurationLabel": "Durasi: {minutes}m {seconds}s",
+  "@videoDurationLabel": {
+    "description": "Label durasi pemutaran video",
+    "placeholders": {
+      "minutes": { "type": "int" },
+      "seconds": { "type": "int" }
+    }
+  },
+
+  "videoIntegratedTitle": "Video Materi Terintegrasi",
+  "@videoIntegratedTitle": { "description": "Judul bagian video materi terintegrasi" },
+
+  "videoSourceUrlLabel": "URL Sumber: {url}",
+  "@videoSourceUrlLabel": {
+    "description": "Label tautan sumber video",
+    "placeholders": {
+      "url": { "type": "String" }
+    }
+  },
+
+  "videoStorageNote": "Video ini di-stream langsung tanpa disimpan di Firebase Storage untuk efisiensi penyimpanan sesuai arsitektur Blueprint.",
+  "@videoStorageNote": { "description": "Catatan edukatif penyimpanan video pembelajaran" },
+
+  "videoLoadFailed": "Gagal memuat video: {error}",
+  "@videoLoadFailed": {
+    "description": "Pesan error gagal memuat data video",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "meetingLockedUntilPublish": "Pertemuan ini dijadwalkan terbit pada {date}. Seluruh modul terkunci hingga waktu tersebut.",
+  "@meetingLockedUntilPublish": {
+    "description": "Banner pemberitahuan pertemuan terkunci jadwal terbit",
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  }
 }

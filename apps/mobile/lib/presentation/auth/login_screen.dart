@@ -191,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           l10n.authOrDivider,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.textSecondaryColor),
                         ),
                       ),
                       const Expanded(child: Divider()),
@@ -201,16 +201,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   OutlinedButton(
                     onPressed: isLoading ? null : _submitGoogle,
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppTheme.border),
-                      backgroundColor: Colors.white,
+                      side: BorderSide(color: context.borderColor),
+                      backgroundColor: context.surfaceColor,
                     ),
                     child: isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: AppTheme.primary,
+                              color: context.primaryColor,
                             ),
                           )
                         : Row(
@@ -220,8 +220,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               const SizedBox(width: 12),
                               Text(
                                 l10n.authBtnGoogleSignIn,
-                                style: const TextStyle(
-                                  color: AppTheme.textPrimary,
+                                style: TextStyle(
+                                  color: context.textPrimaryColor,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),

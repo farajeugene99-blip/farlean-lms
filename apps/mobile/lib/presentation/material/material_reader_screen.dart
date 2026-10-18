@@ -200,40 +200,40 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
           // Header Info
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            color: AppTheme.surface,
+            color: context.surfaceColor,
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withAlpha(20),
+                    color: context.primaryColor.withAlpha(20),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     l10n.labelVersion(material.version),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.primary,
+                      color: context.primaryColor,
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   l10n.materialFormat(material.format.toUpperCase()),
-                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                  style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
                 ),
                 const Spacer(),
                 if (_isRecordingView) ...[
-                  const SizedBox(
+                  SizedBox(
                     width: 12,
                     height: 12,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.textSecondary),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: context.textSecondaryColor),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     l10n.materialRecordingProgress,
-                    style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 11, color: context.textSecondaryColor, fontWeight: FontWeight.w500),
                   ),
                 ] else if (_recordSuccess) ...[
                   const Icon(Icons.check_circle_outline_rounded, size: 14, color: AppTheme.success),
@@ -276,6 +276,19 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
                   expands: true,
                   padding: EdgeInsets.zero,
                   placeholder: l10n.materialEmptyPlaceholder,
+                  customStyles: DefaultStyles(
+                    paragraph: DefaultTextBlockStyle(
+                      TextStyle(
+                        color: context.textPrimaryColor,
+                        fontSize: 15,
+                        height: 1.5,
+                      ),
+                      const HorizontalSpacing(0, 0),
+                      const VerticalSpacing(0, 0),
+                      const VerticalSpacing(0, 0),
+                      null,
+                    ),
+                  ),
                 ),
               ),
             ),

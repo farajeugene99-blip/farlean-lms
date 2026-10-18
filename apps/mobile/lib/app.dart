@@ -11,17 +11,20 @@ import 'routing/app_router.dart';
 import 'services/auth_provider.dart';
 import 'services/class_provider.dart';
 import 'services/locale_provider.dart';
+import 'services/theme_provider.dart';
 
 class FarleanApp extends StatefulWidget {
   final AuthProvider? authProvider;
   final ClassProvider? classProvider;
   final LocaleProvider? localeProvider;
+  final ThemeProvider? themeProvider;
 
   const FarleanApp({
     super.key,
     this.authProvider,
     this.classProvider,
     this.localeProvider,
+    this.themeProvider,
   });
 
   @override
@@ -32,6 +35,7 @@ class _FarleanAppState extends State<FarleanApp> {
   late final AuthProvider _authProvider;
   late final ClassProvider _classProvider;
   late final LocaleProvider _localeProvider;
+  late final ThemeProvider _themeProvider;
   late final GoRouter _router;
 
   @override
@@ -40,7 +44,9 @@ class _FarleanAppState extends State<FarleanApp> {
     _authProvider = widget.authProvider ?? AuthProvider();
     _classProvider = widget.classProvider ?? ClassProvider();
     _localeProvider = widget.localeProvider ?? LocaleProvider();
-    _localeProvider.load(); // non-blocking; selama fase 2A selalu id
+    _themeProvider = widget.themeProvider ?? ThemeProvider();
+    _localeProvider.load();
+    _themeProvider.load();
     _router = AppRouter.createRouter(_authProvider);
   }
 
@@ -51,15 +57,16 @@ class _FarleanAppState extends State<FarleanApp> {
         ChangeNotifierProvider<AuthProvider>.value(value: _authProvider),
         ChangeNotifierProvider<ClassProvider>.value(value: _classProvider),
         ChangeNotifierProvider<LocaleProvider>.value(value: _localeProvider),
+        ChangeNotifierProvider<ThemeProvider>.value(value: _themeProvider),
       ],
-      child: Consumer<LocaleProvider>(
-        builder: (context, localeProvider, _) => MaterialApp.router(
+      child: Consumer2<LocaleProvider, ThemeProvider>(
+        builder: (context, localeProvider, themeProvider, _) => MaterialApp.router(
           title: AppConstants.appName,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.themeMode,
           routerConfig: _router,
-          // Locale dari provider (dikunci ke 'id' selama fase migrasi 2A).
-          // DevicePreview.locale tetap bisa override saat development.
           locale: DevicePreview.locale(context) ?? localeProvider.locale,
           localizationsDelegates: const [
             AppLocalizations.delegate,

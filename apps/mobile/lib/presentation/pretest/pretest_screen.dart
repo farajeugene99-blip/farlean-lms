@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/content_status.dart';
 import '../../models/pretest.dart';
 import '../../models/question.dart';
@@ -285,23 +286,24 @@ class _PretestScreenState extends State<PretestScreen> {
   }
 
   Future<void> _confirmSubmit() async {
+    final l10n = AppLocalizations.of(context);
     final unanswered = _questions.length - _answers.length;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Kumpulkan Jawaban?'),
+        title: Text(l10n.quizConfirmSubmitTitle),
         content: Text(
           unanswered > 0
               ? 'Terdapat $unanswered soal yang belum Anda jawab. Jawaban yang sudah dikumpulkan tidak dapat diubah lagi.'
-              : 'Seluruh soal telah dijawab. Apakah Anda yakin ingin mengumpulkan kuis sekarang?',
+              : l10n.quizConfirmSubmitBody,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.btnCancel)),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.success),
-            child: const Text('Kumpulkan'),
+            child: Text(l10n.quizBtnSubmit),
           ),
         ],
       ),
@@ -410,24 +412,22 @@ class _PretestScreenState extends State<PretestScreen> {
     }
 
     // Cabang C (Tidak Dapat Memastikan): Status tidak dapat dipastikan
+    final l10n = AppLocalizations.of(context);
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.cloud_off_rounded, color: AppTheme.error),
-            SizedBox(width: 8),
-            Text('Koneksi Terputus'),
+            const Icon(Icons.cloud_off_rounded, color: AppTheme.error),
+            const SizedBox(width: 8),
+            Text(l10n.quizConnErrorTitle),
           ],
         ),
-        content: const Text(
-          'Koneksi jaringan terputus. Status penilaian kuis saat ini tidak dapat dipastikan dari server. '
-          'Harap periksa koneksi internet Anda dan coba kembali.',
-        ),
+        content: Text(l10n.quizConnErrorBody),
         actions: [
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Tutup'),
+            child: Text(l10n.quizUnderstand),
           ),
         ],
       ),
@@ -435,27 +435,26 @@ class _PretestScreenState extends State<PretestScreen> {
   }
 
   void _showDeadlineExpiredDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.timer_off_rounded, color: AppTheme.error),
-            SizedBox(width: 8),
-            Text('Batas Waktu Berakhir'),
+            const Icon(Icons.timer_off_rounded, color: AppTheme.error),
+            const SizedBox(width: 8),
+            Text(l10n.quizDeadlineExpiredTitle),
           ],
         ),
-        content: const Text(
-          'Batas waktu pengerjaan (deadline) kuis telah berakhir. Sesi pengerjaan kuis telah dikunci oleh server.',
-        ),
+        content: Text(l10n.quizDeadlineExpiredBody),
         actions: [
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
               Navigator.pop(context);
             },
-            child: const Text('Kembali ke Pertemuan'),
+            child: Text(l10n.quizGateBackToMeetingBtn),
           ),
         ],
       ),
@@ -463,15 +462,16 @@ class _PretestScreenState extends State<PretestScreen> {
   }
 
   Future<void> _showResultDialog(GradeResult gradeResult) async {
+    final l10n = AppLocalizations.of(context);
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.check_circle_rounded, color: AppTheme.success),
-            SizedBox(width: 8),
-            Text('Kuis Selesai Dinilai'),
+            const Icon(Icons.check_circle_rounded, color: AppTheme.success),
+            const SizedBox(width: 8),
+            Text(l10n.quizSubmitSuccessTitle),
           ],
         ),
         content: Column(
@@ -480,21 +480,21 @@ class _PretestScreenState extends State<PretestScreen> {
           children: [
             Text(
               'Skor Akhir: ${gradeResult.score}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.primary,
+                color: context.primaryColor,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               'Poin diperoleh: ${gradeResult.pointsEarned} dari ${gradeResult.totalPoints} poin',
-              style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'Jawaban Anda telah tersimpan dengan aman dan sesi kuis telah dikunci.',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondaryColor),
             ),
           ],
         ),
@@ -504,7 +504,7 @@ class _PretestScreenState extends State<PretestScreen> {
               Navigator.pop(ctx);
               Navigator.pop(context);
             },
-            child: const Text('Kembali ke Pertemuan'),
+            child: Text(l10n.quizGateBackToMeetingBtn),
           ),
         ],
       ),
@@ -513,6 +513,8 @@ class _PretestScreenState extends State<PretestScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (_isLoading) {
       return const Scaffold(body: LoadingIndicator(message: 'Mempersiapkan kuis pretest...'));
     }
@@ -547,10 +549,10 @@ class _PretestScreenState extends State<PretestScreen> {
             decoration: BoxDecoration(
               color: _remainingSeconds < 120
                   ? AppTheme.error.withAlpha(20)
-                  : AppTheme.primary.withAlpha(20),
+                  : context.primaryColor.withAlpha(20),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: _remainingSeconds < 120 ? AppTheme.error : AppTheme.primary,
+                color: _remainingSeconds < 120 ? AppTheme.error : context.primaryColor,
                 width: 1.2,
               ),
             ),
@@ -559,7 +561,7 @@ class _PretestScreenState extends State<PretestScreen> {
                 Icon(
                   Icons.timer_outlined,
                   size: 16,
-                  color: _remainingSeconds < 120 ? AppTheme.error : AppTheme.primary,
+                  color: _remainingSeconds < 120 ? AppTheme.error : context.primaryColor,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -567,7 +569,7 @@ class _PretestScreenState extends State<PretestScreen> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
-                    color: _remainingSeconds < 120 ? AppTheme.error : AppTheme.primary,
+                    color: _remainingSeconds < 120 ? AppTheme.error : context.primaryColor,
                   ),
                 ),
               ],
@@ -580,8 +582,8 @@ class _PretestScreenState extends State<PretestScreen> {
           // Question Progress Indicator
           LinearProgressIndicator(
             value: (_currentQuestionIndex + 1) / _questions.length,
-            backgroundColor: AppTheme.border,
-            color: AppTheme.primary,
+            backgroundColor: context.borderColor,
+            color: context.primaryColor,
           ),
 
           Expanded(
@@ -597,7 +599,7 @@ class _PretestScreenState extends State<PretestScreen> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        'Soal ${_currentQuestionIndex + 1} dari ${_questions.length}',
+                        l10n.quizQuestionOf(_currentQuestionIndex + 1, _questions.length),
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -607,7 +609,7 @@ class _PretestScreenState extends State<PretestScreen> {
                     ),
                     const Spacer(),
                     Text(
-                      '${question.points} Poin',
+                      l10n.quizPoints(question.points),
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                   ],
@@ -632,11 +634,11 @@ class _PretestScreenState extends State<PretestScreen> {
                   final isSelected = _answers[question.id] == optIndex;
 
                   return Card(
-                    color: isSelected ? AppTheme.primary.withAlpha(15) : AppTheme.surface,
+                    color: isSelected ? context.primaryColor.withAlpha(25) : context.cardColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                       side: BorderSide(
-                        color: isSelected ? AppTheme.primary : AppTheme.border,
+                        color: isSelected ? context.primaryColor : context.borderColor,
                         width: isSelected ? 1.5 : 1.0,
                       ),
                     ),
@@ -665,9 +667,9 @@ class _PretestScreenState extends State<PretestScreen> {
           // Bottom Navigation Buttons
           Container(
             padding: const EdgeInsets.all(16.0),
-            decoration: const BoxDecoration(
-              color: AppTheme.surface,
-              border: Border(top: BorderSide(color: AppTheme.border)),
+            decoration: BoxDecoration(
+              color: context.surfaceColor,
+              border: Border(top: BorderSide(color: context.borderColor)),
             ),
             child: Row(
               children: [
@@ -675,7 +677,7 @@ class _PretestScreenState extends State<PretestScreen> {
                   OutlinedButton.icon(
                     onPressed: () => setState(() => _currentQuestionIndex--),
                     icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                    label: const Text('Sebelumnya'),
+                    label: Text(l10n.quizBtnPrev),
                   )
                 else
                   const Spacer(),
@@ -684,13 +686,13 @@ class _PretestScreenState extends State<PretestScreen> {
                   ElevatedButton.icon(
                     onPressed: () => setState(() => _currentQuestionIndex++),
                     icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                    label: const Text('Selanjutnya'),
+                    label: Text(l10n.quizBtnNext),
                   )
                 else
                   ElevatedButton.icon(
                     onPressed: _isSubmitting ? null : _confirmSubmit,
                     icon: const Icon(Icons.check_rounded, size: 18),
-                    label: const Text('Kumpulkan'),
+                    label: Text(l10n.quizBtnSubmit),
                     style: ElevatedButton.styleFrom(backgroundColor: AppTheme.success),
                   ),
               ],
@@ -702,8 +704,9 @@ class _PretestScreenState extends State<PretestScreen> {
   }
 
   Widget _buildMateriGateScreen() {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Akses Pretest Terkunci')),
+      appBar: AppBar(title: Text(l10n.quizGateLockedTitle)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -725,10 +728,10 @@ class _PretestScreenState extends State<PretestScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Sesuai ketentuan alur pembelajaran Farlean LMS, Anda harus membuka dan membaca materi pembelajaran pertemuan ini terlebih dahulu sebelum diperkenankan mengerjakan pretest.\n\nJika sebelumnya Anda sudah pernah membuka materi, ketuk tombol di bawah untuk membuka kembali materi agar progres kehadiran tersinkronisasi secara resmi ke server.',
+              Text(
+                l10n.quizGateLockedDesc,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textSecondary, height: 1.4),
+                style: TextStyle(color: context.textSecondaryColor, height: 1.4),
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
@@ -759,7 +762,7 @@ class _PretestScreenState extends State<PretestScreen> {
                   Navigator.pop(context);
                 },
                 icon: const Icon(Icons.menu_book_rounded, size: 20),
-                label: const Text('Buka Materi Pembelajaran'),
+                label: Text(l10n.quizGateOpenMaterialBtn),
               ),
             ],
           ),

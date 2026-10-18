@@ -1,9 +1,481 @@
+// Cloud Active Security Rules - Deployed successfully to project `farlean-lms`
+// Verified active in production on Sun Oct 18 2026 via `firebase deploy --only firestore:rules,firestore:indexes`
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Current Cloud Baseline (Deny-All)
-    // Recorded on Phase 0.5a Audit as confirmed by project owner
+
+    // ============================================================================
+    // HELPER FUNCTIONS
+    // ============================================================================
+
+    // Memeriksa apakah request berasal dari pengguna yang terotentikasi
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Memeriksa apakah email pengguna sudah diverifikasi (Syarat Wajib Blueprint)
+    function isVerified() {
+      return isAuthenticated() && request.auth.token.email_verified == true;
+    }
+
+    // Memeriksa apakah request berasal dari pemilik dokumen (wajib terverifikasi)
+    function isOwner(uid) {
+      return isVerified() && request.auth.uid == uid;
+    }
+
+    // Mengambil role dari Custom Claims token (Source of Truth Role)
+    function getRole() {
+      return request.auth.token.get('role', 'USER');
+    }
+
+    // Memeriksa role GURU
+    function isGuru() {
+      return isVerified() && getRole() == 'GURU';
+    }
+
+    // Memeriksa role ADMIN
+    function isAdmin() {
+      return isVerified() && getRole() == 'ADMIN';
+    }
+
+    // Memeriksa role pengelola (GURU atau ADMIN)
+    function isStaff() {
+      return isGuru() || isAdmin();
+    }
+
+    // Memeriksa apakah user adalah anggota AKTIF di kelas yang diminta
+    function isClassMemberActive(classId) {
+      return isVerified() &&
+        exists(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.status == 'active';
+    }
+
+    // Memeriksa apakah staf adalah PEMILIK kelas aktif atau ADMIN
+    function isClassOwner(classId) {
+      return isAdmin() || (
+        isGuru() &&
+        exists(/databases/$(database)/documents/classes/$(classId)) &&
+        get(/databases/$(database)/documents/classes/$(classId)).data.teacher_id == request.auth.uid &&
+        (!('status' in get(/databases/$(database)/documents/classes/$(classId)).data) || get(/databases/$(database)/documents/classes/$(classId)).data.status == 'Active')
+      );
+    }
+
+    // Memeriksa apakah staf adalah guru pengajar kelas atau ADMIN (berlaku baik kelas Active maupun Archived)
+    function isClassTeacher(classId) {
+      return isAdmin() || (
+        isGuru() &&
+        exists(/databases/$(database)/documents/classes/$(classId)) &&
+        get(/databases/$(database)/documents/classes/$(classId)).data.teacher_id == request.auth.uid
+      );
+    }
+
+    // Validasi field yang boleh diubah sendiri oleh user pada profilnya
+    function isValidUserSelfUpdate() {
+      let diff = request.resource.data.diff(resource.data);
+      return diff.affectedKeys().hasOnly(['name', 'photo_url', 'last_active'])
+        // Validasi format name: string 1-100 karakter
+        && request.resource.data.keys().hasAll(['name', 'last_active'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        // Validasi photo_url: string atau null
+        && (!('photo_url' in request.resource.data) || request.resource.data.photo_url == null || request.resource.data.photo_url is string)
+        // Validasi last_active wajib server timestamp
+        && request.resource.data.last_active == request.time;
+    }
+
+    // Validasi integritas data saat penulisan konten pembelajaran oleh Staff
+    function isValidMeetingWrite() {
+      return isStaff()
+        && request.resource.data.class_id is string
+        && request.resource.data.class_id.size() > 0
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.status in ['Draft', 'Scheduled', 'Published', 'Archived']
+        && (!('publish_at' in request.resource.data) || request.resource.data.publish_at == null || request.resource.data.publish_at is timestamp);
+    }
+
+    function isValidMaterialWrite() {
+      return isStaff()
+        && request.resource.data.class_id is string
+        && request.resource.data.class_id.size() > 0
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.status in ['Draft', 'Published', 'Archived'];
+    }
+
+    function isValidManualBookWrite() {
+      return isStaff()
+        && request.resource.data.class_id is string
+        && request.resource.data.class_id.size() > 0
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.file_url is string
+        && request.resource.data.file_url.size() > 0
+        && (!('status' in request.resource.data) || request.resource.data.status in ['Draft', 'Published', 'Archived']);
+    }
+
+    function isValidVideoWrite() {
+      return isStaff()
+        && request.resource.data.class_id is string
+        && request.resource.data.class_id.size() > 0
+        && request.resource.data.url is string
+        && request.resource.data.url.size() > 0
+        && (!('status' in request.resource.data) || request.resource.data.status in ['Draft', 'Published', 'Archived']);
+    }
+
+    function isValidPretestWrite() {
+      return isStaff()
+        && request.resource.data.class_id is string
+        && request.resource.data.class_id.size() > 0
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.status in ['Draft', 'Published', 'Archived'];
+    }
+
+    function isValidPosttestWrite() {
+      return isStaff()
+        && request.resource.data.class_id is string
+        && request.resource.data.class_id.size() > 0
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.status in ['Draft', 'Published', 'Archived'];
+    }
+
+    // ============================================================================
+    // 1. USERS & PRIVATE IDENTITY
+    // ============================================================================
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isStaff();
+      allow create: if false;
+      allow update: if isOwner(uid) && isValidUserSelfUpdate();
+      allow delete: if false;
+
+      match /private/identity {
+        allow read: if isOwner(uid) || isAdmin();
+        allow write: if isOwner(uid) || isAdmin();
+      }
+    }
+
+    // ============================================================================
+    // 2. CLASSES & MEMBERSHIP
+    // ============================================================================
+    match /classes/{classId} {
+      allow read: if isClassMemberActive(classId) || (isGuru() && resource.data.teacher_id == request.auth.uid) || isAdmin();
+      // Pembuatan kelas WAJIB melalui backend (/api/create-class) demi atomisitas unik kode
+      allow create: if false;
+      // Update kelas: hanya owner/admin; kode kelas dan teacher_id IMMUTABLE
+      allow update: if isClassOwner(classId)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['code', 'teacher_id'])
+        && (!('status' in request.resource.data) || request.resource.data.status in ['Active', 'Archived']);
+      // Penghapusan kelas dari client DILARANG (hanya melalui admin purge backend)
+      allow delete: if false;
+
+      match /members/{memberUid} {
+        allow read: if (isVerified() && request.auth.uid == memberUid)
+                    || isClassMemberActive(classId)
+                    || isClassTeacher(classId);
+        allow write: if false;
+      }
+
+      match /pretest_scores/{scoreDoc} {
+        allow read: if (isVerified() && request.auth.uid == resource.data.user_id) || isClassTeacher(classId);
+        allow write: if false;
+      }
+
+      match /posttest_scores/{scoreDoc} {
+        allow read: if (isVerified() && request.auth.uid == resource.data.user_id) || isClassTeacher(classId);
+        allow write: if false;
+      }
+    }
+
+    // ============================================================================
+    // 3. MEETINGS (HUB PEMBELAJARAN)
+    // ============================================================================
+    match /meetings/{meetingId} {
+      allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status in ['Published', 'Scheduled'])
+                  || isClassTeacher(resource.data.class_id);
+      allow create: if isValidMeetingWrite()
+                    && isClassOwner(request.resource.data.class_id);
+      allow update: if isValidMeetingWrite()
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && isClassOwner(resource.data.class_id);
+      allow delete: if isClassOwner(resource.data.class_id);
+
+      match /materi_views/{uid} {
+        allow read: if (isOwner(uid) && isClassMemberActive(get(/databases/$(database)/documents/meetings/$(meetingId)).data.class_id))
+                    || isClassOwner(get(/databases/$(database)/documents/meetings/$(meetingId)).data.class_id);
+        allow write: if isOwner(uid)
+          && isClassMemberActive(get(/databases/$(database)/documents/meetings/$(meetingId)).data.class_id)
+          && request.resource.data.keys().hasAll(['materi_id', 'user_id', 'opened_at'])
+          && (!request.resource.data.keys().hasAny(['role', 'score', 'status']))
+          && request.resource.data.user_id == request.auth.uid
+          && request.resource.data.materi_id is string
+          && request.resource.data.materi_id.size() > 0
+          && (request.resource.data.opened_at == request.time || request.resource.data.opened_at is timestamp);
+      }
+    }
+
+    // ============================================================================
+    // 4. MATERIALS (MATERI FLUTTER QUILL)
+    // ============================================================================
+    match /materials/{materiId} {
+      allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status == 'Published')
+                  || isClassTeacher(resource.data.class_id);
+      allow create: if isValidMaterialWrite()
+                    && isClassOwner(request.resource.data.class_id);
+      allow update: if isValidMaterialWrite()
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && isClassOwner(resource.data.class_id);
+      allow delete: if isClassOwner(resource.data.class_id);
+    }
+
+    // ============================================================================
+    // 5. VIDEOS (YOUTUBE & CLOUDINARY)
+    // ============================================================================
+    match /videos/{videoId} {
+      allow read: if (isClassMemberActive(resource.data.class_id) && (!('status' in resource.data) || resource.data.status == 'Published'))
+                  || isClassTeacher(resource.data.class_id);
+      allow create: if isValidVideoWrite()
+                    && isClassOwner(request.resource.data.class_id);
+      allow update: if isValidVideoWrite()
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && isClassOwner(resource.data.class_id);
+      allow delete: if isClassOwner(resource.data.class_id);
+    }
+
+    // ============================================================================
+    // 6. MANUAL BOOKS (BUKU PANDUAN PDF)
+    // ============================================================================
+    match /manual_books/{bookId} {
+      allow read: if (isClassMemberActive(resource.data.class_id) && (!('status' in resource.data) || resource.data.status == 'Published'))
+                  || isClassTeacher(resource.data.class_id);
+      allow create: if isValidManualBookWrite()
+                    && isClassOwner(request.resource.data.class_id);
+      allow update: if isValidManualBookWrite()
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && isClassOwner(resource.data.class_id);
+      allow delete: if isClassOwner(resource.data.class_id);
+    }
+
+    // ============================================================================
+    // 7. PRETESTS & QUESTIONS SUBCOLLECTION
+    // ============================================================================
+    match /pretests/{testId} {
+      allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status == 'Published')
+                  || isClassTeacher(resource.data.class_id);
+      allow create: if isValidPretestWrite()
+                    && isClassOwner(request.resource.data.class_id);
+      allow update: if isValidPretestWrite()
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && isClassOwner(resource.data.class_id);
+      allow delete: if isClassOwner(resource.data.class_id);
+
+      match /questions/{qid} {
+        allow read: if (isClassMemberActive(get(/databases/$(database)/documents/pretests/$(testId)).data.class_id)
+                        && get(/databases/$(database)/documents/pretests/$(testId)).data.status == 'Published')
+                    || isClassTeacher(get(/databases/$(database)/documents/pretests/$(testId)).data.class_id);
+        allow write: if false; // D2: 100% Server-Only via /api/save-question & /api/delete-question
+      }
+    }
+
+    // ============================================================================
+    // 8. POSTTESTS & QUESTIONS SUBCOLLECTION
+    // ============================================================================
+    match /posttests/{testId} {
+      allow read: if (isClassMemberActive(resource.data.class_id) && resource.data.status == 'Published')
+                  || isClassTeacher(resource.data.class_id);
+      allow create: if isValidPosttestWrite()
+                    && isClassOwner(request.resource.data.class_id);
+      allow update: if isValidPosttestWrite()
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && isClassOwner(resource.data.class_id);
+      allow delete: if isClassOwner(resource.data.class_id);
+
+      match /questions/{qid} {
+        allow read: if (isClassMemberActive(get(/databases/$(database)/documents/posttests/$(testId)).data.class_id)
+                        && get(/databases/$(database)/documents/posttests/$(testId)).data.status == 'Published')
+                    || isClassTeacher(get(/databases/$(database)/documents/posttests/$(testId)).data.class_id);
+        allow write: if false; // D2: 100% Server-Only via /api/save-question & /api/delete-question
+      }
+    }
+
+    // ============================================================================
+    // 9. ANSWER KEYS (100% ISOLASI RAHASIA: SERVER-ONLY)
+    // ============================================================================
+    match /answer_keys/{testId} {
+      allow read, write: if false;
+
+      match /items/{qid} {
+        allow read, write: if false;
+      }
+    }
+
+    // ============================================================================
+    // 10. ATTEMPTS (PENGERJAAN PRETEST & POSTTEST)
+    // ============================================================================
+    match /attempts/{attemptId} {
+      // Membaca: Pemilik attempt, Guru pemilik kelas, atau Admin
+      allow read: if (isVerified() && request.auth.uid == resource.data.user_id)
+                  || (('class_id' in resource.data) && resource.data.class_id is string && isClassTeacher(resource.data.class_id))
+                  || isAdmin();
+
+      // Subkoleksi privat evaluation: menyimpan snapshot kunci jawaban server-side
+      match /evaluation/{evalDoc} {
+        // Siswa DILARANG membaca kunci penilaian (Anti-Leak)
+        // Hanya Guru pemilik kelas atau Admin sistem yang boleh membaca evaluasi
+        allow read: if (('class_id' in resource.data) && resource.data.class_id is string && resource.data.class_id != '' && isClassTeacher(resource.data.class_id))
+                    || isAdmin();
+        allow write: if false; // Hanya ditulis secara transaksional oleh Admin SDK Backend
+      }
+
+      // Membuat attempt baru:
+      // - Wajib active member di kelas tersebut
+      // - Status awal wajib 'in_progress'
+      // - started_at wajib server timestamp
+      // - score wajib null jika disertakan
+      // - submitted_at wajib null jika disertakan
+      // - kind opsional/valid: 'pretest' atau 'posttest'
+      // - Field dibatasi ketat (hasOnly)
+      allow create: if isVerified()
+        && request.resource.data.keys().hasAll(['user_id', 'class_id', 'test_id', 'status', 'started_at'])
+        && request.resource.data.keys().hasOnly(['id', 'user_id', 'class_id', 'test_id', 'attempt_no', 'answers', 'question_order', 'score', 'status', 'started_at', 'submitted_at', 'kind'])
+        && request.auth.uid == request.resource.data.user_id
+        && isClassMemberActive(request.resource.data.class_id)
+        && request.resource.data.status == 'in_progress'
+        && request.resource.data.started_at == request.time
+        && (!('score' in request.resource.data) || request.resource.data.score == null)
+        && (!('submitted_at' in request.resource.data) || request.resource.data.submitted_at == null)
+        && (!('kind' in request.resource.data) || request.resource.data.kind in ['pretest', 'posttest'])
+        && (
+          (request.resource.data.get('kind', 'pretest') == 'pretest'
+            && exists(/databases/$(database)/documents/pretests/$(request.resource.data.test_id))
+            && get(/databases/$(database)/documents/pretests/$(request.resource.data.test_id)).data.status == 'Published'
+            && get(/databases/$(database)/documents/pretests/$(request.resource.data.test_id)).data.class_id == request.resource.data.class_id)
+          ||
+          (request.resource.data.get('kind', 'pretest') == 'posttest'
+            && exists(/databases/$(database)/documents/posttests/$(request.resource.data.test_id))
+            && get(/databases/$(database)/documents/posttests/$(request.resource.data.test_id)).data.status == 'Published'
+            && get(/databases/$(database)/documents/posttests/$(request.resource.data.test_id)).data.class_id == request.resource.data.class_id)
+        );
+
+      // Mengupdate attempt (Autosave Jawaban):
+      // - Hanya boleh selama status masih 'in_progress'
+      // - Setelah submitted / graded: DILARANG mengupdate jawaban!
+      // - Hanya boleh mengupdate field 'answers' dan 'last_saved_at'
+      allow update: if isVerified()
+        && request.auth.uid == resource.data.user_id
+        && resource.data.status == 'in_progress'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answers', 'last_saved_at']);
+
+      allow delete: if false;
+    }
+
+    // ============================================================================
+    // 11. SYSTEM INTERNAL COLLECTIONS (CLASS CODES & RATE LIMITS)
+    // ============================================================================
+    match /class_codes/{code} {
+      allow read, write: if false;
+    }
+
+    match /rate_limits/{uid} {
+      allow read, write: if false;
+    }
+
+    // ============================================================================
+    // 12. DISCUSSIONS & REPLIES (FORUM KELAS)
+    // ============================================================================
+    match /discussions/{discussionId} {
+      // Baca: Anggota aktif kelas jika thread ACTIVE, atau Pengelola Kelas (Teacher Owner / Admin)
+      allow read: if (isClassMemberActive(resource.data.class_id)
+                      && (!('status' in resource.data) || resource.data.status == 'ACTIVE'))
+                  || isClassOwner(resource.data.class_id);
+
+      // Pembuatan thread WAJIB melalui backend (/api/discussion-thread) untuk anti-impersonasi display_name & rate limit
+      allow create: if false;
+
+      // Update thread:
+      // a) Author sendiri hanya boleh mengupdate title, body, dan updated_at selama status masih ACTIVE
+      // b) Owner kelas / Admin boleh mengubah status menjadi ARCHIVED (Moderasi)
+      allow update: if isVerified() && (
+        (request.auth.uid == resource.data.author_id
+          && (!('status' in resource.data) || resource.data.status == 'ACTIVE')
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'body', 'updated_at'])
+          && request.resource.data.title is string
+          && request.resource.data.title.size() > 0
+          && request.resource.data.title.size() <= 200
+          && request.resource.data.body is string
+          && request.resource.data.body.size() > 0
+          && request.resource.data.body.size() <= 5000)
+        ||
+        (isClassOwner(resource.data.class_id)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updated_at'])
+          && request.resource.data.status == 'ARCHIVED')
+      );
+
+      // Hapus thread dilarang dari client (hanya moderasi status ARCHIVED)
+      allow delete: if false;
+
+      match /replies/{replyId} {
+        // Baca balasan: anggota aktif jika parent & reply ACTIVE, atau Owner kelas / Admin
+        allow read: if (isClassMemberActive(get(/databases/$(database)/documents/discussions/$(discussionId)).data.class_id)
+                        && (!('status' in get(/databases/$(database)/documents/discussions/$(discussionId)).data) || get(/databases/$(database)/documents/discussions/$(discussionId)).data.status == 'ACTIVE')
+                        && (!('status' in resource.data) || resource.data.status == 'ACTIVE'))
+                    || isClassOwner(get(/databases/$(database)/documents/discussions/$(discussionId)).data.class_id);
+
+        // Pembuatan balasan WAJIB melalui backend (/api/discussion-reply) untuk transaksi atomik increment reply_count & anti-impersonasi
+        allow create: if false;
+
+        // Update balasan:
+        // a) Author sendiri hanya boleh mengupdate body dan updated_at selama parent & reply masih ACTIVE
+        // b) Owner kelas / Admin boleh memoderasi (status -> ARCHIVED)
+        allow update: if isVerified() && (
+          (request.auth.uid == resource.data.author_id
+            && (!('status' in resource.data) || resource.data.status == 'ACTIVE')
+            && (!('status' in get(/databases/$(database)/documents/discussions/$(discussionId)).data) || get(/databases/$(database)/documents/discussions/$(discussionId)).data.status == 'ACTIVE')
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['body', 'updated_at'])
+            && request.resource.data.body is string
+            && request.resource.data.body.size() > 0
+            && request.resource.data.body.size() <= 2000)
+          ||
+          (isClassOwner(get(/databases/$(database)/documents/discussions/$(discussionId)).data.class_id)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updated_at'])
+            && request.resource.data.status == 'ARCHIVED')
+        );
+
+        allow delete: if false;
+      }
+    }
+
+    // ============================================================================
+    // 13. DISCUSSION READS (STATUS BACA FORUM PER-USER)
+    // ============================================================================
+    match /discussion_reads/{readDocId} {
+      // Hanya pemilik status baca yang boleh membaca (privasi siswa, staf tidak boleh membaca riwayat baca pengguna lain)
+      allow read: if isVerified() && resource.data.user_id == request.auth.uid;
+
+      // Pembuatan & pembaruan status baca terproteksi:
+      // - Wajib email terverifikasi & active member di kelas tersebut
+      // - Dokumen ID wajib deterministik: {uid}_{discussion_id}
+      // - user_id wajib request.auth.uid (anti-impersonasi)
+      // - last_read_at wajib request.time server timestamp (anti-pemalsuan waktu baca)
+      // - Field dibatasi ketat: user_id, discussion_id, class_id, last_read_at
+      allow create, update: if isVerified()
+        && readDocId == request.auth.uid + '_' + request.resource.data.discussion_id
+        && request.resource.data.user_id == request.auth.uid
+        && isClassMemberActive(request.resource.data.class_id)
+        && request.resource.data.last_read_at == request.time
+        && request.resource.data.keys().hasAll(['user_id', 'discussion_id', 'class_id', 'last_read_at'])
+        && request.resource.data.keys().hasOnly(['user_id', 'discussion_id', 'class_id', 'last_read_at']);
+
+      allow delete: if false;
+    }
+
+    // ============================================================================
+    // GLOBAL CATCH-ALL: Deny-by-default
+    // ============================================================================
     match /{document=**} {
       allow read, write: if false;
     }

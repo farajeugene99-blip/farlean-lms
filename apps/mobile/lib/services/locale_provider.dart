@@ -17,19 +17,16 @@ class LocaleProvider extends ChangeNotifier {
   Locale get locale => _locale;
 
   /// Memuat preferensi locale tersimpan dari SharedPreferences.
-  /// Selama fase migrasi i18n, apapun nilai tersimpannya dikunci ke `id`.
+  /// Jika belum ada preferensi tersimpan (null), fallback default selalu 'id'.
   Future<void> load() async {
-    // TODO(i18n-phase-2a): uncomment block di bawah ini setelah semua modul
-    // migrasi selesai dan QA hijau, lalu hapus baris `_locale = Locale('id')`.
-    //
-    // final prefs = await SharedPreferences.getInstance();
-    // final saved = prefs.getString(_prefKey);
-    // if (saved != null && _supportedCodes.contains(saved)) {
-    //   _locale = Locale(saved);
-    //   notifyListeners();
-    // }
-    _locale = const Locale('id');
-    // notifyListeners tidak dipanggil — locale sudah `id` dari awal.
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_prefKey);
+    if (saved != null && _supportedCodes.contains(saved)) {
+      _locale = Locale(saved);
+      notifyListeners();
+    } else {
+      _locale = const Locale('id');
+    }
   }
 
   /// Menyimpan dan menerapkan locale baru.

@@ -201,7 +201,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
                     if (trimmed.startsWith('data:image')) {
                       return l10n.materialImageBase64Forbidden;
                     }
-                    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+                    if (!trimmed.startsWith('https://')) {
                       return l10n.materialImageUrlInvalid;
                     }
                     return null;
@@ -542,7 +542,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
           // Action Toolbar tambahan untuk Gambar Cloudinary + Template
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            color: AppTheme.surface,
+            color: context.surfaceColor,
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -563,7 +563,7 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
                   const SizedBox(width: 16),
                   Text(
                     l10n.materialCharCountDeltaJson(_charCount),
-                    style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                    style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
                   ),
                 ],
               ),
@@ -604,6 +604,19 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
                   expands: true,
                   padding: EdgeInsets.zero,
                   placeholder: l10n.materialEditorPlaceholder,
+                  customStyles: DefaultStyles(
+                    paragraph: DefaultTextBlockStyle(
+                      TextStyle(
+                        color: context.textPrimaryColor,
+                        fontSize: 15,
+                        height: 1.5,
+                      ),
+                      const HorizontalSpacing(0, 0),
+                      const VerticalSpacing(0, 0),
+                      const VerticalSpacing(0, 0),
+                      null,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -614,10 +627,10 @@ class _MaterialEditorScreenState extends State<MaterialEditorScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              color: AppTheme.surface,
+              color: context.surfaceColor,
               child: Text(
                 '${l10n.labelLastSaved}: ${DateFormatter.formatLastSaved(_existingMaterial!.updatedAt, _existingMaterial!.version)}',
-                style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
                 textAlign: TextAlign.center,
               ),
             ),

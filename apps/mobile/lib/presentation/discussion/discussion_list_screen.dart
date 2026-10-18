@@ -312,7 +312,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
               Icon(
                 Icons.forum_outlined,
                 size: 56,
-                color: AppTheme.textSecondary.withAlpha(128),
+                color: context.textSecondaryColor.withAlpha(128),
               ),
               const SizedBox(height: 16),
               Text(
@@ -323,7 +323,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
               Text(
                 l10n.discussionNoClassBody,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                style: TextStyle(fontSize: 14, color: context.textSecondaryColor),
               ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
@@ -372,12 +372,12 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        border: Border(bottom: BorderSide(color: AppTheme.border.withAlpha(100))),
+        color: context.surfaceColor,
+        border: Border(bottom: BorderSide(color: context.borderColor.withAlpha(100))),
       ),
       child: Row(
         children: [
-          const Icon(Icons.school_outlined, size: 20, color: AppTheme.primary),
+          Icon(Icons.school_outlined, size: 20, color: context.primaryColor),
           const SizedBox(width: 8),
           Text(l10n.meetingClassLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           const SizedBox(width: 8),
@@ -482,7 +482,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
             Icon(
               Icons.forum_outlined,
               size: 56,
-              color: AppTheme.textSecondary.withAlpha(128),
+              color: context.textSecondaryColor.withAlpha(128),
             ),
             const SizedBox(height: 16),
             Text(
@@ -493,7 +493,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
             Text(
               emptyDesc,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
             ),
           ],
         ),
@@ -522,7 +522,7 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: AppTheme.border.withAlpha(120)),
+        side: BorderSide(color: context.borderColor.withAlpha(120)),
       ),
       child: InkWell(
         onTap: () async {
@@ -578,16 +578,16 @@ class _DiscussionListScreenState extends State<DiscussionListScreen> {
                 thread.body,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.person_outline_rounded, size: 14, color: AppTheme.textSecondary.withAlpha(180)),
+                  Icon(Icons.person_outline_rounded, size: 14, color: context.textSecondaryColor.withAlpha(180)),
                   const SizedBox(width: 4),
                   Text(
                     thread.authorDisplayName,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.textSecondaryColor),
                   ),
                   const Spacer(),
                   Container(

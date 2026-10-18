@@ -753,38 +753,41 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                   ),
                   if (meeting.status == ContentStatus.scheduled) ...[
                     const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withAlpha(20),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.withAlpha(60)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.schedule_rounded, size: 20, color: Colors.blue),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.meetingScheduledBannerTitle,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blue),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  meeting.publishAt != null
-                                      ? l10n.meetingScheduledBanner(DateFormatter.formatWib(meeting.publishAt))
-                                      : l10n.meetingScheduledBannerFallback,
-                                  style: const TextStyle(fontSize: 12, color: Colors.blue),
-                                ),
-                              ],
+                    () {
+                      final schedColor = context.isDarkMode ? const Color(0xFF60A5FA) : Colors.blue;
+                      return Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: schedColor.withAlpha(20),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: schedColor.withAlpha(60)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.schedule_rounded, size: 20, color: schedColor),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.meetingScheduledBannerTitle,
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: schedColor),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    meeting.publishAt != null
+                                        ? l10n.meetingScheduledBanner(DateFormatter.formatWib(meeting.publishAt))
+                                        : l10n.meetingScheduledBannerFallback,
+                                    style: TextStyle(fontSize: 12, color: schedColor),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
+                          ],
+                        ),
+                      );
+                    }(),
                   ],
                 ],
               ),
@@ -885,7 +888,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                 ? l10n.meetingModulePosttestSubActive
                 : (isStaff ? l10n.meetingModulePosttestSubStaffEmpty : l10n.meetingModulePosttestSubStudentEmpty),
             icon: Icons.assignment_turned_in_rounded,
-            accentColor: Colors.deepPurple,
+            accentColor: context.isDarkMode ? const Color(0xFFC084FC) : Colors.deepPurple,
             isAvailable: meeting.posttestId != null || isStaff,
             actionLabel: meeting.posttestId != null ? l10n.meetingModulePosttestActionStart : l10n.meetingModulePosttestActionCreate,
             secondaryActionLabel: (isStaff && meeting.posttestId != null) ? l10n.meetingModulePretestManageQuestions : null,
@@ -973,7 +976,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                    style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
                   ),
                   const SizedBox(height: 12),
                   Wrap(
@@ -983,7 +986,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                       ElevatedButton(
                         onPressed: isAvailable ? onTap : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isAvailable ? accentColor : AppTheme.border,
+                          backgroundColor: isAvailable ? accentColor : context.borderColor,
                           minimumSize: const Size(120, 38),
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                         ),
@@ -991,7 +994,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                           isAvailable ? actionLabel : l10n.meetingModuleNotAvailable,
                           style: TextStyle(
                             fontSize: 13,
-                            color: isAvailable ? Colors.white : AppTheme.textSecondary,
+                            color: isAvailable ? Colors.white : context.textSecondaryColor,
                           ),
                         ),
                       ),
@@ -1044,7 +1047,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         color = AppTheme.success;
         break;
       case ContentStatus.scheduled:
-        color = Colors.blue;
+        color = context.isDarkMode ? const Color(0xFF60A5FA) : Colors.blue;
         break;
       case ContentStatus.archived:
         color = AppTheme.textSecondary;
@@ -1182,7 +1185,7 @@ class _AddVideoDialogState extends State<_AddVideoDialog> {
                 ),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return l10n.meetingVideoUrlRequired;
-                  if (!v.startsWith('http://') && !v.startsWith('https://')) {
+                  if (!v.trim().startsWith('https://')) {
                     return l10n.meetingVideoUrlInvalid;
                   }
                   return null;
@@ -1452,7 +1455,7 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.quiz_outlined, size: 48, color: AppTheme.textSecondary.withAlpha(100)),
+                            Icon(Icons.quiz_outlined, size: 48, color: context.textSecondaryColor.withAlpha(100)),
                             const SizedBox(height: 12),
                             Text(
                               l10n.meetingDraftNoQuestionsTitle,
@@ -1461,7 +1464,7 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                             const SizedBox(height: 6),
                             Text(
                               l10n.meetingDraftNoQuestionsBody,
-                              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                              style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
                             ),
                           ],
                         ),
@@ -1484,7 +1487,7 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                                 elevation: 1,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  side: const BorderSide(color: AppTheme.border),
+                                  side: BorderSide(color: context.borderColor),
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(12),
@@ -1516,9 +1519,9 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                             decoration: BoxDecoration(
-                                              color: AppTheme.background,
+                                              color: context.backgroundColor,
                                               borderRadius: BorderRadius.circular(4),
-                                              border: Border.all(color: AppTheme.border),
+                                              border: Border.all(color: context.borderColor),
                                             ),
                                             child: Text(
                                               l10n.meetingPointsLabel(q.points),
@@ -1538,9 +1541,9 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                                             return Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                               decoration: BoxDecoration(
-                                                color: AppTheme.background,
+                                                color: context.backgroundColor,
                                                 borderRadius: BorderRadius.circular(8),
-                                                border: Border.all(color: AppTheme.border),
+                                                border: Border.all(color: context.borderColor),
                                               ),
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
@@ -1564,7 +1567,7 @@ class _ManageQuestionsSheetState extends State<_ManageQuestionsSheet> {
                                                   Flexible(
                                                     child: Text(
                                                       opt.value,
-                                                      style: const TextStyle(fontSize: 12, color: AppTheme.textPrimary),
+                                                      style: TextStyle(fontSize: 12, color: context.textPrimaryColor),
                                                     ),
                                                   ),
                                                 ],
@@ -1821,10 +1824,10 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: isKey ? AppTheme.success.withAlpha(15) : AppTheme.background,
+                        color: isKey ? AppTheme.success.withAlpha(20) : context.backgroundColor,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: isKey ? AppTheme.success.withAlpha(120) : AppTheme.border,
+                          color: isKey ? AppTheme.success.withAlpha(120) : context.borderColor,
                           width: isKey ? 1.5 : 1.0,
                         ),
                       ),
@@ -1848,7 +1851,7 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                               decoration: InputDecoration(
                                 labelText: isKey ? l10n.meetingOptionLabelKey(label) : l10n.meetingOptionLabelRegular(label),
                                 labelStyle: TextStyle(
-                                  color: isKey ? AppTheme.success : AppTheme.textSecondary,
+                                  color: isKey ? AppTheme.success : context.textSecondaryColor,
                                   fontWeight: isKey ? FontWeight.bold : FontWeight.normal,
                                 ),
                                 isDense: true,
@@ -1870,16 +1873,16 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppTheme.background,
+                      color: context.backgroundColor,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppTheme.border),
+                      border: Border.all(color: context.borderColor),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           l10n.meetingLegacyOptionsTitle,
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.textSecondary),
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: context.textSecondaryColor),
                         ),
                         const SizedBox(height: 4),
                         ..._legacyExtraOptions.asMap().entries.map((e) {
@@ -1888,7 +1891,7 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                             padding: const EdgeInsets.only(top: 2),
                             child: Text(
                               '$label. ${e.value}',
-                              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                              style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
                             ),
                           );
                         }),

@@ -24,7 +24,12 @@ class DateFormatter {
   }
 
   /// Memformat [dateTime] untuk riwayat simpan materi: `DD/MM/YYYY HH:mm • Versi {version}`.
-  static String formatLastSaved(DateTime? dateTime, int version, {String fallback = '-'}) {
+  static String formatLastSaved(
+    DateTime? dateTime,
+    int version, {
+    String fallback = '-',
+    String versionLabel = 'Versi',
+  }) {
     if (dateTime == null) return fallback;
     final wib = toWib(dateTime);
     final day = wib.day.toString().padLeft(2, '0');
@@ -32,6 +37,6 @@ class DateFormatter {
     final year = wib.year.toString();
     final hour = wib.hour.toString().padLeft(2, '0');
     final minute = wib.minute.toString().padLeft(2, '0');
-    return '$day/$month/$year $hour:$minute • Versi $version';
+    return '$day/$month/$year $hour:$minute • $versionLabel $version';
   }
 }

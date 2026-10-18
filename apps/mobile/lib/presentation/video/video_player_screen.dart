@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/video_item.dart';
 import '../../repositories/video_repository.dart';
 import '../common/error_view.dart';
@@ -151,25 +152,26 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       );
     }
 
+    final l10n = AppLocalizations.of(context);
     final video = _video!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Video Pembelajaran'),
+        title: Text(l10n.meetingModuleVideoTitle),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppTheme.primary.withAlpha(20),
+              color: context.primaryColor.withAlpha(20),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
               video.provider.value.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.primary,
+                color: context.primaryColor,
               ),
             ),
           ),
@@ -204,7 +206,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        'Penyedia: ${video.provider.value}',
+                        l10n.videoProviderLabel(video.provider.value),
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppTheme.secondary,
@@ -215,34 +217,34 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                     if (video.duration != null) ...[
                       const SizedBox(width: 8),
                       Text(
-                        'Durasi: ${video.duration! ~/ 60}m ${video.duration! % 60}s',
-                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        l10n.videoDurationLabel(video.duration! ~/ 60, video.duration! % 60),
+                        style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
                       ),
                     ],
                   ],
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Video Materi Terintegrasi',
+                  l10n.videoIntegratedTitle,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'URL Sumber: ${video.url}',
-                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  l10n.videoSourceUrlLabel(video.url),
+                  style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
                 ),
                 const SizedBox(height: 16),
-                const Card(
+                Card(
                   child: Padding(
-                    padding: EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(16.0),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline_rounded, color: AppTheme.primary, size: 20),
-                        SizedBox(width: 12),
+                        Icon(Icons.info_outline_rounded, color: context.primaryColor, size: 20),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Video ini di-stream langsung tanpa disimpan di Firebase Storage untuk efisiensi penyimpanan sesuai arsitektur Blueprint.',
-                            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                            l10n.videoStorageNote,
+                            style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
                           ),
                         ),
                       ],

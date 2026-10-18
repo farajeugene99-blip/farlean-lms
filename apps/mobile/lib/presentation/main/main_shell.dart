@@ -93,14 +93,14 @@ class MainShell extends StatelessWidget {
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: BoxDecoration(
-            color: AppTheme.surface,
+            color: context.surfaceColor,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppTheme.border),
-            boxShadow: const [
+            border: Border.all(color: context.borderColor),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x0F000000),
+                color: context.isDarkMode ? Colors.black45 : const Color(0x0F000000),
                 blurRadius: 16,
-                offset: Offset(0, 4),
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -159,7 +159,7 @@ class MainShell extends StatelessWidget {
     bool isHighlight = false,
   }) {
     final isSelected = index == selectedIndex;
-    final primaryColor = isHighlight ? AppTheme.secondary : AppTheme.primary;
+    final primaryColor = isHighlight ? context.secondaryColor : context.primaryColor;
 
     return Expanded(
       child: InkWell(
@@ -173,7 +173,7 @@ class MainShell extends StatelessWidget {
               Icon(
                 icon,
                 size: 22,
-                color: isSelected ? primaryColor : AppTheme.textSecondary,
+                color: isSelected ? primaryColor : context.textSecondaryColor,
               ),
               const SizedBox(height: 4),
               FittedBox(
@@ -184,7 +184,7 @@ class MainShell extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected ? primaryColor : AppTheme.textSecondary,
+                    color: isSelected ? primaryColor : context.textSecondaryColor,
                   ),
                 ),
               ),

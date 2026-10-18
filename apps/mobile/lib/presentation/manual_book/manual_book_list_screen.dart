@@ -167,7 +167,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
                     ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return l10n.manualBookUrlRequired;
-                      if (!v.startsWith('http://') && !v.startsWith('https://')) {
+                      if (!v.trim().startsWith('https://')) {
                         return l10n.manualBookUrlInvalid;
                       }
                       return null;
@@ -272,7 +272,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
               Icon(
                 Icons.menu_book_outlined,
                 size: 56,
-                color: AppTheme.textSecondary.withAlpha(128),
+                color: context.textSecondaryColor.withAlpha(128),
               ),
               const SizedBox(height: 16),
               Text(
@@ -315,7 +315,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
               Icon(
                 Icons.menu_book_outlined,
                 size: 56,
-                color: AppTheme.textSecondary.withAlpha(128),
+                color: context.textSecondaryColor.withAlpha(128),
               ),
               const SizedBox(height: 16),
               Text(
@@ -326,7 +326,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
               Text(
                 l10n.manualBookEmptyBody,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppTheme.textSecondary),
+                style: TextStyle(color: context.textSecondaryColor),
               ),
             ],
           ),
@@ -384,19 +384,19 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
                       const SizedBox(height: 4),
                       Text(
                         book.description.isNotEmpty ? book.description : l10n.manualBookNoDescription,
-                        style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                        style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
                       ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
                           Text(
                             book.fileName,
-                            style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                            style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
                           ),
                           const SizedBox(width: 8),
                           Text(
                             '•  $sizeStr',
-                            style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                            style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
                           ),
                         ],
                       ),

@@ -51,9 +51,8 @@ class ManualBookRepository {
     if (book.title.trim().isEmpty) {
       throw ArgumentError('Judul manual book tidak boleh kosong.');
     }
-    if (book.fileUrl.trim().isEmpty ||
-        (!book.fileUrl.startsWith('http://') && !book.fileUrl.startsWith('https://'))) {
-      throw ArgumentError('URL berkas harus valid dan diawali http:// atau https://');
+    if (book.fileUrl.trim().isEmpty || !book.fileUrl.trim().startsWith('https://')) {
+      throw ArgumentError('URL berkas harus valid dan diawali https://');
     }
 
     final firestore = _firestore;

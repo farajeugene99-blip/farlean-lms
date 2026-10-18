@@ -310,12 +310,12 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        border: Border(bottom: BorderSide(color: AppTheme.border.withAlpha(100))),
+        color: context.surfaceColor,
+        border: Border(bottom: BorderSide(color: context.borderColor.withAlpha(100))),
       ),
       child: Row(
         children: [
-          const Icon(Icons.school_outlined, size: 20, color: AppTheme.primary),
+          Icon(Icons.school_outlined, size: 20, color: context.primaryColor),
           const SizedBox(width: 8),
           Text(l10n.meetingClassLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           const SizedBox(width: 8),
@@ -439,16 +439,19 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
               ),
               if (meeting.status == ContentStatus.scheduled && meeting.publishAt != null) ...[
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.schedule_rounded, size: 14, color: Colors.blue),
-                    const SizedBox(width: 4),
-                    Text(
-                      l10n.meetingPublishAtLabel(DateFormatter.formatWib(meeting.publishAt)),
-                      style: const TextStyle(fontSize: 11, color: Colors.blue, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
+                () {
+                  final schedColor = context.isDarkMode ? const Color(0xFF60A5FA) : Colors.blue;
+                  return Row(
+                    children: [
+                      Icon(Icons.schedule_rounded, size: 14, color: schedColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        l10n.meetingPublishAtLabel(DateFormatter.formatWib(meeting.publishAt)),
+                        style: TextStyle(fontSize: 11, color: schedColor, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  );
+                }(),
               ],
               const SizedBox(height: 12),
               Wrap(
@@ -486,10 +489,10 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
         color = AppTheme.success;
         break;
       case ContentStatus.scheduled:
-        color = Colors.blue;
+        color = context.isDarkMode ? const Color(0xFF60A5FA) : Colors.blue;
         break;
       case ContentStatus.archived:
-        color = AppTheme.textSecondary;
+        color = context.textSecondaryColor;
         break;
       case ContentStatus.draft:
         color = AppTheme.warning;
@@ -518,10 +521,10 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isAvailable ? AppTheme.surface : AppTheme.background,
+        color: isAvailable ? context.surfaceColor : context.backgroundColor,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: isAvailable ? AppTheme.border : Colors.transparent,
+          color: isAvailable ? context.borderColor : Colors.transparent,
         ),
       ),
       child: Row(
@@ -530,14 +533,14 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
           Icon(
             icon,
             size: 14,
-            color: isAvailable ? AppTheme.primary : AppTheme.textSecondary.withAlpha(100),
+            color: isAvailable ? context.primaryColor : context.textSecondaryColor.withAlpha(100),
           ),
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
               fontSize: 11,
-              color: isAvailable ? AppTheme.textPrimary : AppTheme.textSecondary.withAlpha(128),
+              color: isAvailable ? context.textPrimaryColor : context.textSecondaryColor.withAlpha(128),
               fontWeight: isAvailable ? FontWeight.w500 : FontWeight.w400,
             ),
           ),

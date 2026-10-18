@@ -29,13 +29,13 @@ class VerifyEmailScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withAlpha(20),
+                  color: context.primaryColor.withAlpha(20),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.mark_email_unread_outlined,
                   size: 56,
-                  color: AppTheme.primary,
+                  color: context.primaryColor,
                 ),
               ),
               const SizedBox(height: 20),

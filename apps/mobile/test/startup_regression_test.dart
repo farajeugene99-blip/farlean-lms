@@ -86,17 +86,9 @@ void main() {
       );
     });
 
-    test('Test (c): Penegakan emulator-only menolak bypass produksi tanpa flag eksplisit', () async {
-      expect(
-        () => FirebaseConfig.initialize(useEmulator: false),
-        throwsA(
-          isA<StateError>().having(
-            (e) => e.message,
-            'message',
-            contains('Akses ke Firebase Production diblokir pada Phase 1 & 2'),
-          ),
-        ),
-      );
+    test('Test (c): ApiConfig default ke Vercel HTTPS produksi untuk mencegah Cleartext HTTP di perangkat fisik', () {
+      expect(ApiConfig.baseUrl, equals('https://farlean-lms-backend.vercel.app'));
+      expect(ApiConfig.baseUrl.startsWith('https://'), isTrue);
     });
 
     test('Test (d): FirebaseConfig.resolveEmulatorHost mengembalikan default host yang valid', () {
@@ -108,6 +100,8 @@ void main() {
     test('Test (e): ApiConfig.validate() berhasil dieksekusi di debug/test mode', () {
       expect(() => ApiConfig.validate(), returnsNormally);
       expect(ApiConfig.baseUrl, isNotEmpty);
+      expect(ApiConfig.gradeUrl, equals('https://farlean-lms-backend.vercel.app/api/grade'));
+      expect(ApiConfig.bootstrapUrl, equals('https://farlean-lms-backend.vercel.app/api/bootstrap'));
     });
   });
 }

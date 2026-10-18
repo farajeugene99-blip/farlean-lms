@@ -54,22 +54,22 @@ class StartupErrorScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         'Inisialisasi Firebase Gagal',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
+                          color: context.textPrimaryColor,
                         ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Platform: $platform',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondaryColor,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -77,16 +77,16 @@ class StartupErrorScreen extends StatelessWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppTheme.background,
+                          color: context.backgroundColor,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppTheme.border),
+                          border: Border.all(color: context.borderColor),
                         ),
                         child: SelectableText(
                           errorMessage,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'monospace',
                             fontSize: 12,
-                            color: AppTheme.textPrimary,
+                            color: context.textPrimaryColor,
                           ),
                         ),
                       ),

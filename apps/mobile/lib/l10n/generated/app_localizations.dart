@@ -1586,10 +1586,10 @@ abstract class AppLocalizations {
   /// **'URL wajib diisi'**
   String get meetingVideoUrlRequired;
 
-  /// Validasi protokol URL video
+  /// Validasi protokol URL video harus https
   ///
   /// In id, this message translates to:
-  /// **'URL harus diawali http:// atau https://'**
+  /// **'URL harus diawali https://'**
   String get meetingVideoUrlInvalid;
 
   /// Tombol simpan video
@@ -1868,10 +1868,10 @@ abstract class AppLocalizations {
   /// **'Gambar base64 inline dilarang.'**
   String get materialImageBase64Forbidden;
 
-  /// Validasi protokol URL gambar
+  /// Validasi protokol URL gambar harus https
   ///
   /// In id, this message translates to:
-  /// **'URL harus diawali dengan http:// atau https://'**
+  /// **'URL harus diawali dengan https://'**
   String get materialImageUrlInvalid;
 
   /// Tombol aksi sisipkan gambar ke dokumen
@@ -3008,10 +3008,10 @@ abstract class AppLocalizations {
   /// **'URL berkas wajib diisi'**
   String get manualBookUrlRequired;
 
-  /// Validasi URL berkas harus protokol http/https
+  /// Validasi URL berkas harus protokol https
   ///
   /// In id, this message translates to:
-  /// **'URL harus diawali http:// atau https://'**
+  /// **'URL harus diawali https://'**
   String get manualBookUrlInvalid;
 
   /// Label field nama berkas pdf
@@ -3067,6 +3067,222 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Buka Dokumen PDF'**
   String get manualBookOpenPdfBtn;
+
+  /// Judul menu pemilihan tema tampilan
+  ///
+  /// In id, this message translates to:
+  /// **'Tema Tampilan'**
+  String get profileThemeTitle;
+
+  /// Subjudul menu pemilihan tema tampilan
+  ///
+  /// In id, this message translates to:
+  /// **'Atur tema terang, gelap, atau ikuti sistem'**
+  String get profileThemeSubtitle;
+
+  /// Opsi tema terang
+  ///
+  /// In id, this message translates to:
+  /// **'Terang'**
+  String get themeModeLight;
+
+  /// Opsi tema gelap
+  ///
+  /// In id, this message translates to:
+  /// **'Gelap'**
+  String get themeModeDark;
+
+  /// Opsi tema mengikuti sistem operasi
+  ///
+  /// In id, this message translates to:
+  /// **'Ikuti Sistem'**
+  String get themeModeSystem;
+
+  /// Judul menu pemilihan bahasa aplikasi
+  ///
+  /// In id, this message translates to:
+  /// **'Bahasa Aplikasi'**
+  String get profileLanguageTitle;
+
+  /// Subjudul menu pemilihan bahasa
+  ///
+  /// In id, this message translates to:
+  /// **'Pilih bahasa antarmuka aplikasi'**
+  String get profileLanguageSubtitle;
+
+  /// Nama bahasa Indonesia
+  ///
+  /// In id, this message translates to:
+  /// **'Bahasa Indonesia'**
+  String get languageId;
+
+  /// Nama bahasa Inggris
+  ///
+  /// In id, this message translates to:
+  /// **'English'**
+  String get languageEn;
+
+  /// Indikator nomor soal aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Soal {current} dari {total}'**
+  String quizQuestionOf(int current, int total);
+
+  /// Bobot poin soal kuis
+  ///
+  /// In id, this message translates to:
+  /// **'{points} Poin'**
+  String quizPoints(int points);
+
+  /// Tombol navigasi soal sebelumnya
+  ///
+  /// In id, this message translates to:
+  /// **'Sebelumnya'**
+  String get quizBtnPrev;
+
+  /// Tombol navigasi soal selanjutnya
+  ///
+  /// In id, this message translates to:
+  /// **'Selanjutnya'**
+  String get quizBtnNext;
+
+  /// Tombol kumpulkan jawaban kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Kumpulkan'**
+  String get quizBtnSubmit;
+
+  /// Judul layar gate akses pretest terkunci
+  ///
+  /// In id, this message translates to:
+  /// **'Akses Pretest Terkunci'**
+  String get quizGateLockedTitle;
+
+  /// Instruksi edukatif gerbang pretest saat materi belum dibuka
+  ///
+  /// In id, this message translates to:
+  /// **'Sesuai ketentuan alur pembelajaran Farlean LMS, Anda harus membuka dan membaca materi pembelajaran pertemuan ini terlebih dahulu sebelum diperkenankan mengerjakan pretest.\n\nJika sebelumnya Anda sudah pernah membuka materi, ketuk tombol di bawah untuk membuka kembali materi agar progres kehadiran tersinkronisasi secara resmi ke server.'**
+  String get quizGateLockedDesc;
+
+  /// Tombol membuka materi pembelajaran
+  ///
+  /// In id, this message translates to:
+  /// **'Buka Materi Pembelajaran'**
+  String get quizGateOpenMaterialBtn;
+
+  /// Tombol kembali ke layar pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Kembali ke Pertemuan'**
+  String get quizGateBackToMeetingBtn;
+
+  /// Judul dialog konfirmasi pengumpulan kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Kumpulkan Jawaban?'**
+  String get quizConfirmSubmitTitle;
+
+  /// Isi dialog konfirmasi pengumpulan kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Apakah Anda yakin ingin mengumpulkan kuis ini? Pastikan seluruh soal telah Anda jawab dengan seksama.'**
+  String get quizConfirmSubmitBody;
+
+  /// Teks indikator saat kuis sedang dikirim ke server
+  ///
+  /// In id, this message translates to:
+  /// **'Mengumpulkan...'**
+  String get quizSubmitting;
+
+  /// Judul dialog sukses penilaian kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Kuis Selesai Dinilai'**
+  String get quizSubmitSuccessTitle;
+
+  /// Isi pesan sukses penilaian kuis resmi
+  ///
+  /// In id, this message translates to:
+  /// **'Nilai resmi Anda: {score} ({earned}/{total} poin).\nNilai terbaik Anda telah diperbarui di server.'**
+  String quizSubmitSuccessBody(String score, int earned, int total);
+
+  /// Judul dialog error koneksi kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Koneksi Terputus'**
+  String get quizConnErrorTitle;
+
+  /// Isi dialog error koneksi kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Koneksi jaringan terputus. Status penilaian kuis saat ini tidak dapat dipastikan dari server. Harap periksa koneksi internet Anda dan coba kembali.'**
+  String get quizConnErrorBody;
+
+  /// Judul dialog batas waktu kuis kedaluwarsa
+  ///
+  /// In id, this message translates to:
+  /// **'Batas Waktu Berakhir'**
+  String get quizDeadlineExpiredTitle;
+
+  /// Isi dialog batas waktu pengerjaan kuis kedaluwarsa
+  ///
+  /// In id, this message translates to:
+  /// **'Batas waktu pengerjaan (deadline) kuis telah berakhir. Sesi pengerjaan kuis telah dikunci oleh server.'**
+  String get quizDeadlineExpiredBody;
+
+  /// Tombol aksi mengerti pada dialog
+  ///
+  /// In id, this message translates to:
+  /// **'Mengerti'**
+  String get quizUnderstand;
+
+  /// Pesan penolakan saat kuis berstatus draft
+  ///
+  /// In id, this message translates to:
+  /// **'Kuis ini masih berstatus Draft dan belum dibuka oleh pengajar.'**
+  String get quizDraftBlockedMessage;
+
+  /// Label penyedia video pembelajaran
+  ///
+  /// In id, this message translates to:
+  /// **'Penyedia: {provider}'**
+  String videoProviderLabel(String provider);
+
+  /// Label durasi pemutaran video
+  ///
+  /// In id, this message translates to:
+  /// **'Durasi: {minutes}m {seconds}s'**
+  String videoDurationLabel(int minutes, int seconds);
+
+  /// Judul bagian video materi terintegrasi
+  ///
+  /// In id, this message translates to:
+  /// **'Video Materi Terintegrasi'**
+  String get videoIntegratedTitle;
+
+  /// Label tautan sumber video
+  ///
+  /// In id, this message translates to:
+  /// **'URL Sumber: {url}'**
+  String videoSourceUrlLabel(String url);
+
+  /// Catatan edukatif penyimpanan video pembelajaran
+  ///
+  /// In id, this message translates to:
+  /// **'Video ini di-stream langsung tanpa disimpan di Firebase Storage untuk efisiensi penyimpanan sesuai arsitektur Blueprint.'**
+  String get videoStorageNote;
+
+  /// Pesan error gagal memuat data video
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memuat video: {error}'**
+  String videoLoadFailed(String error);
+
+  /// Banner pemberitahuan pertemuan terkunci jadwal terbit
+  ///
+  /// In id, this message translates to:
+  /// **'Pertemuan ini dijadwalkan terbit pada {date}. Seluruh modul terkunci hingga waktu tersebut.'**
+  String meetingLockedUntilPublish(String date);
 }
 
 class _AppLocalizationsDelegate

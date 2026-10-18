@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/content_status.dart';
 import '../../models/posttest.dart';
 import '../../models/question.dart';
@@ -266,24 +267,26 @@ class _PosttestScreenState extends State<PosttestScreen> {
     if (attempt == null || _isSubmitting) return;
 
     if (!autoSubmit) {
+      final l10n = AppLocalizations.of(context);
       final unansweredCount = _questions.length - _answers.length;
       final confirm = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Kumpulkan Post Test?'),
+          title: Text(l10n.quizConfirmSubmitTitle),
           content: Text(
             unansweredCount > 0
                 ? 'Masih ada $unansweredCount soal yang belum dijawab. Yakin ingin mengumpulkan sekarang?'
-                : 'Semua soal telah dijawab. Jawaban akan dikunci dan dinilai oleh server.',
+                : l10n.quizConfirmSubmitBody,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Periksa Kembali'),
+              child: Text(l10n.btnCancel),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Kumpulkan'),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.success),
+              child: Text(l10n.quizBtnSubmit),
             ),
           ],
         ),
@@ -359,6 +362,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
       return;
     }
 
+    final l10n = AppLocalizations.of(context);
     if (freshAttempt != null && freshAttempt.status == AttemptStatus.inProgress) {
       showDialog<void>(
         context: context,
@@ -377,7 +381,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Mengerti'),
+              child: Text(l10n.quizUnderstand),
             ),
           ],
         ),
@@ -388,21 +392,18 @@ class _PosttestScreenState extends State<PosttestScreen> {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.cloud_off_rounded, color: AppTheme.error),
-            SizedBox(width: 8),
-            Text('Koneksi Terputus'),
+            const Icon(Icons.cloud_off_rounded, color: AppTheme.error),
+            const SizedBox(width: 8),
+            Text(l10n.quizConnErrorTitle),
           ],
         ),
-        content: const Text(
-          'Koneksi jaringan terputus. Status penilaian kuis saat ini tidak dapat dipastikan dari server. '
-          'Harap periksa koneksi internet Anda dan coba kembali.',
-        ),
+        content: Text(l10n.quizConnErrorBody),
         actions: [
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Tutup'),
+            child: Text(l10n.quizUnderstand),
           ),
         ],
       ),
@@ -410,27 +411,26 @@ class _PosttestScreenState extends State<PosttestScreen> {
   }
 
   void _showDeadlineExpiredDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.timer_off_rounded, color: AppTheme.error),
-            SizedBox(width: 8),
-            Text('Batas Waktu Berakhir'),
+            const Icon(Icons.timer_off_rounded, color: AppTheme.error),
+            const SizedBox(width: 8),
+            Text(l10n.quizDeadlineExpiredTitle),
           ],
         ),
-        content: const Text(
-          'Batas waktu pengerjaan (deadline) kuis telah berakhir. Sesi pengerjaan kuis telah dikunci oleh server.',
-        ),
+        content: Text(l10n.quizDeadlineExpiredBody),
         actions: [
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
               Navigator.pop(context);
             },
-            child: const Text('Kembali ke Pertemuan'),
+            child: Text(l10n.quizGateBackToMeetingBtn),
           ),
         ],
       ),
@@ -449,15 +449,16 @@ class _PosttestScreenState extends State<PosttestScreen> {
   }
 
   void _showResultDialog(GradeResult result) {
+    final l10n = AppLocalizations.of(context);
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.check_circle_rounded, color: AppTheme.success),
-            SizedBox(width: 8),
-            Text('Hasil Post Test'),
+            const Icon(Icons.check_circle_rounded, color: AppTheme.success),
+            const SizedBox(width: 8),
+            Text(l10n.quizSubmitSuccessTitle),
           ],
         ),
         content: Column(
@@ -466,7 +467,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
           children: [
             Text(
               'Skor Akhir: ${result.score.toStringAsFixed(1)}',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.primary),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: context.primaryColor),
             ),
             const SizedBox(height: 8),
             Text(
@@ -474,9 +475,9 @@ class _PosttestScreenState extends State<PosttestScreen> {
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'Jawaban Anda telah dikunci dan skor evaluasi pembelajaran telah tercatat di server.',
-              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
             ),
           ],
         ),
@@ -486,7 +487,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
               Navigator.pop(ctx);
               Navigator.pop(context);
             },
-            child: const Text('Kembali ke Pertemuan'),
+            child: Text(l10n.quizGateBackToMeetingBtn),
           ),
         ],
       ),
@@ -511,9 +512,12 @@ class _PosttestScreenState extends State<PosttestScreen> {
       );
     }
 
+    final l10n = AppLocalizations.of(context);
     final posttest = _posttest!;
     final currentQ = _questions[_currentQuestionIndex];
     final selectedOption = _answers[currentQ.id];
+    final isDark = context.isDarkMode;
+    final accentColor = isDark ? const Color(0xFFC084FC) : Colors.deepPurple;
 
     final minutes = _remainingSeconds ~/ 60;
     final seconds = _remainingSeconds % 60;
@@ -527,7 +531,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: _remainingSeconds < 180 ? AppTheme.error.withAlpha(20) : AppTheme.primary.withAlpha(20),
+              color: _remainingSeconds < 180 ? AppTheme.error.withAlpha(20) : context.primaryColor.withAlpha(20),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -535,14 +539,14 @@ class _PosttestScreenState extends State<PosttestScreen> {
                 Icon(
                   Icons.timer_outlined,
                   size: 16,
-                  color: _remainingSeconds < 180 ? AppTheme.error : AppTheme.primary,
+                  color: _remainingSeconds < 180 ? AppTheme.error : context.primaryColor,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   timerText,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: _remainingSeconds < 180 ? AppTheme.error : AppTheme.primary,
+                    color: _remainingSeconds < 180 ? AppTheme.error : context.primaryColor,
                   ),
                 ),
               ],
@@ -555,8 +559,8 @@ class _PosttestScreenState extends State<PosttestScreen> {
           // Question Progress Indicator
           LinearProgressIndicator(
             value: (_currentQuestionIndex + 1) / _questions.length,
-            backgroundColor: AppTheme.background,
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.deepPurple),
+            backgroundColor: context.borderColor,
+            valueColor: AlwaysStoppedAnimation<Color>(accentColor),
           ),
 
           Expanded(
@@ -566,19 +570,19 @@ class _PosttestScreenState extends State<PosttestScreen> {
                 Row(
                   children: [
                     Text(
-                      'Soal ${_currentQuestionIndex + 1} dari ${_questions.length}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textSecondary),
+                      l10n.quizQuestionOf(_currentQuestionIndex + 1, _questions.length),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: context.textSecondaryColor),
                     ),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.deepPurple.withAlpha(20),
+                        color: accentColor.withAlpha(25),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        '${currentQ.points} Poin',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                        l10n.quizPoints(currentQ.points),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: accentColor),
                       ),
                     ),
                   ],
@@ -604,10 +608,10 @@ class _PosttestScreenState extends State<PosttestScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.deepPurple.withAlpha(20) : AppTheme.surface,
+                          color: isSelected ? accentColor.withAlpha(25) : context.cardColor,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isSelected ? Colors.deepPurple : AppTheme.border,
+                            color: isSelected ? accentColor : context.borderColor,
                             width: isSelected ? 2 : 1,
                           ),
                         ),
@@ -615,13 +619,13 @@ class _PosttestScreenState extends State<PosttestScreen> {
                           children: [
                             CircleAvatar(
                               radius: 14,
-                              backgroundColor: isSelected ? Colors.deepPurple : AppTheme.background,
+                              backgroundColor: isSelected ? accentColor : context.backgroundColor,
                               child: Text(
                                 optionChar,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: isSelected ? Colors.white : AppTheme.textPrimary,
+                                  color: isSelected ? Colors.white : context.textPrimaryColor,
                                 ),
                               ),
                             ),
@@ -648,9 +652,9 @@ class _PosttestScreenState extends State<PosttestScreen> {
           // Bottom Navigation Buttons
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: AppTheme.surface,
-              border: Border(top: BorderSide(color: AppTheme.border)),
+            decoration: BoxDecoration(
+              color: context.surfaceColor,
+              border: Border(top: BorderSide(color: context.borderColor)),
             ),
             child: Row(
               children: [
@@ -660,7 +664,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
                       setState(() => _currentQuestionIndex--);
                     },
                     icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                    label: const Text('Sebelumnya'),
+                    label: Text(l10n.quizBtnPrev),
                   ),
                 const Spacer(),
                 if (_currentQuestionIndex < _questions.length - 1)
@@ -669,7 +673,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
                       setState(() => _currentQuestionIndex++);
                     },
                     icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                    label: const Text('Selanjutnya'),
+                    label: Text(l10n.quizBtnNext),
                   )
                 else
                   ElevatedButton.icon(
@@ -678,7 +682,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
                     icon: _isSubmitting
                         ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                         : const Icon(Icons.check_rounded, size: 18),
-                    label: const Text('Selesai & Kumpulkan'),
+                    label: Text(l10n.quizBtnSubmit),
                   ),
               ],
             ),

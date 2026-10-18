@@ -264,13 +264,13 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
     return Card(
       margin: EdgeInsets.only(bottom: isChild ? 6 : 10),
       elevation: isChild ? 0 : 0.5,
-      color: isChild ? AppTheme.surface : Colors.white,
+      color: isChild ? (context.isDarkMode ? AppTheme.surfaceVariantDark : context.cardColor) : context.surfaceColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
           color: isChild
-              ? AppTheme.border.withAlpha(70)
-              : AppTheme.border.withAlpha(120),
+              ? context.borderColor.withAlpha(70)
+              : context.borderColor.withAlpha(120),
         ),
       ),
       child: Padding(
@@ -301,10 +301,10 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                       ),
                       if (isChild && reply.parentAuthorName != null && reply.parentAuthorName!.isNotEmpty) ...[
                         const SizedBox(width: 4),
-                        const Icon(Icons.arrow_right_rounded, size: 14, color: AppTheme.textSecondary),
+                        Icon(Icons.arrow_right_rounded, size: 14, color: context.textSecondaryColor),
                         Text(
                           '@${reply.parentAuthorName}',
-                          style: const TextStyle(fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.w500),
+                          style: TextStyle(fontSize: 11, color: context.primaryColor, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ],
@@ -312,7 +312,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                 ),
                 if (!isArchived && (isReplyAuthor || isStaff))
                   IconButton(
-                    icon: const Icon(Icons.archive_outlined, size: 16, color: AppTheme.textSecondary),
+                    icon: Icon(Icons.archive_outlined, size: 16, color: context.textSecondaryColor),
                     tooltip: l10n.discussionArchiveReplyTooltip,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -337,7 +337,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
             const SizedBox(height: 8),
             Text(
               reply.body,
-              style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.textPrimary),
+              style: TextStyle(fontSize: 13, height: 1.4, color: context.textPrimaryColor),
             ),
             if (!isArchived) ...[
               const SizedBox(height: 6),
@@ -439,7 +439,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                     elevation: 1,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      side: const BorderSide(color: AppTheme.border),
+                      side: BorderSide(color: context.borderColor),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(18),
@@ -487,7 +487,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                           const SizedBox(height: 10),
                           Text(
                             thread.body,
-                            style: const TextStyle(fontSize: 14, height: 1.5, color: AppTheme.textPrimary),
+                            style: TextStyle(fontSize: 14, height: 1.5, color: context.textPrimaryColor),
                           ),
                         ],
                       ),
@@ -497,7 +497,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                   const SizedBox(height: 20),
                   Row(
                     children: [
-                      const Icon(Icons.chat_bubble_outline_rounded, size: 18, color: AppTheme.primary),
+                      Icon(Icons.chat_bubble_outline_rounded, size: 18, color: context.primaryColor),
                       const SizedBox(width: 8),
                       Text(
                         l10n.discussionDetailReplyCount(_replies.length),
@@ -513,11 +513,11 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                         padding: const EdgeInsets.all(32.0),
                         child: Column(
                           children: [
-                            Icon(Icons.mark_chat_read_outlined, size: 40, color: AppTheme.textSecondary.withAlpha(100)),
+                            Icon(Icons.mark_chat_read_outlined, size: 40, color: context.textSecondaryColor.withAlpha(100)),
                             const SizedBox(height: 8),
                             Text(
                               l10n.discussionNoRepliesYet,
-                              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                              style: TextStyle(color: context.textSecondaryColor, fontSize: 13),
                             ),
                           ],
                         ),
@@ -559,7 +559,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                                       width: 2,
                                       margin: const EdgeInsets.symmetric(horizontal: 4),
                                       decoration: BoxDecoration(
-                                        color: AppTheme.border,
+                                        color: context.borderColor,
                                         borderRadius: BorderRadius.circular(1),
                                       ),
                                     ),
@@ -615,9 +615,9 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                   ),
                   InkWell(
                     onTap: () => setState(() => _replyingTo = null),
-                    child: const Padding(
-                      padding: EdgeInsets.all(4.0),
-                      child: Icon(Icons.close_rounded, size: 16, color: AppTheme.textSecondary),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Icon(Icons.close_rounded, size: 16, color: context.textSecondaryColor),
                     ),
                   ),
                 ],
@@ -628,8 +628,8 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: AppTheme.surface,
-              border: Border(top: BorderSide(color: AppTheme.border.withAlpha(120))),
+              color: context.surfaceColor,
+              border: Border(top: BorderSide(color: context.borderColor.withAlpha(120))),
             ),
             child: SafeArea(
               child: isArchived

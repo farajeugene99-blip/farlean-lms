@@ -28,10 +28,10 @@ class PlaceholderScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withAlpha(20),
+                  color: context.primaryColor.withAlpha(20),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 48, color: AppTheme.primary),
+                child: Icon(icon, size: 48, color: context.primaryColor),
               ),
               const SizedBox(height: 16),
               Text(title, style: Theme.of(context).textTheme.titleLarge),
