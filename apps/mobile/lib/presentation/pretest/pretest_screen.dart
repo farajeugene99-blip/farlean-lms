@@ -55,6 +55,40 @@ class _PretestScreenState extends State<PretestScreen> {
   bool _isSubmitting = false;
   bool _hasOpenedMateri = false;
   String? _errorMessage;
+  String? _errorKey;
+  String? _errorParam;
+
+  void _setError(String key, [String? param]) {
+    setState(() {
+      _errorKey = key;
+      _errorParam = param;
+      _isLoading = false;
+    });
+  }
+
+  String _resolveErrorMessage(AppLocalizations l10n) {
+    if (_errorKey != null) {
+      switch (_errorKey) {
+        case 'session_not_active':
+          return l10n.quizSessionNotActive;
+        case 'not_found':
+          return l10n.quizNotFound;
+        case 'draft_blocked':
+          return l10n.quizDraftBlocked(_errorParam ?? '');
+        case 'invalid_class_meeting':
+          return l10n.quizInvalidClassMeeting;
+        case 'no_questions':
+          return l10n.quizNoQuestionsUploaded;
+        case 'stale_session':
+          return l10n.quizStaleSessionEnded;
+        case 'max_attempts':
+          return l10n.quizMaxAttemptsReached(_errorParam ?? '');
+        case 'load_failed':
+          return l10n.quizLoadFailedGeneric(_errorParam ?? '');
+      }
+    }
+    return _errorMessage ?? l10n.quizPretestLoadFailed;
+  }
 
   // Timer State
   Timer? _countdownTimer;
@@ -83,15 +117,14 @@ class _PretestScreenState extends State<PretestScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _errorKey = null;
+      _errorParam = null;
     });
 
     final authProvider = context.read<AuthProvider>();
     final uid = authProvider.firebaseUser?.uid;
     if (uid == null) {
-      setState(() {
-        _errorMessage = 'Sesi Anda belum aktif.';
-        _isLoading = false;
-      });
+      _setError('session_not_active');
       return;
     }
 
@@ -99,20 +132,14 @@ class _PretestScreenState extends State<PretestScreen> {
       // 1. Ambil metadata Pretest terlebih dahulu
       final pretest = await _pretestRepository.getPretest(widget.pretestId);
       if (pretest == null) {
-        setState(() {
-          _errorMessage = 'Kuis pretest tidak ditemukan.';
-          _isLoading = false;
-        });
+        _setError('not_found');
         return;
       }
       _pretest = pretest;
 
       // Enforce status Published di sisi klien (Client Published Gate)
       if (pretest.status != ContentStatus.published) {
-        setState(() {
-          _errorMessage = 'Kuis pretest masih berstatus ${pretest.status.value} dan belum dibuka.';
-          _isLoading = false;
-        });
+        _setError('draft_blocked', pretest.status.value);
         return;
       }
 
@@ -120,10 +147,7 @@ class _PretestScreenState extends State<PretestScreen> {
       final effectiveMeetingId = widget.meetingId.isNotEmpty ? widget.meetingId : pretest.meetingId;
 
       if (effectiveClassId.isEmpty || effectiveMeetingId.isEmpty) {
-        setState(() {
-          _errorMessage = 'Kuis tidak terhubung dengan kelas atau pertemuan yang valid.';
-          _isLoading = false;
-        });
+        _setError('invalid_class_meeting');
         return;
       }
 
@@ -142,10 +166,7 @@ class _PretestScreenState extends State<PretestScreen> {
       // 3. Ambil daftar soal
       final questionsList = await _pretestRepository.getQuestions(widget.pretestId);
       if (questionsList.isEmpty) {
-        setState(() {
-          _errorMessage = 'Soal kuis belum diunggah oleh pengajar.';
-          _isLoading = false;
-        });
+        _setError('no_questions');
         return;
       }
 
@@ -166,10 +187,7 @@ class _PretestScreenState extends State<PretestScreen> {
         if (remaining <= 0) {
           // Attempt basi. Jika tidak ada jawaban sama sekali, tandai sesi berakhir tanpa auto-submit 0
           if (inProgressAttempt.answers.isEmpty) {
-            setState(() {
-              _errorMessage = 'Sesi pengerjaan sebelumnya telah berakhir sebelum jawaban dikumpulkan.';
-              _isLoading = false;
-            });
+            _setError('stale_session');
             return;
           }
         }
@@ -192,10 +210,7 @@ class _PretestScreenState extends State<PretestScreen> {
           testId: widget.pretestId,
         );
         if (count >= pretest.maxAttempts) {
-          setState(() {
-            _errorMessage = 'Anda telah mencapai batas maksimal percobaan (${pretest.maxAttempts}x).';
-            _isLoading = false;
-          });
+          _setError('max_attempts', pretest.maxAttempts.toString());
           return;
         }
 
@@ -220,10 +235,7 @@ class _PretestScreenState extends State<PretestScreen> {
       setState(() => _isLoading = false);
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _errorMessage = 'Gagal memuat sesi kuis: $e';
-          _isLoading = false;
-        });
+        _setError('load_failed', e.toString());
       }
     }
   }
@@ -276,12 +288,15 @@ class _PretestScreenState extends State<PretestScreen> {
 
   Future<void> _autoSubmitOnTimeUp() async {
     if (_isSubmitting) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Waktu pengerjaan telah habis. Jawaban Anda disimpan otomatis.'),
-        backgroundColor: AppTheme.warning,
-      ),
-    );
+    if (mounted) {
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.quizTimeUpAutosaved),
+          backgroundColor: AppTheme.warning,
+        ),
+      );
+    }
     await _submitAttempt(autoSubmit: true, reason: 'timeout');
   }
 
@@ -295,7 +310,7 @@ class _PretestScreenState extends State<PretestScreen> {
         title: Text(l10n.quizConfirmSubmitTitle),
         content: Text(
           unanswered > 0
-              ? 'Terdapat $unanswered soal yang belum Anda jawab. Jawaban yang sudah dikumpulkan tidak dapat diubah lagi.'
+              ? l10n.quizConfirmUnansweredBody(unanswered)
               : l10n.quizConfirmSubmitBody,
         ),
         actions: [
@@ -353,8 +368,9 @@ class _PretestScreenState extends State<PretestScreen> {
         return;
       }
 
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengumpulkan kuis: $e'), backgroundColor: AppTheme.error),
+        SnackBar(content: Text(l10n.quizSubmitFailed(e.toString())), backgroundColor: AppTheme.error),
       );
     }
   }
@@ -386,24 +402,22 @@ class _PretestScreenState extends State<PretestScreen> {
 
     // Cabang B (In-Progress): Server belum memproses, kuis masih aktif
     if (freshAttempt != null && freshAttempt.status == AttemptStatus.inProgress) {
+      final l10n = AppLocalizations.of(context);
       showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.wifi_tethering_error_rounded, color: AppTheme.warning),
-              SizedBox(width: 8),
-              Text('Penilaian Tertunda'),
+              const Icon(Icons.wifi_tethering_error_rounded, color: AppTheme.warning),
+              const SizedBox(width: 8),
+              Text(l10n.quizPendingEvaluationTitle),
             ],
           ),
-          content: const Text(
-            'Koneksi ke server penilaian terputus, namun sesi kuis Anda masih aktif di server. '
-            'Jawaban lokal Anda telah tersimpan otomatis. Silakan tekan tombol Kirim Kuis untuk mencoba kembali.',
-          ),
+          content: Text(l10n.quizPendingEvaluationBody),
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Mengerti'),
+              child: Text(l10n.quizUnderstand),
             ),
           ],
         ),
@@ -479,7 +493,7 @@ class _PretestScreenState extends State<PretestScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Skor Akhir: ${gradeResult.score}',
+              l10n.quizFinalScore(gradeResult.score.toString()),
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -488,12 +502,12 @@ class _PretestScreenState extends State<PretestScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Poin diperoleh: ${gradeResult.pointsEarned} dari ${gradeResult.totalPoints} poin',
+              l10n.quizPointsEarned(gradeResult.pointsEarned.toString(), gradeResult.totalPoints.toString()),
               style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
             ),
             const SizedBox(height: 12),
             Text(
-              'Jawaban Anda telah tersimpan dengan aman dan sesi kuis telah dikunci.',
+              l10n.quizPretestAnswersLocked,
               style: TextStyle(color: context.textSecondaryColor),
             ),
           ],
@@ -516,14 +530,14 @@ class _PretestScreenState extends State<PretestScreen> {
     final l10n = AppLocalizations.of(context);
 
     if (_isLoading) {
-      return const Scaffold(body: LoadingIndicator(message: 'Mempersiapkan kuis pretest...'));
+      return Scaffold(body: LoadingIndicator(message: l10n.quizPretestLoading));
     }
 
-    if (_errorMessage != null || _pretest == null) {
+    if (_errorMessage != null || _errorKey != null || _pretest == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Pretest')),
+        appBar: AppBar(title: Text(l10n.meetingModulePretest)),
         body: ErrorView(
-          message: _errorMessage ?? 'Gagal memuat pretest.',
+          message: _resolveErrorMessage(l10n),
           onRetry: _initializePretestSession,
         ),
       );
@@ -723,7 +737,7 @@ class _PretestScreenState extends State<PretestScreen> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Materi Belum Dibuka',
+                l10n.quizGateMateriNotOpened,
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),

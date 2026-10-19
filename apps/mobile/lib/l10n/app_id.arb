@@ -2042,5 +2042,136 @@
     "placeholders": {
       "date": { "type": "String" }
     }
+  },
+
+  "quizGateMateriNotOpened": "Materi Belum Dibuka",
+  "@quizGateMateriNotOpened": { "description": "Judul gate layar pretest jika materi belum dibuka" },
+
+  "quizTimeUpAutosaved": "Waktu pengerjaan telah habis. Jawaban Anda disimpan otomatis.",
+  "@quizTimeUpAutosaved": { "description": "Snackbar timeout autosave kuis pretest" },
+
+  "quizTimeUpAutosubmitted": "Waktu pengerjaan telah habis. Jawaban dikumpulkan otomatis.",
+  "@quizTimeUpAutosubmitted": { "description": "Snackbar timeout auto-submit kuis post test" },
+
+  "quizSubmitFailed": "Gagal mengumpulkan kuis: {error}",
+  "@quizSubmitFailed": {
+    "description": "Snackbar error gagal submit kuis",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "quizPendingEvaluationTitle": "Penilaian Tertunda",
+  "@quizPendingEvaluationTitle": { "description": "Judul dialog penilaian kuis tertunda akibat kendala jaringan" },
+
+  "quizPendingEvaluationBody": "Koneksi ke server penilaian terputus, namun sesi kuis Anda masih aktif di server. Jawaban lokal Anda telah tersimpan otomatis. Silakan tekan tombol Kirim Kuis untuk mencoba kembali.",
+  "@quizPendingEvaluationBody": { "description": "Pesan edukatif dialog penilaian kuis tertunda" },
+
+  "quizConfirmUnansweredBody": "Terdapat {unanswered} soal yang belum Anda jawab. Jawaban yang sudah dikumpulkan tidak dapat diubah lagi.",
+  "@quizConfirmUnansweredBody": {
+    "description": "Konfirmasi submit kuis dengan jumlah soal belum dijawab",
+    "placeholders": {
+      "unanswered": { "type": "int" }
+    }
+  },
+
+  "quizPretestLoading": "Mempersiapkan kuis pretest...",
+  "@quizPretestLoading": { "description": "Indikator loading persiapan kuis pretest" },
+
+  "quizPretestLoadFailed": "Gagal memuat pretest.",
+  "@quizPretestLoadFailed": { "description": "Pesan error fallback saat pretest gagal dimuat" },
+
+  "quizPosttestLoading": "Mempersiapkan sesi post test...",
+  "@quizPosttestLoading": { "description": "Indikator loading persiapan kuis post test" },
+
+  "quizPosttestUnavailable": "Kuis post test tidak tersedia.",
+  "@quizPosttestUnavailable": { "description": "Pesan error fallback saat post test tidak tersedia" },
+
+  "quizNoQuestionsConfigured": "Belum ada soal yang dikonfigurasi untuk post test ini.",
+  "@quizNoQuestionsConfigured": { "description": "Pesan error saat belum ada soal pada post test" },
+
+  "quizPosttestLoadFailed": "Gagal memuat kuis post test: {error}",
+  "@quizPosttestLoadFailed": {
+    "description": "Pesan error gagal memuat sesi kuis post test",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "quizFinalScore": "Skor Akhir: {score}",
+  "@quizFinalScore": {
+    "description": "Label skor akhir pada dialog hasil kuis",
+    "placeholders": {
+      "score": { "type": "String" }
+    }
+  },
+
+  "quizPointsEarned": "Poin diperoleh: {earned} dari {total} poin",
+  "@quizPointsEarned": {
+    "description": "Rincian perolehan poin pada dialog hasil kuis",
+    "placeholders": {
+      "earned": { "type": "String" },
+      "total": { "type": "String" }
+    }
+  },
+
+  "quizPretestAnswersLocked": "Jawaban Anda telah tersimpan dengan aman dan sesi kuis telah dikunci.",
+  "@quizPretestAnswersLocked": { "description": "Keterangan penutupan sesi pada dialog hasil pretest" },
+
+  "quizPosttestAnswersLocked": "Jawaban Anda telah dikunci dan skor evaluasi pembelajaran telah tercatat di server.",
+  "@quizPosttestAnswersLocked": { "description": "Keterangan penutupan sesi pada dialog hasil post test" },
+
+  "quizSessionNotActive": "Sesi Anda belum aktif.",
+  "@quizSessionNotActive": { "description": "Pesan error saat pengguna belum memiliki sesi login aktif" },
+
+  "quizNotFound": "Kuis pretest tidak ditemukan.",
+  "@quizNotFound": { "description": "Pesan error saat pretest tidak ditemukan" },
+
+  "quizPosttestNotFound": "Kuis post test tidak ditemukan.",
+  "@quizPosttestNotFound": { "description": "Pesan error saat post test tidak ditemukan" },
+
+  "quizDraftBlocked": "Kuis pretest masih berstatus {status} dan belum dibuka.",
+  "@quizDraftBlocked": {
+    "description": "Pesan error kuis masih dalam status non-published",
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+
+  "quizInvalidClassMeeting": "Kuis tidak terhubung dengan kelas atau pertemuan yang valid.",
+  "@quizInvalidClassMeeting": { "description": "Pesan error kuis tidak terhubung dengan kelas/pertemuan" },
+
+  "quizInvalidClass": "Kuis post test tidak terhubung dengan kelas yang valid.",
+  "@quizInvalidClass": { "description": "Pesan error post test tidak memiliki class_id valid" },
+
+  "quizNoQuestionsUploaded": "Soal kuis belum diunggah oleh pengajar.",
+  "@quizNoQuestionsUploaded": { "description": "Pesan error saat daftar soal kuis masih kosong" },
+
+  "quizStaleSessionEnded": "Sesi pengerjaan sebelumnya telah berakhir sebelum jawaban dikumpulkan.",
+  "@quizStaleSessionEnded": { "description": "Pesan error saat attempt sebelumnya telah expired tanpa jawaban" },
+
+  "quizMaxAttemptsReached": "Anda telah mencapai batas maksimal percobaan ({attempts}x).",
+  "@quizMaxAttemptsReached": {
+    "description": "Pesan error kuota attempt kuis pretest telah habis",
+    "placeholders": {
+      "attempts": { "type": "String" }
+    }
+  },
+
+  "quizPosttestMaxAttemptsReached": "Anda telah mencapai batas maksimal percobaan ({count}/{max}).",
+  "@quizPosttestMaxAttemptsReached": {
+    "description": "Pesan error kuota attempt kuis post test telah habis",
+    "placeholders": {
+      "count": { "type": "String" },
+      "max": { "type": "String" }
+    }
+  },
+
+  "quizLoadFailedGeneric": "Gagal memuat sesi kuis: {error}",
+  "@quizLoadFailedGeneric": {
+    "description": "Pesan exception generik saat inisialisasi kuis gagal",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
   }
 }

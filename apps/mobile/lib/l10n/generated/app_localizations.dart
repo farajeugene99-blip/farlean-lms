@@ -3283,6 +3283,174 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Pertemuan ini dijadwalkan terbit pada {date}. Seluruh modul terkunci hingga waktu tersebut.'**
   String meetingLockedUntilPublish(String date);
+
+  /// Judul gate layar pretest jika materi belum dibuka
+  ///
+  /// In id, this message translates to:
+  /// **'Materi Belum Dibuka'**
+  String get quizGateMateriNotOpened;
+
+  /// Snackbar timeout autosave kuis pretest
+  ///
+  /// In id, this message translates to:
+  /// **'Waktu pengerjaan telah habis. Jawaban Anda disimpan otomatis.'**
+  String get quizTimeUpAutosaved;
+
+  /// Snackbar timeout auto-submit kuis post test
+  ///
+  /// In id, this message translates to:
+  /// **'Waktu pengerjaan telah habis. Jawaban dikumpulkan otomatis.'**
+  String get quizTimeUpAutosubmitted;
+
+  /// Snackbar error gagal submit kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal mengumpulkan kuis: {error}'**
+  String quizSubmitFailed(String error);
+
+  /// Judul dialog penilaian kuis tertunda akibat kendala jaringan
+  ///
+  /// In id, this message translates to:
+  /// **'Penilaian Tertunda'**
+  String get quizPendingEvaluationTitle;
+
+  /// Pesan edukatif dialog penilaian kuis tertunda
+  ///
+  /// In id, this message translates to:
+  /// **'Koneksi ke server penilaian terputus, namun sesi kuis Anda masih aktif di server. Jawaban lokal Anda telah tersimpan otomatis. Silakan tekan tombol Kirim Kuis untuk mencoba kembali.'**
+  String get quizPendingEvaluationBody;
+
+  /// Konfirmasi submit kuis dengan jumlah soal belum dijawab
+  ///
+  /// In id, this message translates to:
+  /// **'Terdapat {unanswered} soal yang belum Anda jawab. Jawaban yang sudah dikumpulkan tidak dapat diubah lagi.'**
+  String quizConfirmUnansweredBody(int unanswered);
+
+  /// Indikator loading persiapan kuis pretest
+  ///
+  /// In id, this message translates to:
+  /// **'Mempersiapkan kuis pretest...'**
+  String get quizPretestLoading;
+
+  /// Pesan error fallback saat pretest gagal dimuat
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memuat pretest.'**
+  String get quizPretestLoadFailed;
+
+  /// Indikator loading persiapan kuis post test
+  ///
+  /// In id, this message translates to:
+  /// **'Mempersiapkan sesi post test...'**
+  String get quizPosttestLoading;
+
+  /// Pesan error fallback saat post test tidak tersedia
+  ///
+  /// In id, this message translates to:
+  /// **'Kuis post test tidak tersedia.'**
+  String get quizPosttestUnavailable;
+
+  /// Pesan error saat belum ada soal pada post test
+  ///
+  /// In id, this message translates to:
+  /// **'Belum ada soal yang dikonfigurasi untuk post test ini.'**
+  String get quizNoQuestionsConfigured;
+
+  /// Pesan error gagal memuat sesi kuis post test
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memuat kuis post test: {error}'**
+  String quizPosttestLoadFailed(String error);
+
+  /// Label skor akhir pada dialog hasil kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Skor Akhir: {score}'**
+  String quizFinalScore(String score);
+
+  /// Rincian perolehan poin pada dialog hasil kuis
+  ///
+  /// In id, this message translates to:
+  /// **'Poin diperoleh: {earned} dari {total} poin'**
+  String quizPointsEarned(String earned, String total);
+
+  /// Keterangan penutupan sesi pada dialog hasil pretest
+  ///
+  /// In id, this message translates to:
+  /// **'Jawaban Anda telah tersimpan dengan aman dan sesi kuis telah dikunci.'**
+  String get quizPretestAnswersLocked;
+
+  /// Keterangan penutupan sesi pada dialog hasil post test
+  ///
+  /// In id, this message translates to:
+  /// **'Jawaban Anda telah dikunci dan skor evaluasi pembelajaran telah tercatat di server.'**
+  String get quizPosttestAnswersLocked;
+
+  /// Pesan error saat pengguna belum memiliki sesi login aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Sesi Anda belum aktif.'**
+  String get quizSessionNotActive;
+
+  /// Pesan error saat pretest tidak ditemukan
+  ///
+  /// In id, this message translates to:
+  /// **'Kuis pretest tidak ditemukan.'**
+  String get quizNotFound;
+
+  /// Pesan error saat post test tidak ditemukan
+  ///
+  /// In id, this message translates to:
+  /// **'Kuis post test tidak ditemukan.'**
+  String get quizPosttestNotFound;
+
+  /// Pesan error kuis masih dalam status non-published
+  ///
+  /// In id, this message translates to:
+  /// **'Kuis pretest masih berstatus {status} dan belum dibuka.'**
+  String quizDraftBlocked(String status);
+
+  /// Pesan error kuis tidak terhubung dengan kelas/pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Kuis tidak terhubung dengan kelas atau pertemuan yang valid.'**
+  String get quizInvalidClassMeeting;
+
+  /// Pesan error post test tidak memiliki class_id valid
+  ///
+  /// In id, this message translates to:
+  /// **'Kuis post test tidak terhubung dengan kelas yang valid.'**
+  String get quizInvalidClass;
+
+  /// Pesan error saat daftar soal kuis masih kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Soal kuis belum diunggah oleh pengajar.'**
+  String get quizNoQuestionsUploaded;
+
+  /// Pesan error saat attempt sebelumnya telah expired tanpa jawaban
+  ///
+  /// In id, this message translates to:
+  /// **'Sesi pengerjaan sebelumnya telah berakhir sebelum jawaban dikumpulkan.'**
+  String get quizStaleSessionEnded;
+
+  /// Pesan error kuota attempt kuis pretest telah habis
+  ///
+  /// In id, this message translates to:
+  /// **'Anda telah mencapai batas maksimal percobaan ({attempts}x).'**
+  String quizMaxAttemptsReached(String attempts);
+
+  /// Pesan error kuota attempt kuis post test telah habis
+  ///
+  /// In id, this message translates to:
+  /// **'Anda telah mencapai batas maksimal percobaan ({count}/{max}).'**
+  String quizPosttestMaxAttemptsReached(String count, String max);
+
+  /// Pesan exception generik saat inisialisasi kuis gagal
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memuat sesi kuis: {error}'**
+  String quizLoadFailedGeneric(String error);
 }
 
 class _AppLocalizationsDelegate

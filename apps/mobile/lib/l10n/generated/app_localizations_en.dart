@@ -1924,4 +1924,116 @@ class AppLocalizationsEn extends AppLocalizations {
   String meetingLockedUntilPublish(String date) {
     return 'This meeting is scheduled to be published on $date. All modules are locked until then.';
   }
+
+  @override
+  String get quizGateMateriNotOpened => 'Learning Material Not Opened';
+
+  @override
+  String get quizTimeUpAutosaved =>
+      'Time has expired. Your answers have been automatically saved.';
+
+  @override
+  String get quizTimeUpAutosubmitted =>
+      'Time has expired. Your answers have been automatically submitted.';
+
+  @override
+  String quizSubmitFailed(String error) {
+    return 'Failed to submit quiz: $error';
+  }
+
+  @override
+  String get quizPendingEvaluationTitle => 'Pending Evaluation';
+
+  @override
+  String get quizPendingEvaluationBody =>
+      'Connection to grading server lost, but your quiz session remains active on the server. Your local answers have been saved automatically. Please tap Submit Quiz to retry.';
+
+  @override
+  String quizConfirmUnansweredBody(int unanswered) {
+    return 'There are $unanswered unanswered questions. Submitted answers cannot be changed.';
+  }
+
+  @override
+  String get quizPretestLoading => 'Preparing pretest quiz...';
+
+  @override
+  String get quizPretestLoadFailed => 'Failed to load pretest.';
+
+  @override
+  String get quizPosttestLoading => 'Preparing post test session...';
+
+  @override
+  String get quizPosttestUnavailable => 'Post test quiz is not available.';
+
+  @override
+  String get quizNoQuestionsConfigured =>
+      'No questions have been configured for this post test yet.';
+
+  @override
+  String quizPosttestLoadFailed(String error) {
+    return 'Failed to load post test quiz: $error';
+  }
+
+  @override
+  String quizFinalScore(String score) {
+    return 'Final Score: $score';
+  }
+
+  @override
+  String quizPointsEarned(String earned, String total) {
+    return 'Points earned: $earned of $total points';
+  }
+
+  @override
+  String get quizPretestAnswersLocked =>
+      'Your answers have been securely saved and the quiz session is locked.';
+
+  @override
+  String get quizPosttestAnswersLocked =>
+      'Your answers have been locked and your learning evaluation score has been recorded on the server.';
+
+  @override
+  String get quizSessionNotActive => 'Your session is not active.';
+
+  @override
+  String get quizNotFound => 'Pretest quiz not found.';
+
+  @override
+  String get quizPosttestNotFound => 'Post test quiz not found.';
+
+  @override
+  String quizDraftBlocked(String status) {
+    return 'Pretest quiz is still in $status status and has not been opened.';
+  }
+
+  @override
+  String get quizInvalidClassMeeting =>
+      'Quiz is not connected to a valid class or meeting.';
+
+  @override
+  String get quizInvalidClass =>
+      'Post test quiz is not connected to a valid class.';
+
+  @override
+  String get quizNoQuestionsUploaded =>
+      'Quiz questions have not been uploaded by the instructor.';
+
+  @override
+  String get quizStaleSessionEnded =>
+      'The previous attempt session ended before answers were submitted.';
+
+  @override
+  String quizMaxAttemptsReached(String attempts) {
+    return 'You have reached the maximum attempt limit (${attempts}x).';
+  }
+
+  @override
+  String quizPosttestMaxAttemptsReached(String count, String max) {
+    return 'You have reached the maximum attempt limit ($count/$max).';
+  }
+
+  @override
+  String quizLoadFailedGeneric(String error) {
+    return 'Failed to load quiz session: $error';
+  }
 }

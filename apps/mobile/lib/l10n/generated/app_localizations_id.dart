@@ -1921,4 +1921,116 @@ class AppLocalizationsId extends AppLocalizations {
   String meetingLockedUntilPublish(String date) {
     return 'Pertemuan ini dijadwalkan terbit pada $date. Seluruh modul terkunci hingga waktu tersebut.';
   }
+
+  @override
+  String get quizGateMateriNotOpened => 'Materi Belum Dibuka';
+
+  @override
+  String get quizTimeUpAutosaved =>
+      'Waktu pengerjaan telah habis. Jawaban Anda disimpan otomatis.';
+
+  @override
+  String get quizTimeUpAutosubmitted =>
+      'Waktu pengerjaan telah habis. Jawaban dikumpulkan otomatis.';
+
+  @override
+  String quizSubmitFailed(String error) {
+    return 'Gagal mengumpulkan kuis: $error';
+  }
+
+  @override
+  String get quizPendingEvaluationTitle => 'Penilaian Tertunda';
+
+  @override
+  String get quizPendingEvaluationBody =>
+      'Koneksi ke server penilaian terputus, namun sesi kuis Anda masih aktif di server. Jawaban lokal Anda telah tersimpan otomatis. Silakan tekan tombol Kirim Kuis untuk mencoba kembali.';
+
+  @override
+  String quizConfirmUnansweredBody(int unanswered) {
+    return 'Terdapat $unanswered soal yang belum Anda jawab. Jawaban yang sudah dikumpulkan tidak dapat diubah lagi.';
+  }
+
+  @override
+  String get quizPretestLoading => 'Mempersiapkan kuis pretest...';
+
+  @override
+  String get quizPretestLoadFailed => 'Gagal memuat pretest.';
+
+  @override
+  String get quizPosttestLoading => 'Mempersiapkan sesi post test...';
+
+  @override
+  String get quizPosttestUnavailable => 'Kuis post test tidak tersedia.';
+
+  @override
+  String get quizNoQuestionsConfigured =>
+      'Belum ada soal yang dikonfigurasi untuk post test ini.';
+
+  @override
+  String quizPosttestLoadFailed(String error) {
+    return 'Gagal memuat kuis post test: $error';
+  }
+
+  @override
+  String quizFinalScore(String score) {
+    return 'Skor Akhir: $score';
+  }
+
+  @override
+  String quizPointsEarned(String earned, String total) {
+    return 'Poin diperoleh: $earned dari $total poin';
+  }
+
+  @override
+  String get quizPretestAnswersLocked =>
+      'Jawaban Anda telah tersimpan dengan aman dan sesi kuis telah dikunci.';
+
+  @override
+  String get quizPosttestAnswersLocked =>
+      'Jawaban Anda telah dikunci dan skor evaluasi pembelajaran telah tercatat di server.';
+
+  @override
+  String get quizSessionNotActive => 'Sesi Anda belum aktif.';
+
+  @override
+  String get quizNotFound => 'Kuis pretest tidak ditemukan.';
+
+  @override
+  String get quizPosttestNotFound => 'Kuis post test tidak ditemukan.';
+
+  @override
+  String quizDraftBlocked(String status) {
+    return 'Kuis pretest masih berstatus $status dan belum dibuka.';
+  }
+
+  @override
+  String get quizInvalidClassMeeting =>
+      'Kuis tidak terhubung dengan kelas atau pertemuan yang valid.';
+
+  @override
+  String get quizInvalidClass =>
+      'Kuis post test tidak terhubung dengan kelas yang valid.';
+
+  @override
+  String get quizNoQuestionsUploaded =>
+      'Soal kuis belum diunggah oleh pengajar.';
+
+  @override
+  String get quizStaleSessionEnded =>
+      'Sesi pengerjaan sebelumnya telah berakhir sebelum jawaban dikumpulkan.';
+
+  @override
+  String quizMaxAttemptsReached(String attempts) {
+    return 'Anda telah mencapai batas maksimal percobaan (${attempts}x).';
+  }
+
+  @override
+  String quizPosttestMaxAttemptsReached(String count, String max) {
+    return 'Anda telah mencapai batas maksimal percobaan ($count/$max).';
+  }
+
+  @override
+  String quizLoadFailedGeneric(String error) {
+    return 'Gagal memuat sesi kuis: $error';
+  }
 }

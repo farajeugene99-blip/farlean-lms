@@ -48,6 +48,42 @@ class _PosttestScreenState extends State<PosttestScreen> {
   bool _isLoading = true;
   bool _isSubmitting = false;
   String? _errorMessage;
+  String? _errorKey;
+  String? _errorParam1;
+  String? _errorParam2;
+
+  void _setError(String key, [String? param1, String? param2]) {
+    setState(() {
+      _errorKey = key;
+      _errorParam1 = param1;
+      _errorParam2 = param2;
+      _isLoading = false;
+    });
+  }
+
+  String _resolveErrorMessage(AppLocalizations l10n) {
+    if (_errorKey != null) {
+      switch (_errorKey) {
+        case 'session_not_active':
+          return l10n.quizSessionNotActive;
+        case 'not_found':
+          return l10n.quizPosttestNotFound;
+        case 'draft_blocked':
+          return l10n.quizDraftBlocked(_errorParam1 ?? '');
+        case 'invalid_class':
+          return l10n.quizInvalidClass;
+        case 'no_questions_configured':
+          return l10n.quizNoQuestionsConfigured;
+        case 'max_attempts':
+          return l10n.quizPosttestMaxAttemptsReached(_errorParam1 ?? '0', _errorParam2 ?? '1');
+        case 'stale_session':
+          return l10n.quizStaleSessionEnded;
+        case 'load_failed':
+          return l10n.quizPosttestLoadFailed(_errorParam1 ?? '');
+      }
+    }
+    return _errorMessage ?? l10n.quizPosttestUnavailable;
+  }
 
   // Timer State
   Timer? _countdownTimer;
@@ -75,54 +111,42 @@ class _PosttestScreenState extends State<PosttestScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _errorKey = null;
+      _errorParam1 = null;
+      _errorParam2 = null;
     });
 
     final authProvider = context.read<AuthProvider>();
     final uid = authProvider.firebaseUser?.uid;
 
     if (uid == null) {
-      setState(() {
-        _errorMessage = 'Sesi login tidak valid. Silakan masuk kembali.';
-        _isLoading = false;
-      });
+      _setError('session_not_active');
       return;
     }
 
     try {
       final posttest = await _posttestRepository.getPosttest(widget.posttestId);
       if (posttest == null) {
-        setState(() {
-          _errorMessage = 'Kuis post test tidak ditemukan.';
-          _isLoading = false;
-        });
+        _setError('not_found');
         return;
       }
       _posttest = posttest;
 
       // Enforce status Published di sisi klien
       if (posttest.status != ContentStatus.published) {
-        setState(() {
-          _errorMessage = 'Kuis post test masih berstatus ${posttest.status.value} dan belum dibuka.';
-          _isLoading = false;
-        });
+        _setError('draft_blocked', posttest.status.value);
         return;
       }
 
       final effectiveClassId = widget.classId.isNotEmpty ? widget.classId : posttest.classId;
       if (effectiveClassId.isEmpty) {
-        setState(() {
-          _errorMessage = 'Kuis post test tidak terhubung dengan kelas yang valid.';
-          _isLoading = false;
-        });
+        _setError('invalid_class');
         return;
       }
 
       final rawQuestions = await _posttestRepository.getQuestions(widget.posttestId);
       if (rawQuestions.isEmpty) {
-        setState(() {
-          _errorMessage = 'Belum ada soal yang dikonfigurasi untuk post test ini.';
-          _isLoading = false;
-        });
+        _setError('no_questions_configured');
         return;
       }
 
@@ -140,10 +164,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
         );
 
         if (attemptCount >= posttest.maxAttempts) {
-          setState(() {
-            _errorMessage = 'Anda telah mencapai batas maksimal percobaan ($attemptCount/${posttest.maxAttempts}).';
-            _isLoading = false;
-          });
+          _setError('max_attempts', '$attemptCount', '${posttest.maxAttempts}');
           return;
         }
 
@@ -171,10 +192,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
 
         if (remaining <= 0) {
           if (attempt.answers.isEmpty) {
-            setState(() {
-              _errorMessage = 'Sesi pengerjaan sebelumnya telah berakhir sebelum jawaban dikumpulkan.';
-              _isLoading = false;
-            });
+            _setError('stale_session');
             return;
           }
         }
@@ -204,10 +222,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
       });
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _errorMessage = 'Gagal memuat kuis post test: $e';
-          _isLoading = false;
-        });
+        _setError('load_failed', e.toString());
       }
     }
   }
@@ -275,7 +290,7 @@ class _PosttestScreenState extends State<PosttestScreen> {
           title: Text(l10n.quizConfirmSubmitTitle),
           content: Text(
             unansweredCount > 0
-                ? 'Masih ada $unansweredCount soal yang belum dijawab. Yakin ingin mengumpulkan sekarang?'
+                ? l10n.quizConfirmUnansweredBody(unansweredCount)
                 : l10n.quizConfirmSubmitBody,
           ),
           actions: [
@@ -329,9 +344,10 @@ class _PosttestScreenState extends State<PosttestScreen> {
         return;
       }
 
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal mengirim penilaian: $e'),
+          content: Text(l10n.quizSubmitFailed(e.toString())),
           backgroundColor: AppTheme.error,
         ),
       );
@@ -367,17 +383,14 @@ class _PosttestScreenState extends State<PosttestScreen> {
       showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.wifi_tethering_error_rounded, color: AppTheme.warning),
-              SizedBox(width: 8),
-              Text('Penilaian Tertunda'),
+              const Icon(Icons.wifi_tethering_error_rounded, color: AppTheme.warning),
+              const SizedBox(width: 8),
+              Text(l10n.quizPendingEvaluationTitle),
             ],
           ),
-          content: const Text(
-            'Koneksi ke server penilaian terputus, namun sesi kuis Anda masih aktif di server. '
-            'Jawaban lokal Anda telah tersimpan otomatis. Silakan tekan tombol Kumpulkan untuk mencoba kembali.',
-          ),
+          content: Text(l10n.quizPendingEvaluationBody),
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx),
@@ -439,9 +452,10 @@ class _PosttestScreenState extends State<PosttestScreen> {
 
   void _autoSubmitOnTimeUp() {
     if (_isSubmitting || !mounted) return;
+    final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Waktu pengerjaan telah habis. Jawaban dikumpulkan otomatis.'),
+      SnackBar(
+        content: Text(l10n.quizTimeUpAutosubmitted),
         backgroundColor: AppTheme.warning,
       ),
     );
@@ -466,17 +480,17 @@ class _PosttestScreenState extends State<PosttestScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Skor Akhir: ${result.score.toStringAsFixed(1)}',
+              l10n.quizFinalScore(result.score.toStringAsFixed(1)),
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: context.primaryColor),
             ),
             const SizedBox(height: 8),
             Text(
-              'Poin Diperoleh: ${result.pointsEarned} dari ${result.totalPoints}',
+              l10n.quizPointsEarned(result.pointsEarned.toString(), result.totalPoints.toString()),
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 12),
             Text(
-              'Jawaban Anda telah dikunci dan skor evaluasi pembelajaran telah tercatat di server.',
+              l10n.quizPosttestAnswersLocked,
               style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
             ),
           ],
@@ -496,23 +510,24 @@ class _PosttestScreenState extends State<PosttestScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (_isLoading) {
-      return const Scaffold(
-        body: LoadingIndicator(message: 'Mempersiapkan sesi post test...'),
+      return Scaffold(
+        body: LoadingIndicator(message: l10n.quizPosttestLoading),
       );
     }
 
-    if (_errorMessage != null || _posttest == null) {
+    if (_errorMessage != null || _errorKey != null || _posttest == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Post Test')),
+        appBar: AppBar(title: Text(l10n.meetingModulePosttest)),
         body: ErrorView(
-          message: _errorMessage ?? 'Kuis post test tidak tersedia.',
+          message: _resolveErrorMessage(l10n),
           onRetry: _loadPosttestSession,
         ),
       );
     }
 
-    final l10n = AppLocalizations.of(context);
     final posttest = _posttest!;
     final currentQ = _questions[_currentQuestionIndex];
     final selectedOption = _answers[currentQ.id];
