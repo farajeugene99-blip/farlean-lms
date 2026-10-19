@@ -2050,4 +2050,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String videoPlaybackFailed(String error) {
     return 'Failed to play Cloudinary video: $error';
   }
+
+  @override
+  String get startupFirebaseInitFailed => 'Firebase Initialization Failed';
 }

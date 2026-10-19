@@ -2190,5 +2190,8 @@
     "placeholders": {
       "error": { "type": "String" }
     }
-  }
+  },
+
+  "startupFirebaseInitFailed": "Inisialisasi Firebase Gagal",
+  "@startupFirebaseInitFailed": { "description": "Judul error saat startup inisialisasi Firebase gagal" }
 }

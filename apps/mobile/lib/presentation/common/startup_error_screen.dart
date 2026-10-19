@@ -1,17 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class StartupErrorScreen extends StatelessWidget {
   final Object error;
   final StackTrace? stackTrace;
   final VoidCallback onRetry;
+  final Locale? locale;
 
   const StartupErrorScreen({
     super.key,
     required this.error,
     this.stackTrace,
     required this.onRetry,
+    this.locale,
   });
 
   @override
@@ -20,10 +23,15 @@ class StartupErrorScreen extends StatelessWidget {
     final platform = kIsWeb
         ? 'Web'
         : defaultTargetPlatform.name.toUpperCase();
+    final effectiveLocale = locale ?? const Locale('id');
+    final l10n = lookupAppLocalizations(effectiveLocale);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      locale: effectiveLocale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         backgroundColor: AppTheme.background,
         body: SafeArea(
@@ -55,7 +63,7 @@ class StartupErrorScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Inisialisasi Firebase Gagal',
+                        l10n.startupFirebaseInitFailed,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -94,7 +102,7 @@ class StartupErrorScreen extends StatelessWidget {
                       ElevatedButton.icon(
                         onPressed: onRetry,
                         icon: const Icon(Icons.refresh_rounded, size: 20),
-                        label: const Text('Coba Lagi'),
+                        label: Text(l10n.labelRetry),
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),
                         ),

@@ -2047,4 +2047,7 @@ class AppLocalizationsId extends AppLocalizations {
   String videoPlaybackFailed(String error) {
     return 'Gagal memutar video Cloudinary: $error';
   }
+
+  @override
+  String get startupFirebaseInitFailed => 'Inisialisasi Firebase Gagal';
 }

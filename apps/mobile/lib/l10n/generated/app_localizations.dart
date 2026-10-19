@@ -3475,6 +3475,12 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Gagal memutar video Cloudinary: {error}'**
   String videoPlaybackFailed(String error);
+
+  /// Judul error saat startup inisialisasi Firebase gagal
+  ///
+  /// In id, this message translates to:
+  /// **'Inisialisasi Firebase Gagal'**
+  String get startupFirebaseInitFailed;
 }
 
 class _AppLocalizationsDelegate

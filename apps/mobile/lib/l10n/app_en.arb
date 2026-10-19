@@ -616,5 +616,6 @@
   "videoLoadingPlayer": "Loading video player...",
   "videoNotFound": "Learning video not found.",
   "videoYoutubeUrlInvalid": "Invalid YouTube video URL.",
-  "videoPlaybackFailed": "Failed to play Cloudinary video: {error}"
+  "videoPlaybackFailed": "Failed to play Cloudinary video: {error}",
+  "startupFirebaseInitFailed": "Firebase Initialization Failed"
 }
