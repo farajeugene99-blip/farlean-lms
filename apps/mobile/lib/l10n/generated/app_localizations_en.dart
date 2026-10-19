@@ -2036,4 +2036,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String quizLoadFailedGeneric(String error) {
     return 'Failed to load quiz session: $error';
   }
+
+  @override
+  String get videoLoadingPlayer => 'Loading video player...';
+
+  @override
+  String get videoNotFound => 'Learning video not found.';
+
+  @override
+  String get videoYoutubeUrlInvalid => 'Invalid YouTube video URL.';
+
+  @override
+  String videoPlaybackFailed(String error) {
+    return 'Failed to play Cloudinary video: $error';
+  }
 }

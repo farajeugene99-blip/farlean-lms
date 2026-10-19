@@ -2033,4 +2033,18 @@ class AppLocalizationsId extends AppLocalizations {
   String quizLoadFailedGeneric(String error) {
     return 'Gagal memuat sesi kuis: $error';
   }
+
+  @override
+  String get videoLoadingPlayer => 'Memuat pemutar video...';
+
+  @override
+  String get videoNotFound => 'Video pembelajaran tidak ditemukan.';
+
+  @override
+  String get videoYoutubeUrlInvalid => 'URL video YouTube tidak valid.';
+
+  @override
+  String videoPlaybackFailed(String error) {
+    return 'Gagal memutar video Cloudinary: $error';
+  }
 }

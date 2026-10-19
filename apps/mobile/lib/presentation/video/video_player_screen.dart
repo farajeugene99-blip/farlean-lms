@@ -29,6 +29,32 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   VideoItem? _video;
   bool _isLoading = true;
   String? _errorMessage;
+  String? _errorKey;
+  String? _errorParam;
+
+  void _setError(String key, [String? param]) {
+    setState(() {
+      _errorKey = key;
+      _errorParam = param;
+      _isLoading = false;
+    });
+  }
+
+  String _resolveErrorMessage(AppLocalizations l10n) {
+    if (_errorKey != null) {
+      switch (_errorKey) {
+        case 'not_found':
+          return l10n.videoNotFound;
+        case 'load_failed':
+          return l10n.videoLoadFailed(_errorParam ?? '');
+        case 'youtube_invalid':
+          return l10n.videoYoutubeUrlInvalid;
+        case 'cloudinary_failed':
+          return l10n.videoPlaybackFailed(_errorParam ?? '');
+      }
+    }
+    return _errorMessage ?? l10n.videoNotFound;
+  }
 
   // YouTube Controller
   YoutubePlayerController? _youtubeController;
@@ -60,6 +86,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _errorKey = null;
+      _errorParam = null;
     });
 
     try {
@@ -67,10 +95,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       if (!mounted) return;
 
       if (video == null) {
-        setState(() {
-          _errorMessage = 'Video pembelajaran tidak ditemukan.';
-          _isLoading = false;
-        });
+        _setError('not_found');
         return;
       }
 
@@ -78,10 +103,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       _initializePlayer(video);
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _errorMessage = 'Gagal memuat video: $e';
-          _isLoading = false;
-        });
+        _setError('load_failed', e.toString());
       }
     }
   }
@@ -90,10 +112,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     if (video.provider == VideoProvider.youtube) {
       final videoId = YoutubePlayerController.convertUrlToId(video.url);
       if (videoId == null) {
-        setState(() {
-          _errorMessage = 'URL video YouTube tidak valid.';
-          _isLoading = false;
-        });
+        _setError('youtube_invalid');
         return;
       }
 
@@ -116,10 +135,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           }
         }).catchError((error) {
           if (mounted) {
-            setState(() {
-              _errorMessage = 'Gagal memutar video Cloudinary: $error';
-              _isLoading = false;
-            });
+            _setError('cloudinary_failed', error.toString());
           }
         });
 
@@ -136,23 +152,24 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (_isLoading) {
-      return const Scaffold(
-        body: LoadingIndicator(message: 'Memuat pemutar video...'),
+      return Scaffold(
+        body: LoadingIndicator(message: l10n.videoLoadingPlayer),
       );
     }
 
-    if (_errorMessage != null || _video == null) {
+    if (_errorMessage != null || _errorKey != null || _video == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Video Pembelajaran')),
+        appBar: AppBar(title: Text(l10n.meetingModuleVideoTitle)),
         body: ErrorView(
-          message: _errorMessage ?? 'Video tidak ditemukan.',
+          message: _resolveErrorMessage(l10n),
           onRetry: _loadVideo,
         ),
       );
     }
 
-    final l10n = AppLocalizations.of(context);
     final video = _video!;
 
     return Scaffold(

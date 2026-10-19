@@ -3451,6 +3451,30 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Gagal memuat sesi kuis: {error}'**
   String quizLoadFailedGeneric(String error);
+
+  /// Indikator loading saat pemutar video diinisialisasi
+  ///
+  /// In id, this message translates to:
+  /// **'Memuat pemutar video...'**
+  String get videoLoadingPlayer;
+
+  /// Pesan error saat video pembelajaran tidak ditemukan
+  ///
+  /// In id, this message translates to:
+  /// **'Video pembelajaran tidak ditemukan.'**
+  String get videoNotFound;
+
+  /// Pesan error saat URL video YouTube tidak valid
+  ///
+  /// In id, this message translates to:
+  /// **'URL video YouTube tidak valid.'**
+  String get videoYoutubeUrlInvalid;
+
+  /// Pesan error gagal memutar video Cloudinary
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal memutar video Cloudinary: {error}'**
+  String videoPlaybackFailed(String error);
 }
 
 class _AppLocalizationsDelegate

@@ -612,5 +612,9 @@
   "quizStaleSessionEnded": "The previous attempt session ended before answers were submitted.",
   "quizMaxAttemptsReached": "You have reached the maximum attempt limit ({attempts}x).",
   "quizPosttestMaxAttemptsReached": "You have reached the maximum attempt limit ({count}/{max}).",
-  "quizLoadFailedGeneric": "Failed to load quiz session: {error}"
+  "quizLoadFailedGeneric": "Failed to load quiz session: {error}",
+  "videoLoadingPlayer": "Loading video player...",
+  "videoNotFound": "Learning video not found.",
+  "videoYoutubeUrlInvalid": "Invalid YouTube video URL.",
+  "videoPlaybackFailed": "Failed to play Cloudinary video: {error}"
 }

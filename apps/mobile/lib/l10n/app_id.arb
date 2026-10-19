@@ -2173,5 +2173,22 @@
     "placeholders": {
       "error": { "type": "String" }
     }
+  },
+
+  "videoLoadingPlayer": "Memuat pemutar video...",
+  "@videoLoadingPlayer": { "description": "Indikator loading saat pemutar video diinisialisasi" },
+
+  "videoNotFound": "Video pembelajaran tidak ditemukan.",
+  "@videoNotFound": { "description": "Pesan error saat video pembelajaran tidak ditemukan" },
+
+  "videoYoutubeUrlInvalid": "URL video YouTube tidak valid.",
+  "@videoYoutubeUrlInvalid": { "description": "Pesan error saat URL video YouTube tidak valid" },
+
+  "videoPlaybackFailed": "Gagal memutar video Cloudinary: {error}",
+  "@videoPlaybackFailed": {
+    "description": "Pesan error gagal memutar video Cloudinary",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
   }
 }
