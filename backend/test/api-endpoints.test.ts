@@ -182,12 +182,38 @@ async function runApiTests() {
       const req = {
         method: 'POST',
         headers: { authorization: 'Bearer valid_token' },
-        body: { attemptId: 'attempt_draft_test' },
+        body: { classId: testClassId, folderType: 'manual_books' },
       } as any;
       const res = createMockRes();
-      await gradeHandler(req, res as any);
-      if (res.statusCode !== 400) throw new Error(`Expected 400, got ${res.statusCode}`);
-      if (!res.jsonData?.error?.includes('Draft')) throw new Error('Error message must mention Draft');
+      await uploadSignHandler(req, res as any);
+
+      if (res.statusCode !== 403) throw new Error(`Expected 403, got ${res.statusCode}`);
+    } finally {
+      resetTokenVerifier();
+    }
+  });
+
+  // Skenario: /api/upload-sign folderType assignment_instructions
+  await test('10b. /api/upload-sign assignment_instructions mengizinkan GURU pemilik kelas', async () => {
+    setTokenVerifier(async () => ({
+      uid: guruUid,
+      email_verified: true,
+      role: 'GURU',
+    }));
+
+    try {
+      const req = {
+        method: 'POST',
+        headers: { authorization: 'Bearer valid_token' },
+        body: { classId: testClassId, folderType: 'assignment_instructions' },
+      } as any;
+      const res = createMockRes();
+      await uploadSignHandler(req, res as any);
+
+      if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+      if (res.jsonData?.folder !== `farlean/classes/${testClassId}/assignment_instructions`) {
+        throw new Error(`Folder mismatch: ${res.jsonData?.folder}`);
+      }
     } finally {
       resetTokenVerifier();
     }

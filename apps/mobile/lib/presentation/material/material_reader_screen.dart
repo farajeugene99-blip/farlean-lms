@@ -10,6 +10,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../models/material_content.dart';
 import '../../repositories/material_repository.dart';
 import '../../services/auth_provider.dart';
+import '../ai/ai_tutor_screen.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
 
@@ -209,6 +210,23 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       appBar: AppBar(
         title: Text(material.title),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome_rounded),
+            tooltip: l10n.aiTutorTitle,
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AiTutorScreen(
+                    classId: widget.classId,
+                    meetingId: widget.meetingId,
+                    materiId: widget.materiId,
+                    materiTitle: material.title,
+                    initialPrompt: 'Bisa bantu jelaskan materi "${material.title}" ini?',
+                  ),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.picture_as_pdf_rounded),
             tooltip: l10n.materialExportPdfTooltip,

@@ -151,13 +151,15 @@ class MeetingRepository {
     }
   }
 
-  /// Menautkan referensi modul (pretest, materi, video, posttest) ke pertemuan
+  /// Menautkan referensi modul (pretest, materi, video, posttest, assignment) ke pertemuan
   Future<void> linkModule(
     String meetingId, {
     String? pretestId,
     String? materiId,
     String? videoId,
     String? posttestId,
+    String? assignmentId,
+    bool clearAssignment = false,
   }) async {
     final firestore = _firestore;
     if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
@@ -168,6 +170,11 @@ class MeetingRepository {
       if (materiId != null) updates['materi_id'] = materiId;
       if (videoId != null) updates['video_id'] = videoId;
       if (posttestId != null) updates['posttest_id'] = posttestId;
+      if (clearAssignment) {
+        updates['assignment_id'] = FieldValue.delete();
+      } else if (assignmentId != null) {
+        updates['assignment_id'] = assignmentId;
+      }
 
       if (updates.isNotEmpty) {
         await firestore.collection('meetings').doc(meetingId).update(updates);

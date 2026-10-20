@@ -239,9 +239,22 @@ class AppRouter {
             ),
             GoRoute(
               path: AppConstants.aiRoute,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: AiTutorScreen(),
-              ),
+              pageBuilder: (context, state) {
+                final classId = state.uri.queryParameters['classId'];
+                final meetingId = state.uri.queryParameters['meetingId'];
+                final materiId = state.uri.queryParameters['materiId'];
+                final materiTitle = state.uri.queryParameters['materiTitle'];
+                final initialPrompt = state.uri.queryParameters['initialPrompt'];
+                return NoTransitionPage(
+                  child: AiTutorScreen(
+                    classId: classId,
+                    meetingId: meetingId,
+                    materiId: materiId,
+                    materiTitle: materiTitle,
+                    initialPrompt: initialPrompt,
+                  ),
+                );
+              },
             ),
             GoRoute(
               path: AppConstants.diskusiRoute,

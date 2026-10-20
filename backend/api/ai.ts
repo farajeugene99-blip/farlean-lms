@@ -83,6 +83,27 @@ async function isActivelyTakingExam(userId: string): Promise<boolean> {
   return false;
 }
 
+export function extractDeltaPlainText(rawContent: any): string {
+  if (!rawContent) return '';
+  let parsed = rawContent;
+  if (typeof rawContent === 'string') {
+    try {
+      parsed = JSON.parse(rawContent);
+    } catch {
+      return rawContent.trim();
+    }
+  }
+  const ops = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.ops) ? parsed.ops : null);
+  if (ops) {
+    return ops
+      .map((op: any) => (typeof op.insert === 'string' ? op.insert : ''))
+      .join('')
+      .trim();
+  }
+  if (typeof parsed === 'string') return parsed.trim();
+  return '';
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) return;
 
@@ -195,13 +216,104 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const { prompt: userPrompt } = req.body || {};
+    const { prompt: userPrompt, classId, meetingId, materiId } = req.body || {};
     if (!userPrompt || typeof userPrompt !== 'string' || userPrompt.trim().length === 0) {
       return res.status(400).json({ error: 'Pertanyaan (prompt) tidak boleh kosong.' });
     }
 
     if (userPrompt.trim().length > 1000) {
       return res.status(400).json({ error: 'Pertanyaan maksimal 1000 karakter.' });
+    }
+
+    // C. Validasi Otorisasi Konteks Pembelajaran (Class, Meeting, Materi)
+    let contextTitle = '';
+    let contextPlainText = '';
+
+    if (classId && typeof classId === 'string' && classId.trim().length > 0) {
+      const cleanClassId = classId.trim();
+      const classDoc = await db.collection('classes').doc(cleanClassId).get();
+      if (!classDoc.exists) {
+        return res.status(404).json({ error: 'Kelas tidak ditemukan.' });
+      }
+
+      const classData = classDoc.data() || {};
+      const isTeacher = classData.teacher_id === user.uid;
+
+      if (role !== 'ADMIN' && !isTeacher) {
+        const memberDoc = await db
+          .collection('classes')
+          .doc(cleanClassId)
+          .collection('members')
+          .doc(user.uid)
+          .get();
+
+        if (!memberDoc.exists || memberDoc.data()?.status !== 'active') {
+          return res.status(403).json({
+            error: 'Akses ditolak: Anda bukan anggota aktif kelas ini.',
+          });
+        }
+      }
+
+      // Verifikasi pertemuan (jika disediakan)
+      let resolvedMateriId = materiId && typeof materiId === 'string' ? materiId.trim() : null;
+
+      if (meetingId && typeof meetingId === 'string' && meetingId.trim().length > 0) {
+        const cleanMeetingId = meetingId.trim();
+        const meetingDoc = await db.collection('meetings').doc(cleanMeetingId).get();
+        if (!meetingDoc.exists) {
+          return res.status(404).json({ error: 'Pertemuan tidak ditemukan.' });
+        }
+
+        const meetingData = meetingDoc.data() || {};
+        if (meetingData.class_id !== cleanClassId) {
+          return res.status(403).json({
+            error: 'Akses ditolak: Pertemuan tidak terdaftar pada kelas ini.',
+          });
+        }
+
+        // Mahasiswa tidak boleh mengakses konteks materi dari pertemuan yang terkunci/Scheduled/Draft
+        if (role !== 'ADMIN' && !isTeacher) {
+          const meetingStatus = (meetingData.status || '').toString().toLowerCase();
+          if (meetingStatus === 'scheduled' || meetingStatus === 'draft') {
+            return res.status(403).json({
+              error: 'Akses ditolak: Pertemuan ini masih berstatus terjadwal atau terkunci.',
+            });
+          }
+        }
+
+        if (!resolvedMateriId && meetingData.materi_id) {
+          resolvedMateriId = meetingData.materi_id;
+        }
+      }
+
+      // Verifikasi materi (jika disediakan atau didapat dari pertemuan)
+      if (resolvedMateriId) {
+        const materiDoc = await db.collection('materials').doc(resolvedMateriId).get();
+        if (!materiDoc.exists) {
+          return res.status(404).json({ error: 'Materi tidak ditemukan.' });
+        }
+
+        const materiData = materiDoc.data() || {};
+        if (materiData.class_id !== cleanClassId) {
+          return res.status(403).json({
+            error: 'Akses ditolak: Materi tidak terdaftar pada kelas ini.',
+          });
+        }
+
+        if (role !== 'ADMIN' && !isTeacher && materiData.status !== 'Published') {
+          return res.status(403).json({
+            error: 'Akses ditolak: Materi belum dipublikasikan.',
+          });
+        }
+
+        contextTitle = materiData.title || '';
+        const rawContent = materiData.content;
+        const extracted = extractDeltaPlainText(rawContent);
+        const MAX_CONTEXT_CHARS = 8000;
+        contextPlainText = extracted.length > MAX_CONTEXT_CHARS
+          ? extracted.slice(0, MAX_CONTEXT_CHARS) + '\n...[Konten dipotong untuk batas konteks]'
+          : extracted;
+      }
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
@@ -215,12 +327,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
       const ai = new GoogleGenAI({ apiKey });
-      const systemInstruction = `Kamu adalah Farlean AI Tutor, asisten belajar cerdas dan ramah untuk mahasiswa dan dosen pada Farlean LMS.
+      let systemInstruction = `Kamu adalah Farlean AI Tutor, asisten belajar cerdas dan ramah untuk mahasiswa dan dosen pada Farlean LMS.
 Prinsipmu:
 1. Jelaskan konsep dengan metode Socratic (membimbing penalaran bertahap, bukan sekadar memberi jawaban instan).
 2. Dilarang memberikan kunci jawaban tes/ujian langsung jika pengguna tampak meminta jawaban kuis.
 3. Berikan contoh kode praktis atau analogi dunia nyata jika relevan.
 4. Gunakan Bahasa Indonesia yang ramah, sopan, dan jelas.`;
+
+      if (contextTitle || contextPlainText) {
+        systemInstruction += `\n\nKonteks Pembelajaran yang Sedang Dipelajari Mahasiswa:
+Judul Materi: ${contextTitle || '-'}
+Isi Dokumen Materi:
+"""
+${contextPlainText}
+"""
+Instruksi Tambahan:
+Gunakan konteks materi di atas untuk menjawab dan membimbing mahasiswa secara kontekstual, tepat sasaran, dan relevan dengan kurikulum kelas tersebut, tanpa memberikan kunci jawaban tes/kuis langsung.`;
+      }
 
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',

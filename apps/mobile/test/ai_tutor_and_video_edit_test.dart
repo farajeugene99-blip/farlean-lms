@@ -19,6 +19,10 @@ class MockAiServiceForTest extends AiService {
   bool isExamLocked;
   int askTutorCallCount = 0;
 
+  String? lastClassId;
+  String? lastMeetingId;
+  String? lastMateriId;
+
   MockAiServiceForTest({
     this.tutorResponse = 'Ini adalah penjelasan konsep dari AI Tutor.',
     this.videoDraftResponse = 'Ini adalah draf deskripsi video dari AI.',
@@ -26,8 +30,16 @@ class MockAiServiceForTest extends AiService {
   });
 
   @override
-  Future<AiResponse> askTutor(String prompt) async {
+  Future<AiResponse> askTutor(
+    String prompt, {
+    String? classId,
+    String? meetingId,
+    String? materiId,
+  }) async {
     askTutorCallCount++;
+    lastClassId = classId;
+    lastMeetingId = meetingId;
+    lastMateriId = materiId;
     if (isExamLocked) {
       return const AiResponse(
         success: false,

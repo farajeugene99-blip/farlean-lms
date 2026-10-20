@@ -19,8 +19,21 @@ class _ChatMessage {
 
 class AiTutorScreen extends StatefulWidget {
   final AiService? aiService;
+  final String? classId;
+  final String? meetingId;
+  final String? materiId;
+  final String? materiTitle;
+  final String? initialPrompt;
 
-  const AiTutorScreen({super.key, this.aiService});
+  const AiTutorScreen({
+    super.key,
+    this.aiService,
+    this.classId,
+    this.meetingId,
+    this.materiId,
+    this.materiTitle,
+    this.initialPrompt,
+  });
 
   @override
   State<AiTutorScreen> createState() => _AiTutorScreenState();
@@ -33,11 +46,15 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
   final List<_ChatMessage> _messages = [];
   bool _isLoading = false;
   int? _remainingQuota;
+  bool _contextDismissed = false;
 
   @override
   void initState() {
     super.initState();
     _aiService = widget.aiService ?? AiService();
+    if (widget.initialPrompt != null && widget.initialPrompt!.trim().isNotEmpty) {
+      _promptController.text = widget.initialPrompt!.trim();
+    }
     // Guardrail 6: Tidak ada panggilan API di initState()
     // Pesan sambutan awal bersifat lokal
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -87,7 +104,12 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     _scrollToBottom();
 
     try {
-      final response = await _aiService.askTutor(text);
+      final response = await _aiService.askTutor(
+        text,
+        classId: _contextDismissed ? null : widget.classId,
+        meetingId: _contextDismissed ? null : widget.meetingId,
+        materiId: _contextDismissed ? null : widget.materiId,
+      );
       if (!mounted) return;
 
       setState(() {
@@ -161,6 +183,37 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
       ),
       body: Column(
         children: [
+          if (!_contextDismissed && (widget.materiTitle != null || widget.materiId != null))
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: AppTheme.primary.withAlpha(15),
+              child: Row(
+                children: [
+                  const Icon(Icons.menu_book_rounded, size: 16, color: AppTheme.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Konteks: ${widget.materiTitle ?? "Materi Terpilih"}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => setState(() => _contextDismissed = true),
+                    child: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Icon(Icons.close_rounded, size: 16, color: Colors.grey),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           // Chat Messages
           Expanded(
             child: ListView.builder(

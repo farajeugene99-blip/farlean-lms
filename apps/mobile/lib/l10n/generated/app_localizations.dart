@@ -1502,6 +1502,90 @@ abstract class AppLocalizations {
   /// **'Buat Post Test'**
   String get meetingModulePosttestActionCreate;
 
+  /// Judul kartu modul tugas pada pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Tugas Pembelajaran'**
+  String get meetingModuleAssignmentTitle;
+
+  /// Subjudul modul tugas jika sudah aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Tugas pertemuan dengan tenggat dan instruksi terstruktur'**
+  String get meetingModuleAssignmentSubActive;
+
+  /// Subjudul tugas kosong untuk pengajar
+  ///
+  /// In id, this message translates to:
+  /// **'Tugas belum ditautkan. Klik untuk membuat tugas baru.'**
+  String get meetingModuleAssignmentSubStaffEmpty;
+
+  /// Subjudul tugas kosong untuk mahasiswa
+  ///
+  /// In id, this message translates to:
+  /// **'Belum ada tugas pembelajaran untuk pertemuan ini'**
+  String get meetingModuleAssignmentSubStudentEmpty;
+
+  /// Tombol buka tugas pertemuan
+  ///
+  /// In id, this message translates to:
+  /// **'Buka Tugas'**
+  String get meetingModuleAssignmentActionOpen;
+
+  /// Tombol buat tugas pertemuan baru
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Tugas'**
+  String get meetingModuleAssignmentActionCreate;
+
+  /// Label ringkas modul tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Tugas'**
+  String get meetingModuleAssignment;
+
+  /// Label berkas lampiran instruksi tugas dosen
+  ///
+  /// In id, this message translates to:
+  /// **'Berkas Lampiran Petunjuk'**
+  String get assignmentInstructionAttachment;
+
+  /// Tombol unduh berkas lampiran petunjuk
+  ///
+  /// In id, this message translates to:
+  /// **'Unduh Petunjuk'**
+  String get assignmentDownloadInstruction;
+
+  /// Tombol buka berkas lampiran petunjuk
+  ///
+  /// In id, this message translates to:
+  /// **'Buka Petunjuk'**
+  String get assignmentViewInstruction;
+
+  /// Pesan saat tidak ada berkas petunjuk
+  ///
+  /// In id, this message translates to:
+  /// **'Tidak ada berkas lampiran petunjuk'**
+  String get assignmentNoInstructionAttachment;
+
+  /// Judul metrik cache berkas sementara disk
+  ///
+  /// In id, this message translates to:
+  /// **'Berkas Sementara (Disk)'**
+  String get profileCacheDiskTitle;
+
+  /// Judul metrik cache memori RAM
+  ///
+  /// In id, this message translates to:
+  /// **'Cache Memori (RAM)'**
+  String get profileCacheRamTitle;
+
+  /// Pesan snackbar saat cache berhasil dibersihkan
+  ///
+  /// In id, this message translates to:
+  /// **'Cache dan berkas sementara berhasil dibersihkan'**
+  String get profileCacheCleanSuccess;
+
   /// Label tombol modul yang belum aktif
   ///
   /// In id, this message translates to:

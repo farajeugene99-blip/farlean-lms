@@ -876,6 +876,48 @@
   "meetingModulePosttestActionCreate": "Buat Post Test",
   "@meetingModulePosttestActionCreate": { "description": "Tombol buat kuis post test baru" },
 
+  "meetingModuleAssignmentTitle": "Tugas Pembelajaran",
+  "@meetingModuleAssignmentTitle": { "description": "Judul kartu modul tugas pada pertemuan" },
+
+  "meetingModuleAssignmentSubActive": "Tugas pertemuan dengan tenggat dan instruksi terstruktur",
+  "@meetingModuleAssignmentSubActive": { "description": "Subjudul modul tugas jika sudah aktif" },
+
+  "meetingModuleAssignmentSubStaffEmpty": "Tugas belum ditautkan. Klik untuk membuat tugas baru.",
+  "@meetingModuleAssignmentSubStaffEmpty": { "description": "Subjudul tugas kosong untuk pengajar" },
+
+  "meetingModuleAssignmentSubStudentEmpty": "Belum ada tugas pembelajaran untuk pertemuan ini",
+  "@meetingModuleAssignmentSubStudentEmpty": { "description": "Subjudul tugas kosong untuk mahasiswa" },
+
+  "meetingModuleAssignmentActionOpen": "Buka Tugas",
+  "@meetingModuleAssignmentActionOpen": { "description": "Tombol buka tugas pertemuan" },
+
+  "meetingModuleAssignmentActionCreate": "Buat Tugas",
+  "@meetingModuleAssignmentActionCreate": { "description": "Tombol buat tugas pertemuan baru" },
+
+  "meetingModuleAssignment": "Tugas",
+  "@meetingModuleAssignment": { "description": "Label ringkas modul tugas" },
+
+  "assignmentInstructionAttachment": "Berkas Lampiran Petunjuk",
+  "@assignmentInstructionAttachment": { "description": "Label berkas lampiran instruksi tugas dosen" },
+
+  "assignmentDownloadInstruction": "Unduh Petunjuk",
+  "@assignmentDownloadInstruction": { "description": "Tombol unduh berkas lampiran petunjuk" },
+
+  "assignmentViewInstruction": "Buka Petunjuk",
+  "@assignmentViewInstruction": { "description": "Tombol buka berkas lampiran petunjuk" },
+
+  "assignmentNoInstructionAttachment": "Tidak ada berkas lampiran petunjuk",
+  "@assignmentNoInstructionAttachment": { "description": "Pesan saat tidak ada berkas petunjuk" },
+
+  "profileCacheDiskTitle": "Berkas Sementara (Disk)",
+  "@profileCacheDiskTitle": { "description": "Judul metrik cache berkas sementara disk" },
+
+  "profileCacheRamTitle": "Cache Memori (RAM)",
+  "@profileCacheRamTitle": { "description": "Judul metrik cache memori RAM" },
+
+  "profileCacheCleanSuccess": "Cache dan berkas sementara berhasil dibersihkan",
+  "@profileCacheCleanSuccess": { "description": "Pesan snackbar saat cache berhasil dibersihkan" },
+
   "meetingModuleNotAvailable": "Belum Tersedia",
   "@meetingModuleNotAvailable": { "description": "Label tombol modul yang belum aktif" },
 

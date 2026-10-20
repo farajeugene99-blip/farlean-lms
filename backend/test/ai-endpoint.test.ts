@@ -1,4 +1,4 @@
-import aiHandler from '../api/ai';
+import aiHandler, { extractDeltaPlainText } from '../api/ai';
 
 interface MockResponse {
   statusCode: number;
@@ -75,6 +75,38 @@ async function runAiTests() {
     await aiHandler(req, res as any);
     if (res.statusCode !== 401) {
       throw new Error(`Expected status 401, got ${res.statusCode}`);
+    }
+  });
+
+  // 3. Delta Extractor Tests
+  await test('3. extractDeltaPlainText mengekstrak Delta JSON ops array dengan tepat', async () => {
+    const deltaOps = [
+      { insert: 'Bab 1: Pengenalan Lean Manufacturing\n' },
+      { insert: 'Lean manufacturing bertujuan mengurangi waste.\n' },
+    ];
+    const text = extractDeltaPlainText(deltaOps);
+    if (!text.includes('Pengenalan Lean Manufacturing') || !text.includes('mengurangi waste')) {
+      throw new Error(`Ekstraksi gagal: ${text}`);
+    }
+  });
+
+  await test('4. extractDeltaPlainText mengekstrak JSON string Delta ops dengan aman', async () => {
+    const rawJson = JSON.stringify([
+      { insert: 'Definisi Kaizen: perbaikan terus-menerus.' },
+    ]);
+    const text = extractDeltaPlainText(rawJson);
+    if (text !== 'Definisi Kaizen: perbaikan terus-menerus.') {
+      throw new Error(`Ekstraksi JSON string gagal: ${text}`);
+    }
+  });
+
+  await test('5. extractDeltaPlainText menangani string biasa atau null secara graceful', async () => {
+    const plain = 'Teks murni tanpa format Delta';
+    if (extractDeltaPlainText(plain) !== plain) {
+      throw new Error('Gagal mempertahankan teks murni');
+    }
+    if (extractDeltaPlainText(null) !== '') {
+      throw new Error('Null tidak menghasilkan string kosong');
     }
   });
 

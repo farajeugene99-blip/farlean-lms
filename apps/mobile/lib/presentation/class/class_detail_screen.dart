@@ -689,6 +689,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                 _buildModuleIcon(Icons.quiz_outlined, meeting.pretestId != null),
                 _buildModuleIcon(Icons.menu_book_rounded, meeting.materiId != null),
                 _buildModuleIcon(Icons.play_circle_outline_rounded, meeting.videoId != null),
+                _buildModuleIcon(Icons.assignment_turned_in_rounded, meeting.posttestId != null),
+                _buildModuleIcon(Icons.task_alt_rounded, meeting.assignmentId != null),
               ],
             ),
             trailing: _buildStatusBadge(meeting.status.value),
@@ -880,6 +882,10 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           deadline: formData.deadline,
           isGroupAssignment: formData.isGroup,
           allowLateSubmission: formData.allowLate,
+          meetingId: formData.meetingId,
+          attachmentUrl: formData.attachmentUrl,
+          attachmentFileName: formData.attachmentFileName,
+          attachmentFileSize: formData.attachmentFileSize,
         );
         await _assignmentRepository.createAssignment(newAssignment);
         if (mounted) {
@@ -915,8 +921,14 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           deadline: formData.deadline,
           allowLateSubmission: formData.allowLate,
           isGroupAssignment: formData.isGroup,
+          meetingId: formData.meetingId,
+          clearMeetingId: formData.meetingId == null,
+          attachmentUrl: formData.attachmentUrl,
+          attachmentFileName: formData.attachmentFileName,
+          attachmentFileSize: formData.attachmentFileSize,
+          clearAttachment: formData.attachmentUrl == null,
         );
-        await _assignmentRepository.updateAssignment(updated);
+        await _assignmentRepository.updateAssignment(updated, previousMeetingId: assignment.meetingId);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Tugas berhasil diperbarui.'), backgroundColor: AppTheme.success),
@@ -953,7 +965,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
     if (confirmed == true && mounted) {
       try {
-        await _assignmentRepository.deleteAssignment(widget.classId, assignment.id);
+        await _assignmentRepository.deleteAssignment(widget.classId, assignment.id, meetingId: assignment.meetingId);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.assignmentDeleteSuccess), backgroundColor: AppTheme.success),

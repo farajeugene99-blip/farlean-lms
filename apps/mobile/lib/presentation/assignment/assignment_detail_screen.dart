@@ -296,8 +296,14 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
           deadline: formData.deadline,
           allowLateSubmission: formData.allowLate,
           isGroupAssignment: formData.isGroup,
+          meetingId: formData.meetingId,
+          clearMeetingId: formData.meetingId == null,
+          attachmentUrl: formData.attachmentUrl,
+          attachmentFileName: formData.attachmentFileName,
+          attachmentFileSize: formData.attachmentFileSize,
+          clearAttachment: formData.attachmentUrl == null,
         );
-        await _assignmentRepository.updateAssignment(updated);
+        await _assignmentRepository.updateAssignment(updated, previousMeetingId: assignment.meetingId);
         setState(() => _assignment = updated);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -377,6 +383,55 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(14),
                   child: Text(assignment.instructions, style: TextStyle(fontSize: 13, height: 1.4, color: context.textPrimaryColor)),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Lampiran Berkas Petunjuk dari Dosen
+            if (assignment.attachmentUrl != null && assignment.attachmentUrl!.isNotEmpty) ...[
+              Text(l10n.assignmentInstructionAttachment, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Card(
+                elevation: 0.5,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: context.borderColor),
+                ),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.attach_file_rounded, color: AppTheme.primary, size: 22),
+                  ),
+                  title: Text(
+                    assignment.attachmentFileName ?? 'Berkas_Petunjuk.pdf',
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    assignment.attachmentFileSize != null
+                        ? '${(assignment.attachmentFileSize! / (1024 * 1024)).toStringAsFixed(1)} MB'
+                        : 'Berkas Dokumen Lampiran',
+                    style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
+                  ),
+                  trailing: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                    label: Text(l10n.assignmentViewInstruction),
+                    onPressed: () async {
+                      final uri = Uri.tryParse(assignment.attachmentUrl!);
+                      if (uri != null && await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 16),

@@ -850,6 +850,53 @@ class AppLocalizationsId extends AppLocalizations {
   String get meetingModulePosttestActionCreate => 'Buat Post Test';
 
   @override
+  String get meetingModuleAssignmentTitle => 'Tugas Pembelajaran';
+
+  @override
+  String get meetingModuleAssignmentSubActive =>
+      'Tugas pertemuan dengan tenggat dan instruksi terstruktur';
+
+  @override
+  String get meetingModuleAssignmentSubStaffEmpty =>
+      'Tugas belum ditautkan. Klik untuk membuat tugas baru.';
+
+  @override
+  String get meetingModuleAssignmentSubStudentEmpty =>
+      'Belum ada tugas pembelajaran untuk pertemuan ini';
+
+  @override
+  String get meetingModuleAssignmentActionOpen => 'Buka Tugas';
+
+  @override
+  String get meetingModuleAssignmentActionCreate => 'Buat Tugas';
+
+  @override
+  String get meetingModuleAssignment => 'Tugas';
+
+  @override
+  String get assignmentInstructionAttachment => 'Berkas Lampiran Petunjuk';
+
+  @override
+  String get assignmentDownloadInstruction => 'Unduh Petunjuk';
+
+  @override
+  String get assignmentViewInstruction => 'Buka Petunjuk';
+
+  @override
+  String get assignmentNoInstructionAttachment =>
+      'Tidak ada berkas lampiran petunjuk';
+
+  @override
+  String get profileCacheDiskTitle => 'Berkas Sementara (Disk)';
+
+  @override
+  String get profileCacheRamTitle => 'Cache Memori (RAM)';
+
+  @override
+  String get profileCacheCleanSuccess =>
+      'Cache dan berkas sementara berhasil dibersihkan';
+
+  @override
   String get meetingModuleNotAvailable => 'Belum Tersedia';
 
   @override

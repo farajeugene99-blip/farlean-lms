@@ -12,6 +12,7 @@ class Meeting {
   final String? materiId;
   final String? videoId;
   final String? posttestId;
+  final String? assignmentId;
   final ContentStatus status;
   final DateTime? publishAt;
 
@@ -26,6 +27,7 @@ class Meeting {
     this.materiId,
     this.videoId,
     this.posttestId,
+    this.assignmentId,
     this.status = ContentStatus.draft,
     this.publishAt,
   });
@@ -53,6 +55,7 @@ class Meeting {
       materiId: map['materi_id'] as String?,
       videoId: map['video_id'] as String?,
       posttestId: map['posttest_id'] as String?,
+      assignmentId: map['assignment_id'] as String?,
       status: ContentStatus.fromString(map['status'] as String?),
       publishAt: parseDate(map['publish_at']),
     );
@@ -69,6 +72,7 @@ class Meeting {
       'materi_id': materiId,
       'video_id': videoId,
       'posttest_id': posttestId,
+      'assignment_id': assignmentId,
       'status': status.value,
       'publish_at': publishAt != null ? Timestamp.fromDate(publishAt!) : null,
     };
@@ -88,6 +92,7 @@ class Meeting {
     if (materiId != null) map['materi_id'] = materiId;
     if (videoId != null) map['video_id'] = videoId;
     if (posttestId != null) map['posttest_id'] = posttestId;
+    if (assignmentId != null) map['assignment_id'] = assignmentId;
     if (status == ContentStatus.scheduled && publishAt != null) {
       map['publish_at'] = Timestamp.fromDate(publishAt!);
     } else if (status == ContentStatus.published || status == ContentStatus.draft) {
@@ -105,6 +110,8 @@ class Meeting {
     String? materiId,
     String? videoId,
     String? posttestId,
+    String? assignmentId,
+    bool clearAssignmentId = false,
     ContentStatus? status,
     DateTime? publishAt,
     bool clearPublishAt = false,
@@ -120,6 +127,7 @@ class Meeting {
       materiId: materiId ?? this.materiId,
       videoId: videoId ?? this.videoId,
       posttestId: posttestId ?? this.posttestId,
+      assignmentId: clearAssignmentId ? null : (assignmentId ?? this.assignmentId),
       status: status ?? this.status,
       publishAt: clearPublishAt ? null : (publishAt ?? this.publishAt),
     );

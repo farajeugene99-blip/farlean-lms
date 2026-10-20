@@ -272,6 +272,23 @@
   "meetingModulePosttestActionStart": "Start Post Test",
   "meetingModulePosttestActionCreate": "Create Post Test",
 
+  "meetingModuleAssignmentTitle": "Learning Assignment",
+  "meetingModuleAssignmentSubActive": "Meeting assignment with deadline and structured instructions",
+  "meetingModuleAssignmentSubStaffEmpty": "Assignment not yet linked. Click to create a new assignment.",
+  "meetingModuleAssignmentSubStudentEmpty": "No learning assignment for this meeting yet",
+  "meetingModuleAssignmentActionOpen": "Open Assignment",
+  "meetingModuleAssignmentActionCreate": "Create Assignment",
+  "meetingModuleAssignment": "Assignment",
+
+  "assignmentInstructionAttachment": "Instruction Attachment File",
+  "assignmentDownloadInstruction": "Download Instructions",
+  "assignmentViewInstruction": "Open Instructions",
+  "assignmentNoInstructionAttachment": "No instruction attachment file",
+
+  "profileCacheDiskTitle": "Temporary Files (Disk)",
+  "profileCacheRamTitle": "Memory Cache (RAM)",
+  "profileCacheCleanSuccess": "Cache and temporary files successfully cleared",
+
   "meetingModuleNotAvailable": "Not Available",
 
   "meetingCreatePretestTitle": "Create Pretest Quiz",

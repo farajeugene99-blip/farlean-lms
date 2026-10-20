@@ -5,17 +5,21 @@ import '../../core/auth/role_guard.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../models/assignment.dart';
 import '../../models/content_status.dart';
 import '../../models/meeting.dart';
 import '../../models/posttest.dart';
 import '../../models/pretest.dart';
 import '../../models/question.dart';
 import '../../models/video_item.dart';
+import '../../repositories/assignment_repository.dart';
 import '../../repositories/meeting_repository.dart';
 import '../../repositories/posttest_repository.dart';
 import '../../repositories/pretest_repository.dart';
 import '../../repositories/video_repository.dart';
 import '../../services/auth_provider.dart';
+import '../ai/ai_tutor_screen.dart';
+import '../class/create_assignment_dialog.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
 import 'meeting_status_localization.dart';
@@ -27,6 +31,7 @@ class MeetingDetailScreen extends StatefulWidget {
   final VideoRepository? videoRepository;
   final PretestRepository? pretestRepository;
   final PosttestRepository? posttestRepository;
+  final AssignmentRepository? assignmentRepository;
 
   const MeetingDetailScreen({
     super.key,
@@ -36,6 +41,7 @@ class MeetingDetailScreen extends StatefulWidget {
     this.videoRepository,
     this.pretestRepository,
     this.posttestRepository,
+    this.assignmentRepository,
   });
 
   @override
@@ -47,8 +53,10 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
   late final VideoRepository _videoRepository;
   late final PretestRepository _pretestRepository;
   late final PosttestRepository _posttestRepository;
+  late final AssignmentRepository _assignmentRepository;
 
   Meeting? _meeting;
+  Assignment? _linkedAssignment;
   bool _isLoading = true;
   String? _errorMessage;
   bool _isSyncingSchedule = false;
@@ -60,13 +68,38 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     _videoRepository = widget.videoRepository ?? VideoRepository();
     _pretestRepository = widget.pretestRepository ?? PretestRepository();
     _posttestRepository = widget.posttestRepository ?? PosttestRepository();
+    _assignmentRepository = widget.assignmentRepository ?? AssignmentRepository();
 
     _meeting = widget.initialMeeting;
     if (_meeting == null) {
       _loadMeetingDetail();
     } else {
       _isLoading = false;
+      _loadLinkedAssignmentOnly();
     }
+  }
+
+  Future<void> _loadLinkedAssignmentOnly() async {
+    final meeting = _meeting;
+    if (meeting == null) return;
+    try {
+      Assignment? linkedAssign;
+      if (meeting.assignmentId != null && meeting.assignmentId!.isNotEmpty) {
+        try {
+          linkedAssign = await _assignmentRepository.getAssignment(meeting.classId, meeting.assignmentId!);
+        } catch (_) {}
+      }
+      if (linkedAssign == null) {
+        try {
+          linkedAssign = await _assignmentRepository.getAssignmentByMeeting(meeting.classId, meeting.id);
+        } catch (_) {}
+      }
+      if (mounted && linkedAssign != null) {
+        setState(() {
+          _linkedAssignment = linkedAssign;
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadMeetingDetail() async {
@@ -77,9 +110,28 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
 
     try {
       final doc = await _meetingRepository.getMeeting(widget.meetingId);
+      Assignment? linkedAssign;
+      if (doc != null) {
+        if (doc.assignmentId != null && doc.assignmentId!.isNotEmpty) {
+          try {
+            linkedAssign = await _assignmentRepository.getAssignment(doc.classId, doc.assignmentId!);
+          } catch (_) {
+            linkedAssign = null;
+          }
+        }
+        if (linkedAssign == null) {
+          try {
+            linkedAssign = await _assignmentRepository.getAssignmentByMeeting(doc.classId, doc.id);
+          } catch (_) {
+            linkedAssign = null;
+          }
+        }
+      }
+
       if (mounted) {
         setState(() {
           _meeting = doc;
+          _linkedAssignment = linkedAssign;
           _isLoading = false;
         });
       }
@@ -614,6 +666,49 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
     }
   }
 
+  Future<void> _showCreateAssignmentForMeeting() async {
+    final meeting = _meeting;
+    if (meeting == null) return;
+
+    final formData = await showDialog<AssignmentFormData>(
+      context: context,
+      builder: (ctx) => AssignmentFormDialog(
+        preselectedMeetingId: meeting.id,
+        classId: meeting.classId,
+      ),
+    );
+
+    if (formData != null && mounted) {
+      try {
+        final newAssignment = Assignment(
+          id: '',
+          classId: meeting.classId,
+          meetingId: meeting.id,
+          title: formData.title,
+          instructions: formData.instructions,
+          deadline: formData.deadline,
+          isGroupAssignment: formData.isGroup,
+          allowLateSubmission: formData.allowLate,
+          attachmentUrl: formData.attachmentUrl,
+          attachmentFileName: formData.attachmentFileName,
+          attachmentFileSize: formData.attachmentFileSize,
+        );
+        final newId = await _assignmentRepository.createAssignment(newAssignment);
+        setState(() {
+          _meeting = _meeting?.copyWith(assignmentId: newId);
+        });
+        await _loadMeetingDetail();
+      } catch (e) {
+        if (mounted) {
+          final l10n = AppLocalizations.of(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.meetingActionFailed(e.toString())), backgroundColor: AppTheme.error),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -642,6 +737,24 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
       appBar: AppBar(
         title: Text(l10n.meetingCardNumber(meeting.number)),
         actions: [
+          if (!_isScheduledLockedForStudent)
+            IconButton(
+              icon: const Icon(Icons.auto_awesome_rounded),
+              tooltip: l10n.aiTutorTitle,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => AiTutorScreen(
+                      classId: meeting.classId,
+                      meetingId: meeting.id,
+                      materiId: meeting.materiId,
+                      materiTitle: meeting.title,
+                      initialPrompt: 'Bisa berikan ringkasan materi untuk pertemuan "${meeting.title}"?',
+                    ),
+                  ),
+                );
+              },
+            ),
           if (isStaff) ...[
             IconButton(
               icon: const Icon(Icons.edit_rounded),
@@ -907,6 +1020,33 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
             onSecondaryTap: (isStaff && meeting.posttestId != null)
                 ? () => _showManageQuestionsDialog(meeting.posttestId!, 'Post Test', false)
                 : null,
+          ),
+          const SizedBox(height: 12),
+
+          // 5. Modul Tugas Pembelajaran Card
+          _buildModuleCard(
+            title: l10n.meetingModuleAssignmentTitle,
+            subtitle: _linkedAssignment != null
+                ? (_linkedAssignment!.isGroupAssignment
+                    ? '${l10n.assignmentGroupBadge} • ${DateFormatter.formatWib(_linkedAssignment!.deadline)}'
+                    : '${l10n.assignmentIndividualBadge} • ${DateFormatter.formatWib(_linkedAssignment!.deadline)}')
+                : (isStaff ? l10n.meetingModuleAssignmentSubStaffEmpty : l10n.meetingModuleAssignmentSubStudentEmpty),
+            icon: Icons.task_alt_rounded,
+            accentColor: Colors.teal,
+            isAvailable: _linkedAssignment != null || isStaff,
+            actionLabel: _linkedAssignment != null ? l10n.meetingModuleAssignmentActionOpen : l10n.meetingModuleAssignmentActionCreate,
+            onTap: () async {
+              if (_isScheduledLockedForStudent) {
+                _showScheduledLockNotice();
+                return;
+              }
+              if (_linkedAssignment != null) {
+                await context.push('/assignments/${_linkedAssignment!.id}?classId=${meeting.classId}', extra: _linkedAssignment);
+                if (mounted) _loadMeetingDetail();
+              } else if (isStaff) {
+                _showCreateAssignmentForMeeting();
+              }
+            },
           ),
         ],
       ),

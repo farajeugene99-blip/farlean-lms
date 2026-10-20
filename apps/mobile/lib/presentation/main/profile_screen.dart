@@ -11,6 +11,7 @@ import '../../repositories/attempt_repository.dart';
 import '../../repositories/user_repository.dart';
 import '../../services/auth_provider.dart';
 import '../../services/auth_service.dart';
+import '../../services/cache_management_service.dart';
 import '../../services/class_provider.dart';
 import '../../services/locale_provider.dart';
 import '../../services/theme_provider.dart';
@@ -20,11 +21,13 @@ import 'main_shell.dart';
 class ProfileScreen extends StatefulWidget {
   final UserRepository? userRepository;
   final AttemptRepository? attemptRepository;
+  final CacheManagementService? cacheManagementService;
 
   const ProfileScreen({
     super.key,
     this.userRepository,
     this.attemptRepository,
+    this.cacheManagementService,
   });
 
   @override
@@ -34,6 +37,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late final UserRepository _userRepository;
   late final AttemptRepository _attemptRepository;
+  late final CacheManagementService _cacheManagementService;
   String? _nimNip;
   bool _isLoadingIdentity = false;
   bool _isLoggingOut = false;
@@ -43,6 +47,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _userRepository = widget.userRepository ?? UserRepository();
     _attemptRepository = widget.attemptRepository ?? AttemptRepository();
+    _cacheManagementService = widget.cacheManagementService ?? CacheManagementService();
     _loadPrivateIdentity();
   }
 
@@ -159,11 +164,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final outerMessenger = ScaffoldMessenger.of(context);
     final resetSuccessText = l10n.profileResetClassDone;
 
+    int diskTempBytes = 0;
+    bool diskLoaded = false;
+
     await showDialog<void>(
       context: context,
       builder: (dialogCtx) {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
+            if (!diskLoaded) {
+              diskLoaded = true;
+              _cacheManagementService.getDiskTempSizeBytes().then((bytes) {
+                if (ctx.mounted) {
+                  setDialogState(() {
+                    diskTempBytes = bytes;
+                  });
+                }
+              }).catchError((_) {});
+            }
+
             final cacheBytes = PaintingBinding.instance.imageCache.currentSizeBytes;
             final cacheCount = PaintingBinding.instance.imageCache.currentSize;
             final kbFormatted = NumberFormat.decimalPatternDigits(
@@ -266,6 +285,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       l10n.profileCacheClearBtn,
                                       style: const TextStyle(fontSize: 12),
                                     ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Bagian 1b: Berkas Sementara (Disk)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: context.surfaceColor,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: context.borderColor),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.folder_zip_outlined, size: 16, color: Colors.teal),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    l10n.profileCacheDiskTitle,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              diskTempBytes == 0
+                                  ? '0 KB'
+                                  : '${NumberFormat.decimalPatternDigits(locale: l10n.localeName, decimalDigits: 1).format(diskTempBytes / 1024)} KB',
+                              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                            ),
+                            const SizedBox(height: 10),
+                            OutlinedButton(
+                              onPressed: diskTempBytes == 0
+                                  ? null
+                                  : () async {
+                                      await _cacheManagementService.clearDiskTempFiles();
+                                      final updated = await _cacheManagementService.getDiskTempSizeBytes();
+                                      setDialogState(() {
+                                        diskTempBytes = updated;
+                                      });
+                                      outerMessenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text(l10n.profileCacheCleanSuccess),
+                                          backgroundColor: AppTheme.success,
+                                        ),
+                                      );
+                                    },
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.delete_sweep_outlined, size: 16),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Bersihkan Berkas Disk',
+                                    style: TextStyle(fontSize: 12),
                                   ),
                                 ],
                               ),

@@ -63,7 +63,34 @@ class AssignmentRepository {
     return null;
   }
 
-  /// Membuat tugas baru (Guru)
+  /// Mengambil tugas yang tertaut pada suatu pertemuan
+  Future<Assignment?> getAssignmentByMeeting(String classId, String meetingId) async {
+    final cleanClassId = classId.trim();
+    final cleanMeetingId = meetingId.trim();
+    if (cleanClassId.isEmpty || cleanMeetingId.isEmpty) return null;
+
+    final firestore = _firestore;
+    if (firestore == null) return null;
+
+    try {
+      final snapshot = await firestore
+          .collection('classes')
+          .doc(cleanClassId)
+          .collection('assignments')
+          .where('meeting_id', isEqualTo: cleanMeetingId)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return Assignment.fromFirestore(snapshot.docs.first, classId: cleanClassId);
+      }
+    } catch (e) {
+      debugPrint('Catatan getAssignmentByMeeting: $e');
+    }
+    return null;
+  }
+
+  /// Membuat tugas baru (Guru) dengan sinkronisasi atomik ke dokumen pertemuan (jika tertaut)
   Future<String> createAssignment(Assignment assignment) async {
     if (assignment.title.trim().isEmpty) {
       throw ArgumentError('Judul tugas tidak boleh kosong.');
@@ -82,7 +109,18 @@ class AssignmentRepository {
           .collection('assignments')
           .doc(assignment.id.isEmpty ? null : assignment.id);
 
-      await docRef.set(assignment.toMap());
+      final batch = firestore.batch();
+      batch.set(docRef, assignment.toMap());
+
+      if (assignment.meetingId != null && assignment.meetingId!.trim().isNotEmpty) {
+        final meetingRef = firestore.collection('meetings').doc(assignment.meetingId!.trim());
+        batch.update(meetingRef, {
+          'assignment_id': docRef.id,
+          'updated_at': FieldValue.serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
       return docRef.id;
     } catch (e) {
       debugPrint('Gagal membuat assignment: $e');
@@ -90,8 +128,8 @@ class AssignmentRepository {
     }
   }
 
-  /// Memperbarui tugas (Guru)
-  Future<void> updateAssignment(Assignment assignment) async {
+  /// Memperbarui tugas (Guru) dengan sinkronisasi pointer dua arah ke pertemuan baru & lama
+  Future<void> updateAssignment(Assignment assignment, {String? previousMeetingId}) async {
     if (assignment.id.trim().isEmpty || assignment.classId.trim().isEmpty) {
       throw ArgumentError('ID tugas dan classId tidak boleh kosong.');
     }
@@ -100,20 +138,45 @@ class AssignmentRepository {
     if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
 
     try {
-      await firestore
+      final docRef = firestore
           .collection('classes')
           .doc(assignment.classId.trim())
           .collection('assignments')
-          .doc(assignment.id.trim())
-          .update(assignment.toMap());
+          .doc(assignment.id.trim());
+
+      final batch = firestore.batch();
+      batch.update(docRef, assignment.toMap());
+
+      // Jika pertemuan berubah, bersihkan penunjuk pada pertemuan lama
+      final prevMId = previousMeetingId?.trim();
+      final newMId = assignment.meetingId?.trim();
+
+      if (prevMId != null && prevMId.isNotEmpty && prevMId != newMId) {
+        final oldMeetingRef = firestore.collection('meetings').doc(prevMId);
+        batch.update(oldMeetingRef, {
+          'assignment_id': FieldValue.delete(),
+          'updated_at': FieldValue.serverTimestamp(),
+        });
+      }
+
+      // Tautkan ke pertemuan baru jika ada
+      if (newMId != null && newMId.isNotEmpty) {
+        final newMeetingRef = firestore.collection('meetings').doc(newMId);
+        batch.update(newMeetingRef, {
+          'assignment_id': assignment.id.trim(),
+          'updated_at': FieldValue.serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
     } catch (e) {
       debugPrint('Gagal update assignment: $e');
       rethrow;
     }
   }
 
-  /// Menghapus tugas (Guru)
-  Future<void> deleteAssignment(String classId, String assignmentId) async {
+  /// Menghapus tugas (Guru) serta mereset field assignment_id pada pertemuan lama secara atomik
+  Future<void> deleteAssignment(String classId, String assignmentId, {String? meetingId}) async {
     final cleanClassId = classId.trim();
     final cleanAssignmentId = assignmentId.trim();
     if (cleanClassId.isEmpty || cleanAssignmentId.isEmpty) {
@@ -124,12 +187,32 @@ class AssignmentRepository {
     if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
 
     try {
-      await firestore
+      String? targetMeetingId = meetingId?.trim();
+      final docRef = firestore
           .collection('classes')
           .doc(cleanClassId)
           .collection('assignments')
-          .doc(cleanAssignmentId)
-          .delete();
+          .doc(cleanAssignmentId);
+
+      if (targetMeetingId == null || targetMeetingId.isEmpty) {
+        final snap = await docRef.get();
+        if (snap.exists) {
+          targetMeetingId = snap.data()?['meeting_id'] as String?;
+        }
+      }
+
+      final batch = firestore.batch();
+      batch.delete(docRef);
+
+      if (targetMeetingId != null && targetMeetingId.trim().isNotEmpty) {
+        final meetingRef = firestore.collection('meetings').doc(targetMeetingId.trim());
+        batch.update(meetingRef, {
+          'assignment_id': FieldValue.delete(),
+          'updated_at': FieldValue.serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
     } catch (e) {
       debugPrint('Gagal delete assignment: $e');
       rethrow;

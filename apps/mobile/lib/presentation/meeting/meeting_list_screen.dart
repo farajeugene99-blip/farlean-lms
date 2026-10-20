@@ -473,6 +473,16 @@ class _MeetingListScreenState extends State<MeetingListScreen> {
                     l10n.meetingModuleVideo,
                     meeting.videoId != null,
                   ),
+                  _buildModuleChip(
+                    Icons.assignment_turned_in_rounded,
+                    l10n.meetingModulePosttest,
+                    meeting.posttestId != null,
+                  ),
+                  _buildModuleChip(
+                    Icons.task_alt_rounded,
+                    l10n.meetingModuleAssignment,
+                    meeting.assignmentId != null,
+                  ),
                 ],
               ),
             ],

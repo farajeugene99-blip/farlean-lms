@@ -66,7 +66,12 @@ class AiService {
   }
 
   /// Meminta bimbingan dari AI Tutor Pintar (Mahasiswa & Staf)
-  Future<AiResponse> askTutor(String prompt) async {
+  Future<AiResponse> askTutor(
+    String prompt, {
+    String? classId,
+    String? meetingId,
+    String? materiId,
+  }) async {
     final cleanPrompt = prompt.trim();
     if (cleanPrompt.isEmpty) {
       throw const AiException('Pertanyaan tidak boleh kosong.', statusCode: 400);
@@ -78,16 +83,27 @@ class AiService {
     }
 
     try {
+      final payload = <String, dynamic>{
+        'action': 'tutor',
+        'prompt': cleanPrompt,
+      };
+      if (classId != null && classId.trim().isNotEmpty) {
+        payload['classId'] = classId.trim();
+      }
+      if (meetingId != null && meetingId.trim().isNotEmpty) {
+        payload['meetingId'] = meetingId.trim();
+      }
+      if (materiId != null && materiId.trim().isNotEmpty) {
+        payload['materiId'] = materiId.trim();
+      }
+
       final response = await _httpClient.post(
         Uri.parse(ApiConfig.aiUrl),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'action': 'tutor',
-          'prompt': cleanPrompt,
-        }),
+        body: jsonEncode(payload),
       ).timeout(const Duration(seconds: 25));
 
       final data = _tryParseJson(response.body);

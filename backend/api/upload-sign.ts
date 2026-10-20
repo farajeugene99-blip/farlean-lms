@@ -100,6 +100,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     folder = `farlean/classes/${cleanClassId}/assignments/${cleanAssignmentId}/${user.uid}`;
   } else if (cleanClassId === 'SYSTEM') {
     folder = `farlean/system/${folderType === 'images' ? 'images' : 'manual_books'}`;
+  } else if (folderType === 'assignment_instructions') {
+    folder = `farlean/classes/${cleanClassId}/assignment_instructions`;
   } else {
     folder = `farlean/classes/${cleanClassId}/${folderType === 'images' ? 'images' : 'manual_books'}`;
   }

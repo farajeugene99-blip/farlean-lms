@@ -9,6 +9,10 @@ class AssignmentFormData {
   final DateTime deadline;
   final bool isGroup;
   final bool allowLate;
+  final String? meetingId;
+  final String? attachmentUrl;
+  final String? attachmentFileName;
+  final int? attachmentFileSize;
 
   const AssignmentFormData({
     required this.title,
@@ -16,6 +20,10 @@ class AssignmentFormData {
     required this.deadline,
     required this.isGroup,
     required this.allowLate,
+    this.meetingId,
+    this.attachmentUrl,
+    this.attachmentFileName,
+    this.attachmentFileSize,
   });
 }
 
@@ -23,12 +31,16 @@ class AssignmentFormDialog extends StatefulWidget {
   final Assignment? initialAssignment;
   final bool hasSubmissions;
   final DateTime? initialDeadline;
+  final String? preselectedMeetingId;
+  final String? classId;
 
   const AssignmentFormDialog({
     super.key,
     this.initialAssignment,
     this.hasSubmissions = false,
     this.initialDeadline,
+    this.preselectedMeetingId,
+    this.classId,
   });
 
   bool get isEdit => initialAssignment != null;
@@ -44,9 +56,13 @@ class _AssignmentFormDialogState extends State<AssignmentFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
   late final TextEditingController _instructionsController;
+  late final TextEditingController _attachmentUrlController;
+  late final TextEditingController _attachmentNameController;
   late DateTime _deadline;
   late bool _isGroup;
   late bool _allowLate;
+  late String? _meetingId;
+  bool _showAttachmentField = false;
 
   @override
   void initState() {
@@ -54,20 +70,29 @@ class _AssignmentFormDialogState extends State<AssignmentFormDialog> {
     final init = widget.initialAssignment;
     _titleController = TextEditingController(text: init?.title ?? '');
     _instructionsController = TextEditingController(text: init?.instructions ?? '');
+    _attachmentUrlController = TextEditingController(text: init?.attachmentUrl ?? '');
+    _attachmentNameController = TextEditingController(text: init?.attachmentFileName ?? '');
     _deadline = init?.deadline ?? widget.initialDeadline ?? DateTime.now().add(const Duration(days: 7));
     _isGroup = init?.isGroupAssignment ?? false;
     _allowLate = init?.allowLateSubmission ?? true;
+    _meetingId = init?.meetingId ?? widget.preselectedMeetingId;
+    _showAttachmentField = init?.attachmentUrl != null && init!.attachmentUrl!.isNotEmpty;
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _instructionsController.dispose();
+    _attachmentUrlController.dispose();
+    _attachmentNameController.dispose();
     super.dispose();
   }
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    final rawUrl = _attachmentUrlController.text.trim();
+    final rawName = _attachmentNameController.text.trim();
+
     Navigator.of(context).pop(
       AssignmentFormData(
         title: _titleController.text.trim(),
@@ -75,6 +100,9 @@ class _AssignmentFormDialogState extends State<AssignmentFormDialog> {
         deadline: _deadline,
         isGroup: _isGroup,
         allowLate: _allowLate,
+        meetingId: _meetingId,
+        attachmentUrl: rawUrl.isNotEmpty ? rawUrl : null,
+        attachmentFileName: rawName.isNotEmpty ? rawName : (rawUrl.isNotEmpty ? 'petunjuk_tugas.pdf' : null),
       ),
     );
   }
@@ -164,6 +192,83 @@ class _AssignmentFormDialogState extends State<AssignmentFormDialog> {
                   value: _allowLate,
                   onChanged: (val) => setState(() => _allowLate = val),
                 ),
+                const SizedBox(height: 12),
+                if (_meetingId != null && _meetingId!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.teal.withAlpha(20),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.link_rounded, size: 16, color: Colors.teal),
+                          SizedBox(width: 6),
+                          Text(
+                            'Terkoneksi ke Pertemuan',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.teal),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                // Lampiran Berkas Instruksi (PDF / Dokumen)
+                InkWell(
+                  onTap: () => setState(() => _showAttachmentField = !_showAttachmentField),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _showAttachmentField ? Icons.keyboard_arrow_down_rounded : Icons.keyboard_arrow_right_rounded,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 4),
+                        const Expanded(
+                          child: Text(
+                            'Lampirkan Berkas Petunjuk (Opsional)',
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (_showAttachmentField) ...[
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _attachmentUrlController,
+                    decoration: const InputDecoration(
+                      labelText: 'URL Berkas Petunjuk',
+                      hintText: 'https://res.cloudinary.com/.../petunjuk.pdf',
+                      prefixIcon: Icon(Icons.attach_file_rounded, size: 20),
+                    ),
+                    validator: (v) {
+                      if (v != null && v.trim().isNotEmpty && !v.trim().startsWith('https://')) {
+                        return 'URL harus diawali dengan https://';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _attachmentNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama Berkas Lampiran',
+                      hintText: 'Contoh: Panduan_Tugas.pdf',
+                      prefixIcon: Icon(Icons.description_outlined, size: 20),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Format didukung: PDF, DOCX, ZIP (Maks 10 MB)',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
               ],
             ),
           ),

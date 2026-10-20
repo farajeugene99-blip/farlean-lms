@@ -11,6 +11,9 @@ class Assignment {
   final bool isGroupAssignment;
   final List<String> allowedFileTypes;
   final int maxFileSizeMb;
+  final String? attachmentUrl;
+  final String? attachmentFileName;
+  final int? attachmentFileSize;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -25,6 +28,9 @@ class Assignment {
     this.isGroupAssignment = false,
     this.allowedFileTypes = const ['pdf', 'doc', 'docx', 'zip'],
     this.maxFileSizeMb = 10,
+    this.attachmentUrl,
+    this.attachmentFileName,
+    this.attachmentFileSize,
     this.createdAt,
     this.updatedAt,
   });
@@ -69,6 +75,9 @@ class Assignment {
       isGroupAssignment: map['is_group_assignment'] as bool? ?? false,
       allowedFileTypes: allowedTypes.isNotEmpty ? allowedTypes : const ['pdf', 'doc', 'docx', 'zip'],
       maxFileSizeMb: (map['max_file_size_mb'] as num?)?.toInt() ?? 10,
+      attachmentUrl: map['attachment_url'] as String?,
+      attachmentFileName: map['attachment_file_name'] as String?,
+      attachmentFileSize: (map['attachment_file_size'] as num?)?.toInt(),
       createdAt: parseNullableDate(map['created_at']),
       updatedAt: parseNullableDate(map['updated_at']),
     );
@@ -85,6 +94,9 @@ class Assignment {
       'is_group_assignment': isGroupAssignment,
       'allowed_file_types': allowedFileTypes,
       'max_file_size_mb': maxFileSizeMb,
+      if (attachmentUrl != null && attachmentUrl!.trim().isNotEmpty) 'attachment_url': attachmentUrl,
+      if (attachmentFileName != null && attachmentFileName!.trim().isNotEmpty) 'attachment_file_name': attachmentFileName,
+      if (attachmentFileSize != null) 'attachment_file_size': attachmentFileSize,
       'created_at': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
       'updated_at': updatedAt != null ? Timestamp.fromDate(updatedAt!) : FieldValue.serverTimestamp(),
     };
@@ -99,12 +111,17 @@ class Assignment {
     List<String>? allowedFileTypes,
     int? maxFileSizeMb,
     String? meetingId,
+    bool clearMeetingId = false,
+    String? attachmentUrl,
+    String? attachmentFileName,
+    int? attachmentFileSize,
+    bool clearAttachment = false,
     DateTime? updatedAt,
   }) {
     return Assignment(
       id: id,
       classId: classId,
-      meetingId: meetingId ?? this.meetingId,
+      meetingId: clearMeetingId ? null : (meetingId ?? this.meetingId),
       title: title ?? this.title,
       instructions: instructions ?? this.instructions,
       deadline: deadline ?? this.deadline,
@@ -112,6 +129,9 @@ class Assignment {
       isGroupAssignment: isGroupAssignment ?? this.isGroupAssignment,
       allowedFileTypes: allowedFileTypes ?? this.allowedFileTypes,
       maxFileSizeMb: maxFileSizeMb ?? this.maxFileSizeMb,
+      attachmentUrl: clearAttachment ? null : (attachmentUrl ?? this.attachmentUrl),
+      attachmentFileName: clearAttachment ? null : (attachmentFileName ?? this.attachmentFileName),
+      attachmentFileSize: clearAttachment ? null : (attachmentFileSize ?? this.attachmentFileSize),
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

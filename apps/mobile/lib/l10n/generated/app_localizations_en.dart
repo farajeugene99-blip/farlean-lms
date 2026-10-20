@@ -848,6 +848,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meetingModulePosttestActionCreate => 'Create Post Test';
 
   @override
+  String get meetingModuleAssignmentTitle => 'Learning Assignment';
+
+  @override
+  String get meetingModuleAssignmentSubActive =>
+      'Meeting assignment with deadline and structured instructions';
+
+  @override
+  String get meetingModuleAssignmentSubStaffEmpty =>
+      'Assignment not yet linked. Click to create a new assignment.';
+
+  @override
+  String get meetingModuleAssignmentSubStudentEmpty =>
+      'No learning assignment for this meeting yet';
+
+  @override
+  String get meetingModuleAssignmentActionOpen => 'Open Assignment';
+
+  @override
+  String get meetingModuleAssignmentActionCreate => 'Create Assignment';
+
+  @override
+  String get meetingModuleAssignment => 'Assignment';
+
+  @override
+  String get assignmentInstructionAttachment => 'Instruction Attachment File';
+
+  @override
+  String get assignmentDownloadInstruction => 'Download Instructions';
+
+  @override
+  String get assignmentViewInstruction => 'Open Instructions';
+
+  @override
+  String get assignmentNoInstructionAttachment =>
+      'No instruction attachment file';
+
+  @override
+  String get profileCacheDiskTitle => 'Temporary Files (Disk)';
+
+  @override
+  String get profileCacheRamTitle => 'Memory Cache (RAM)';
+
+  @override
+  String get profileCacheCleanSuccess =>
+      'Cache and temporary files successfully cleared';
+
+  @override
   String get meetingModuleNotAvailable => 'Not Available';
 
   @override
