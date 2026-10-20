@@ -2341,4 +2341,14 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get videoEditSuccess => 'Informasi video berhasil diperbarui';
+
+  @override
+  String get classPendingTitle => 'Pendaftaran Menunggu Persetujuan';
+
+  @override
+  String get classPendingBody =>
+      'Permintaan Anda untuk bergabung ke kelas ini telah dikirim dan sedang menunggu konfirmasi dari Dosen Pengampu.';
+
+  @override
+  String get classPendingBackBtn => 'Kembali ke Beranda';
 }

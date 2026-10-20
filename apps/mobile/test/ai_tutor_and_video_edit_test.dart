@@ -92,7 +92,7 @@ AuthProvider _createAuth({
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('VideoItem Model & Video Editing Tests (Fitur B)', () {
+  group('VideoItem Model & Video Editing Tests', () {
     test('1. VideoItem serialisasi title & description dengan kompatibilitas mundur', () {
       const video = VideoItem(
         id: 'v1',
@@ -192,7 +192,7 @@ void main() {
     });
   });
 
-  group('AiTutorScreen Tests (Fitur F)', () {
+  group('AiTutorScreen Tests', () {
     testWidgets('1. Guardrail 6: Layar AI Tutor dimulai tanpa fetch jaringan otomatis dan bebas overflow di 320px', (tester) async {
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1.0;

@@ -230,6 +230,28 @@ class ClassRepository {
     }
   }
 
+  /// Mengambil data keanggotaan pengguna sendiri di kelas tertentu
+  Future<ClassMember?> getMyMembership(String classId, String uid) async {
+    final firestore = _firestore;
+    if (firestore == null || uid.isEmpty) return null;
+
+    try {
+      final doc = await firestore
+          .collection('classes')
+          .doc(classId)
+          .collection('members')
+          .doc(uid)
+          .get();
+
+      if (doc.exists) {
+        return ClassMember.fromFirestore(doc);
+      }
+    } catch (e) {
+      debugPrint('Catatan getMyMembership: $e');
+    }
+    return null;
+  }
+
   /// Mengambil rekap nilai pretest seluruh kelas (khusus dosen/owner kelas)
   Future<Map<String, double>> getClassPretestScores(String classId) async {
     final firestore = _firestore;

@@ -87,7 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) return;
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({ success: false, error: 'Method Not Allowed', message: 'Method Not Allowed' });
   }
 
   // 1. Verifikasi Autentikasi Pengguna
@@ -125,7 +125,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return res.status(503).json({
+        success: false,
         error: 'Layanan AI belum dikonfigurasi di server (GEMINI_API_KEY tidak ditemukan).',
+        message: 'Layanan AI belum dikonfigurasi di server (GEMINI_API_KEY tidak ditemukan).',
       });
     }
 
@@ -205,7 +207,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return res.status(503).json({
+        success: false,
         error: 'Layanan AI belum dikonfigurasi di server (GEMINI_API_KEY tidak ditemukan).',
+        message: 'Layanan AI belum dikonfigurasi di server (GEMINI_API_KEY tidak ditemukan).',
       });
     }
 

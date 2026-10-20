@@ -22,6 +22,8 @@ import '../../services/class_provider.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
 import '../meeting/create_meeting_dialog.dart';
+import 'create_assignment_dialog.dart';
+import 'group_form_dialog.dart';
 
 class ClassDetailScreen extends StatefulWidget {
   final String classId;
@@ -67,6 +69,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
   bool _isLoading = true;
   String? _errorMessage;
+  bool _isPendingMember = false;
 
   @override
   void initState() {
@@ -85,37 +88,105 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     super.dispose();
   }
 
-  Future<void> _loadAllData() async {
-    if (_classroom == null) {
+  Future<void> _loadAllData({bool isSoftRefresh = false}) async {
+    if (!isSoftRefresh && _classroom == null) {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
+        _isPendingMember = false;
       });
     }
 
     final authProvider = context.read<AuthProvider>();
     final isStaff = RoleGuard.isStaff(authProvider.appUser);
+    final isAdmin = RoleGuard.canAccessAdmin(authProvider.appUser);
     final uid = authProvider.firebaseUser?.uid ?? '';
 
     try {
-      final classroom = await _classRepository.getClass(widget.classId);
-      final meetings = await _meetingRepository.getMeetingsByClass(
-        widget.classId,
-        isStaff: isStaff,
-      );
-      final members = await _classRepository.getClassMembers(widget.classId);
-      final groups = await _groupRepository.getGroups(widget.classId);
-      final assignments = await _assignmentRepository.getAssignmentsByClass(widget.classId);
+      Classroom? classroom = _classroom;
+      try {
+        classroom ??= await _classRepository.getClass(widget.classId);
+      } catch (e) {
+        final errStr = e.toString().toLowerCase();
+        if (errStr.contains('permission-denied') && uid.isNotEmpty) {
+          final myMember = await _classRepository.getMyMembership(widget.classId, uid);
+          if (myMember?.status == MemberStatus.pending) {
+            if (mounted) {
+              setState(() {
+                _isPendingMember = true;
+                _isLoading = false;
+              });
+            }
+            return;
+          }
+        }
+        rethrow;
+      }
+
+      if (classroom == null) {
+        if (mounted) {
+          final l10n = AppLocalizations.of(context);
+          setState(() {
+            _errorMessage = l10n.classNotFound;
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+
+      // Hitung otorisasi lokal: hanya pemilik kelas yang dianggap Guru pengajar di kelas ini
+      final isClassTeacher = (classroom.teacherId == uid && isStaff) || isAdmin;
+
+      // Subkoleksi diisolasi per blok try-catch agar kegagalan parsial
+      // tidak membatalkan render kelas utama (Masalah B)
+      List<Meeting> meetings = _meetings;
+      try {
+        meetings = await _meetingRepository.getMeetingsByClass(
+          widget.classId,
+          isStaff: isClassTeacher,
+        );
+      } catch (e) {
+        debugPrint('Catatan getMeetingsByClass di ClassDetail: $e');
+      }
+
+      List<ClassMember> members = _members;
+      try {
+        members = await _classRepository.getClassMembers(widget.classId);
+      } catch (e) {
+        debugPrint('Catatan getClassMembers di ClassDetail: $e');
+      }
+
+      List<ClassGroup> groups = _groups;
+      try {
+        groups = await _groupRepository.getGroups(widget.classId);
+      } catch (e) {
+        debugPrint('Catatan getGroups di ClassDetail: $e');
+      }
+
+      List<Assignment> assignments = _assignments;
+      try {
+        assignments = await _assignmentRepository.getAssignmentsByClass(widget.classId);
+      } catch (e) {
+        debugPrint('Catatan getAssignmentsByClass di ClassDetail: $e');
+      }
 
       Map<String, double> preScores = {};
       Map<String, double> postScores = {};
       Map<String, double> personalScores = {};
 
-      if (isStaff) {
-        preScores = await _classRepository.getClassPretestScores(widget.classId);
-        postScores = await _classRepository.getClassPosttestScores(widget.classId);
+      if (isClassTeacher) {
+        try {
+          preScores = await _classRepository.getClassPretestScores(widget.classId);
+          postScores = await _classRepository.getClassPosttestScores(widget.classId);
+        } catch (e) {
+          debugPrint('Catatan getClassScores di ClassDetail: $e');
+        }
       } else if (uid.isNotEmpty) {
-        personalScores = await _classRepository.getStudentScores(classId: widget.classId, uid: uid);
+        try {
+          personalScores = await _classRepository.getStudentScores(classId: widget.classId, uid: uid);
+        } catch (e) {
+          debugPrint('Catatan getStudentScores di ClassDetail: $e');
+        }
       }
 
       if (mounted) {
@@ -286,6 +357,48 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     if (_isLoading) {
       return Scaffold(
         body: LoadingIndicator(message: l10n.classDetailLoading),
+      );
+    }
+
+    if (_isPendingMember) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.classDetailTitle)),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.warning.withAlpha(25),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.hourglass_top_rounded, size: 48, color: AppTheme.warning),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.classPendingTitle,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.classPendingBody,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.textSecondaryColor),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: Text(l10n.classPendingBackBtn),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
     }
 
@@ -719,129 +832,33 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Future<void> _showCreateAssignmentDialog() async {
-    final l10n = AppLocalizations.of(context);
-    final titleController = TextEditingController();
-    final instructionsController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    DateTime deadline = DateTime.now().add(const Duration(days: 7));
-    bool isGroup = false;
-    bool allowLate = true;
-
-    final created = await showDialog<bool>(
+    final formData = await showDialog<AssignmentFormData>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(l10n.assignmentCreateTitle),
-          content: SizedBox(
-            width: 440,
-            child: Form(
-              key: formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: titleController,
-                      decoration: InputDecoration(
-                        labelText: l10n.assignmentTitleLabel,
-                        hintText: 'Contoh: Tugas 1 - Desain ERD',
-                      ),
-                      validator: (v) => v == null || v.trim().isEmpty ? l10n.assignmentTitleRequired : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: instructionsController,
-                      decoration: InputDecoration(
-                        labelText: l10n.assignmentInstructionsLabel,
-                        hintText: 'Petunjuk pengerjaan dan format berkas...',
-                      ),
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 16),
-                    Text('${l10n.assignmentDeadlineLabel}:', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 6),
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.calendar_today_rounded, size: 16),
-                      label: Text(DateFormatter.formatWib(deadline)),
-                      onPressed: () async {
-                        final pickedDate = await showDatePicker(
-                          context: ctx,
-                          initialDate: deadline,
-                          firstDate: DateTime.now().subtract(const Duration(days: 1)),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
-                        );
-                        if (pickedDate != null) {
-                          setDialogState(() {
-                            deadline = DateTime(
-                              pickedDate.year,
-                              pickedDate.month,
-                              pickedDate.day,
-                              23,
-                              59,
-                            );
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      dense: true,
-                      title: Text(l10n.assignmentIsGroupLabel, style: const TextStyle(fontSize: 13)),
-                      value: isGroup,
-                      onChanged: (val) => setDialogState(() => isGroup = val),
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      dense: true,
-                      title: Text(l10n.assignmentAllowLateLabel, style: const TextStyle(fontSize: 13)),
-                      value: allowLate,
-                      onChanged: (val) => setDialogState(() => allowLate = val),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.btnCancel)),
-            ElevatedButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                try {
-                  final newAssignment = Assignment(
-                    id: '',
-                    classId: widget.classId,
-                    title: titleController.text.trim(),
-                    instructions: instructionsController.text.trim(),
-                    deadline: deadline,
-                    isGroupAssignment: isGroup,
-                    allowLateSubmission: allowLate,
-                  );
-                  await _assignmentRepository.createAssignment(newAssignment);
-                  if (ctx.mounted) Navigator.pop(ctx, true);
-                } catch (e) {
-                  if (ctx.mounted) {
-                    ScaffoldMessenger.of(ctx).showSnackBar(
-                      SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
-                    );
-                  }
-                }
-              },
-              child: Text(l10n.btnSave),
-            ),
-          ],
-        ),
-      ),
+      builder: (ctx) => const CreateAssignmentDialog(),
     );
 
-    titleController.dispose();
-    instructionsController.dispose();
-
-    if (created == true && mounted) {
-      _loadAllData();
+    if (formData != null && mounted) {
+      try {
+        final newAssignment = Assignment(
+          id: '',
+          classId: widget.classId,
+          title: formData.title,
+          instructions: formData.instructions,
+          deadline: formData.deadline,
+          isGroupAssignment: formData.isGroup,
+          allowLateSubmission: formData.allowLate,
+        );
+        await _assignmentRepository.createAssignment(newAssignment);
+        if (mounted) {
+          _loadAllData(isSoftRefresh: true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+          );
+        }
+      }
     }
   }
 
@@ -1790,293 +1807,104 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   Future<void> _showCreateGroupDialog() async {
     final l10n = AppLocalizations.of(context);
     List<ClassMember> availableMembers = [];
-    bool loadingAvailable = true;
-
     try {
       availableMembers = await _groupRepository.getAvailableMembers(widget.classId);
     } catch (_) {
       availableMembers = [];
     }
-    loadingAvailable = false;
-
     if (!mounted) return;
 
-    final nameController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    final selectedMembers = <ClassMember>{};
-
-    final created = await showDialog<bool>(
+    final formData = await showDialog<GroupFormData>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(l10n.groupsCreateTitle),
-          content: SizedBox(
-            width: 440,
-            child: Form(
-              key: formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: nameController,
-                      decoration: InputDecoration(
-                        labelText: l10n.groupsNameLabel,
-                        hintText: l10n.groupsNameHint,
-                      ),
-                      validator: (v) => v == null || v.trim().isEmpty ? l10n.groupsNameRequired : null,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.groupsSelectMembersTitle(selectedMembers.length),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    const SizedBox(height: 8),
-                    if (loadingAvailable)
-                      const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Center(child: CircularProgressIndicator()),
-                      )
-                    else if (availableMembers.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(
-                          l10n.groupsNoAvailableMembers,
-                          style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
-                        ),
-                      )
-                    else
-                      Container(
-                        constraints: const BoxConstraints(maxHeight: 220),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: context.borderColor),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: availableMembers.length,
-                          separatorBuilder: (context, index) => const Divider(height: 1),
-                          itemBuilder: (ctx, i) {
-                            final m = availableMembers[i];
-                            final isChecked = selectedMembers.contains(m);
-                            return CheckboxListTile(
-                              dense: true,
-                              title: Text(m.displayName, style: const TextStyle(fontSize: 13)),
-                              subtitle: m.nim != null ? Text('NIM: ${m.nim}', style: const TextStyle(fontSize: 11)) : null,
-                              value: isChecked,
-                              onChanged: (val) {
-                                setDialogState(() {
-                                  if (val == true) {
-                                    selectedMembers.add(m);
-                                  } else {
-                                    selectedMembers.remove(m);
-                                  }
-                                });
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.btnCancel),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                try {
-                  await _groupRepository.createGroup(
-                    classId: widget.classId,
-                    name: nameController.text.trim(),
-                    members: selectedMembers.toList(),
-                  );
-                  if (ctx.mounted) Navigator.pop(ctx, true);
-                } catch (e) {
-                  if (ctx.mounted) {
-                    ScaffoldMessenger.of(ctx).showSnackBar(
-                      SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
-                    );
-                  }
-                }
-              },
-              child: Text(l10n.btnSave),
-            ),
-          ],
-        ),
+      builder: (ctx) => GroupFormDialog(
+        pool: availableMembers,
+        initialSelected: const {},
+        isEdit: false,
       ),
     );
 
-    nameController.dispose();
-
-    if (created == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.groupsCreateSuccess), backgroundColor: AppTheme.success),
-      );
-      _loadAllData();
+    if (formData != null && mounted) {
+      try {
+        await _groupRepository.createGroup(
+          classId: widget.classId,
+          name: formData.name,
+          members: formData.selectedMembers,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.groupsCreateSuccess), backgroundColor: AppTheme.success),
+          );
+          _loadAllData(isSoftRefresh: true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+          );
+        }
+      }
     }
   }
 
   Future<void> _showEditGroupDialog(ClassGroup group) async {
     final l10n = AppLocalizations.of(context);
-    List<ClassMember> pool = [];
-    bool loadingPool = true;
-
-    // Anggota saat ini dari kelompok ini
     final currentMembers = _members.where((m) => group.memberUids.contains(m.uid)).toList();
+    List<ClassMember> pool = [];
 
     try {
       final available = await _groupRepository.getAvailableMembers(widget.classId);
-      // Kolam pilihan = anggota kelompok saat ini + mahasiswa yang belum berkelompok
       final currentUids = currentMembers.map((m) => m.uid).toSet();
       final extraAvailable = available.where((m) => !currentUids.contains(m.uid)).toList();
       pool = [...currentMembers, ...extraAvailable];
     } catch (_) {
       pool = List.from(currentMembers);
     }
-    loadingPool = false;
-
     if (!mounted) return;
 
-    final nameController = TextEditingController(text: group.name);
-    final formKey = GlobalKey<FormState>();
-    final selectedMembers = Set<ClassMember>.from(currentMembers);
-
-    final updated = await showDialog<bool>(
+    final formData = await showDialog<GroupFormData>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(l10n.groupsEditTitle),
-          content: SizedBox(
-            width: 440,
-            child: Form(
-              key: formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: nameController,
-                      decoration: InputDecoration(
-                        labelText: l10n.groupsNameLabel,
-                        hintText: l10n.groupsNameHint,
-                      ),
-                      validator: (v) => v == null || v.trim().isEmpty ? l10n.groupsNameRequired : null,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.groupsSelectMembersTitle(selectedMembers.length),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    const SizedBox(height: 8),
-                    if (loadingPool)
-                      const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Center(child: CircularProgressIndicator()),
-                      )
-                    else if (pool.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(
-                          l10n.groupsNoAvailableMembers,
-                          style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
-                        ),
-                      )
-                    else
-                      Container(
-                        constraints: const BoxConstraints(maxHeight: 220),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: context.borderColor),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: pool.length,
-                          separatorBuilder: (context, index) => const Divider(height: 1),
-                          itemBuilder: (ctx, i) {
-                            final m = pool[i];
-                            final isChecked = selectedMembers.contains(m);
-                            return CheckboxListTile(
-                              dense: true,
-                              title: Text(m.displayName, style: const TextStyle(fontSize: 13)),
-                              subtitle: m.nim != null ? Text('NIM: ${m.nim}', style: const TextStyle(fontSize: 11)) : null,
-                              value: isChecked,
-                              onChanged: (val) {
-                                setDialogState(() {
-                                  if (val == true) {
-                                    selectedMembers.add(m);
-                                  } else {
-                                    selectedMembers.remove(m);
-                                  }
-                                });
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.btnCancel),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                try {
-                  final initialUids = group.memberUids.toSet();
-                  final currentSelectedUids = selectedMembers.map((m) => m.uid).toSet();
-
-                  final newMembers = selectedMembers.where((m) => !initialUids.contains(m.uid)).toList();
-                  final removedUids = initialUids.where((uid) => !currentSelectedUids.contains(uid)).toList();
-
-                  String? newLeader = group.leaderUid;
-                  if (newLeader != null && !currentSelectedUids.contains(newLeader)) {
-                    newLeader = selectedMembers.isNotEmpty ? selectedMembers.first.uid : null;
-                  }
-
-                  await _groupRepository.updateGroup(
-                    classId: widget.classId,
-                    groupId: group.id,
-                    name: nameController.text.trim(),
-                    leaderUid: newLeader,
-                    newMembers: newMembers,
-                    removedMemberUids: removedUids,
-                  );
-                  if (ctx.mounted) Navigator.pop(ctx, true);
-                } catch (e) {
-                  if (ctx.mounted) {
-                    ScaffoldMessenger.of(ctx).showSnackBar(
-                      SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
-                    );
-                  }
-                }
-              },
-              child: Text(l10n.btnSave),
-            ),
-          ],
-        ),
+      builder: (ctx) => GroupFormDialog(
+        initialName: group.name,
+        pool: pool,
+        initialSelected: currentMembers.toSet(),
+        isEdit: true,
       ),
     );
 
-    nameController.dispose();
+    if (formData != null && mounted) {
+      try {
+        final initialUids = group.memberUids.toSet();
+        final currentSelectedUids = formData.selectedMembers.map((m) => m.uid).toSet();
 
-    if (updated == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.groupsEditSuccess), backgroundColor: AppTheme.success),
-      );
-      _loadAllData();
+        final newMembers = formData.selectedMembers.where((m) => !initialUids.contains(m.uid)).toList();
+        final removedUids = initialUids.where((uid) => !currentSelectedUids.contains(uid)).toList();
+
+        String? newLeader = group.leaderUid;
+        if (newLeader != null && !currentSelectedUids.contains(newLeader)) {
+          newLeader = formData.selectedMembers.isNotEmpty ? formData.selectedMembers.first.uid : null;
+        }
+
+        await _groupRepository.updateGroup(
+          classId: widget.classId,
+          groupId: group.id,
+          name: formData.name,
+          leaderUid: newLeader,
+          newMembers: newMembers,
+          removedMemberUids: removedUids,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.groupsEditSuccess), backgroundColor: AppTheme.success),
+          );
+          _loadAllData(isSoftRefresh: true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+          );
+        }
+      }
     }
   }
 

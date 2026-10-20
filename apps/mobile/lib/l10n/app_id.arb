@@ -2478,5 +2478,14 @@
   "@videoDescLabel": { "description": "Label field deskripsi video" },
 
   "videoEditSuccess": "Informasi video berhasil diperbarui",
-  "@videoEditSuccess": { "description": "Notifikasi sukses update video" }
+  "@videoEditSuccess": { "description": "Notifikasi sukses update video" },
+
+  "classPendingTitle": "Pendaftaran Menunggu Persetujuan",
+  "@classPendingTitle": { "description": "Judul status pendaftaran kelas pending" },
+
+  "classPendingBody": "Permintaan Anda untuk bergabung ke kelas ini telah dikirim dan sedang menunggu konfirmasi dari Dosen Pengampu.",
+  "@classPendingBody": { "description": "Deskripsi status pendaftaran kelas pending" },
+
+  "classPendingBackBtn": "Kembali ke Beranda",
+  "@classPendingBackBtn": { "description": "Tombol kembali pada status pendaftaran pending" }
 }

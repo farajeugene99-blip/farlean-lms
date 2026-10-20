@@ -21,7 +21,7 @@ class MockManualBookRepoForSystem extends ManualBookRepository {
   MockManualBookRepoForSystem(this.books);
 
   @override
-  Future<List<ManualBook>> getManualBooksByClass(String classId) async {
+  Future<List<ManualBook>> getManualBooksByClass(String classId, {bool isAdmin = false}) async {
     return books.where((b) => b.classId == classId).toList();
   }
 }

@@ -9,18 +9,28 @@ class ManualBookRepository {
   ManualBookRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null);
 
-  /// Mengambil semua manual book untuk suatu kelas
-  Future<List<ManualBook>> getManualBooksByClass(String classId) async {
+  /// Mengambil semua manual book untuk sistem (global) atau kelas
+  /// Jika isAdmin == false, hanya mengembalikan dokumen berstatus 'Published' (menghindari PERMISSION_DENIED)
+  Future<List<ManualBook>> getManualBooksByClass(String classId, {bool isAdmin = false}) async {
     final firestore = _firestore;
     if (firestore == null) return [];
 
+    final targetClassId = (classId.isEmpty || classId == 'default_class') ? 'SYSTEM' : classId.trim();
+
     try {
-      final snapshot = await firestore
+      Query<Map<String, dynamic>> query = firestore
           .collection('manual_books')
-          .where('class_id', isEqualTo: classId)
-          .get();
+          .where('class_id', isEqualTo: targetClassId);
+
+      // Non-admin hanya boleh mengambil yang 'Published'
+      if (!isAdmin) {
+        query = query.where('status', isEqualTo: 'Published');
+      }
+
+      final snapshot = await query.get();
 
       final list = snapshot.docs.map((doc) => ManualBook.fromFirestore(doc)).toList();
+      // Pengurutan in-memory di Dart (100% bebas dari kegagalan composite index Firestore)
       list.sort((a, b) => (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
       return list;
     } catch (e) {
@@ -46,7 +56,7 @@ class ManualBookRepository {
     return null;
   }
 
-  /// Menambahkan manual book baru (Guru/Admin)
+  /// Menambahkan manual book baru (Admin untuk SYSTEM / Dosen untuk kelas)
   Future<String> createManualBook(ManualBook book) async {
     if (book.title.trim().isEmpty) {
       throw ArgumentError('Judul manual book tidak boleh kosong.');
@@ -69,7 +79,41 @@ class ManualBookRepository {
     }
   }
 
-  /// Menghapus manual book (Guru/Admin)
+  /// Memperbarui informasi manual book (Admin / Guru)
+  Future<void> updateManualBook(ManualBook book) async {
+    if (book.id.trim().isEmpty) {
+      throw ArgumentError('ID manual book tidak boleh kosong.');
+    }
+
+    final firestore = _firestore;
+    if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
+
+    try {
+      await firestore.collection('manual_books').doc(book.id).update(book.toMap());
+    } catch (e) {
+      debugPrint('Gagal update manual book: $e');
+      rethrow;
+    }
+  }
+
+  /// Mengubah status publikasi manual book (Published / Draft / Archived)
+  Future<void> updateStatus(String id, String status) async {
+    final firestore = _firestore;
+    if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
+
+    try {
+      await firestore.collection('manual_books').doc(id).update({
+        'status': status,
+        'updated_at': FieldValue.serverTimestamp(),
+        if (status == 'Published') 'published_at': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('Gagal update status manual book: $e');
+      rethrow;
+    }
+  }
+
+  /// Menghapus manual book (Admin untuk SYSTEM / Guru untuk kelas)
   Future<void> deleteManualBook(String id) async {
     final firestore = _firestore;
     if (firestore == null) throw StateError('Firestore belum diinisialisasi.');

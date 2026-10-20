@@ -697,5 +697,8 @@
   "videoEditTitle": "Edit Learning Video",
   "videoTitleLabel": "Video Title",
   "videoDescLabel": "Video Description",
-  "videoEditSuccess": "Video information updated successfully"
+  "videoEditSuccess": "Video information updated successfully",
+  "classPendingTitle": "Enrollment Pending Approval",
+  "classPendingBody": "Your request to join this class has been sent and is awaiting confirmation from the instructor.",
+  "classPendingBackBtn": "Back to Home"
 }

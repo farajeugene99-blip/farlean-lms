@@ -162,7 +162,7 @@ service cloud.firestore {
     // 2. CLASSES & MEMBERSHIP
     // ============================================================================
     match /classes/{classId} {
-      allow read: if isClassMemberActive(classId) || (isGuru() && resource.data.teacher_id == request.auth.uid) || isAdmin();
+      allow read: if isClassMemberActive(classId) || (isStaff() && resource.data.teacher_id == request.auth.uid) || isAdmin();
       // Pembuatan kelas WAJIB melalui backend (/api/create-class) demi atomisitas unik kode
       allow create: if false;
       // Update kelas: hanya owner/admin; kode kelas dan teacher_id IMMUTABLE

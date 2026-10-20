@@ -3961,6 +3961,24 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Informasi video berhasil diperbarui'**
   String get videoEditSuccess;
+
+  /// Judul status pendaftaran kelas pending
+  ///
+  /// In id, this message translates to:
+  /// **'Pendaftaran Menunggu Persetujuan'**
+  String get classPendingTitle;
+
+  /// Deskripsi status pendaftaran kelas pending
+  ///
+  /// In id, this message translates to:
+  /// **'Permintaan Anda untuk bergabung ke kelas ini telah dikirim dan sedang menunggu konfirmasi dari Dosen Pengampu.'**
+  String get classPendingBody;
+
+  /// Tombol kembali pada status pendaftaran pending
+  ///
+  /// In id, this message translates to:
+  /// **'Kembali ke Beranda'**
+  String get classPendingBackBtn;
 }
 
 class _AppLocalizationsDelegate

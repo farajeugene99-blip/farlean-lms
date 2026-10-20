@@ -5,6 +5,23 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../core/config/api_config.dart';
 
+class AiException implements Exception {
+  final String message;
+  final int? statusCode;
+  final String? code;
+  final bool isExamLocked;
+
+  const AiException(
+    this.message, {
+    this.statusCode,
+    this.code,
+    this.isExamLocked = false,
+  });
+
+  @override
+  String toString() => message;
+}
+
 class AiResponse {
   final bool success;
   final String content;
@@ -40,16 +57,24 @@ class AiService {
     return user.getIdToken();
   }
 
+  Map<String, dynamic>? _tryParseJson(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map<String, dynamic>) return decoded;
+    } catch (_) {}
+    return null;
+  }
+
   /// Meminta bimbingan dari AI Tutor Pintar (Mahasiswa & Staf)
   Future<AiResponse> askTutor(String prompt) async {
     final cleanPrompt = prompt.trim();
     if (cleanPrompt.isEmpty) {
-      throw ArgumentError('Pertanyaan tidak boleh kosong.');
+      throw const AiException('Pertanyaan tidak boleh kosong.', statusCode: 400);
     }
 
     final token = await _getToken();
     if (token == null) {
-      throw StateError('Sesi pengguna belum aktif.');
+      throw const AiException('Sesi pengguna belum aktif. Silakan masuk terlebih dahulu.', statusCode: 401);
     }
 
     try {
@@ -65,27 +90,50 @@ class AiService {
         }),
       ).timeout(const Duration(seconds: 25));
 
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = _tryParseJson(response.body);
 
-      if (response.statusCode == 200 && data['success'] == true) {
+      if (response.statusCode == 200 && data != null && data['success'] == true) {
         return AiResponse(
           success: true,
           content: data['reply'] as String? ?? '',
           remainingQuota: (data['remainingQuota'] as num?)?.toInt(),
         );
-      } else if (response.statusCode == 403 && data['isExamLocked'] == true) {
+      }
+
+      if (response.statusCode == 403 && data != null && data['isExamLocked'] == true) {
         return AiResponse(
           success: false,
-          content: data['error'] as String? ?? 'AI dinonaktifkan saat ujian.',
+          content: (data['error'] ?? data['message']) as String? ?? 'Fitur AI Tutor dinonaktifkan sementara saat Anda sedang menempuh sesi kuis/ujian.',
           isExamLocked: true,
         );
-      } else {
-        final errorMsg = data['error'] as String? ?? 'Gagal menghubungi AI Tutor (${response.statusCode})';
-        throw StateError(errorMsg);
       }
+
+      if (response.statusCode == 503 || response.statusCode == 502 || response.statusCode == 504) {
+        final serverMsg = data != null ? (data['error'] ?? data['message']) : null;
+        throw AiException(
+          serverMsg?.toString() ?? 'Layanan AI sedang tidak tersedia atau dalam pemeliharaan (503). Harap coba beberapa saat lagi.',
+          statusCode: response.statusCode,
+          code: 'SERVICE_UNAVAILABLE',
+        );
+      }
+
+      if (response.statusCode == 429) {
+        final serverMsg = data != null ? (data['error'] ?? data['message']) : null;
+        throw AiException(
+          serverMsg?.toString() ?? 'Batas kuota AI tercapai. Harap tunggu beberapa saat sebelum mencoba kembali.',
+          statusCode: 429,
+          code: 'RATE_LIMIT_EXCEEDED',
+        );
+      }
+
+      final errorMsg = data != null
+          ? (data['error'] ?? data['message'] ?? 'Gagal menghubungi AI Tutor (${response.statusCode})')
+          : 'Gagal menghubungi server AI (${response.statusCode})';
+      throw AiException(errorMsg.toString(), statusCode: response.statusCode);
     } catch (e) {
+      if (e is AiException) rethrow;
       debugPrint('AI Tutor error: $e');
-      rethrow;
+      throw AiException(e.toString().replaceFirst('Exception: ', '').replaceFirst('Bad state: ', ''));
     }
   }
 
@@ -99,7 +147,7 @@ class AiService {
   }) async {
     final token = await _getToken();
     if (token == null) {
-      throw StateError('Sesi pengguna belum aktif.');
+      throw const AiException('Sesi pengguna belum aktif. Silakan masuk terlebih dahulu.', statusCode: 401);
     }
 
     try {
@@ -119,17 +167,38 @@ class AiService {
         }),
       ).timeout(const Duration(seconds: 25));
 
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = _tryParseJson(response.body);
 
-      if (response.statusCode == 200 && data['success'] == true) {
+      if (response.statusCode == 200 && data != null && data['success'] == true) {
         return data['draftDescription'] as String? ?? '';
-      } else {
-        final errorMsg = data['error'] as String? ?? 'Gagal membuat draf video (${response.statusCode})';
-        throw StateError(errorMsg);
       }
+
+      if (response.statusCode == 503 || response.statusCode == 502 || response.statusCode == 504) {
+        final serverMsg = data != null ? (data['error'] ?? data['message']) : null;
+        throw AiException(
+          serverMsg?.toString() ?? 'Layanan AI Generator sedang tidak tersedia (503). Silakan coba lagi nanti.',
+          statusCode: response.statusCode,
+          code: 'SERVICE_UNAVAILABLE',
+        );
+      }
+
+      if (response.statusCode == 429) {
+        final serverMsg = data != null ? (data['error'] ?? data['message']) : null;
+        throw AiException(
+          serverMsg?.toString() ?? 'Batas penggunaan AI Video Generator tercapai. Silakan coba lagi nanti.',
+          statusCode: 429,
+          code: 'RATE_LIMIT_EXCEEDED',
+        );
+      }
+
+      final errorMsg = data != null
+          ? (data['error'] ?? data['message'] ?? 'Gagal membuat draf video (${response.statusCode})')
+          : 'Gagal menghubungi server AI (${response.statusCode})';
+      throw AiException(errorMsg.toString(), statusCode: response.statusCode);
     } catch (e) {
+      if (e is AiException) rethrow;
       debugPrint('AI Video draft error: $e');
-      rethrow;
+      throw AiException(e.toString().replaceFirst('Exception: ', '').replaceFirst('Bad state: ', ''));
     }
   }
 }

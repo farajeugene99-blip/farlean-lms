@@ -16,7 +16,7 @@ class _FakeManualBookRepo extends ManualBookRepository {
   _FakeManualBookRepo({this.books = const []});
 
   @override
-  Future<List<ManualBook>> getManualBooksByClass(String classId) async => books;
+  Future<List<ManualBook>> getManualBooksByClass(String classId, {bool isAdmin = false}) async => books;
 }
 
 AuthProvider _createStaffAuth() {
@@ -95,7 +95,7 @@ void main() {
 
       expect(find.text('No Guide Books Yet'), findsOneWidget);
 
-      await tester.tap(find.text('Add Manual Book'));
+      await tester.tap(find.text('Add Manual Book').first);
       await tester.pumpAndSettle();
 
       expect(find.text('Add Manual Book'), findsWidgets);

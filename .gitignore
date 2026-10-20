@@ -21,13 +21,22 @@ serviceAccount*.json
 backend/.dump/
 **/.dump/
 *.dump.json
+*.bak
+*.old
+*.backup
+*.tmp
+*.patch
 
-# Firebase Emulator
+# Firebase Emulator & JVM Crash Logs
 *-debug.log
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
 emulator-run.log
+emulator-*.log
+hs_err_pid*.log
+replay_pid*.log
+*.log
 .firebase/
 emulator-data/
 **/emulator-data/

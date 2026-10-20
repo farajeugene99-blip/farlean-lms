@@ -15,6 +15,8 @@ import '../../repositories/group_repository.dart';
 import '../../services/auth_provider.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
+import 'grade_submission_dialog.dart';
+import 'submit_assignment_dialog.dart';
 
 class AssignmentDetailScreen extends StatefulWidget {
   final String assignmentId;
@@ -63,11 +65,13 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     _loadData();
   }
 
-  Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+  Future<void> _loadData({bool isSoftRefresh = false}) async {
+    if (!isSoftRefresh) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
 
     final authProvider = context.read<AuthProvider>();
     final isStaff = RoleGuard.isStaff(authProvider.appUser);
@@ -168,211 +172,105 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     final assignment = _assignment;
     if (assignment == null) return;
 
-    final urlController = TextEditingController(text: isResubmit ? _mySubmission?.fileUrl : '');
-    final nameController = TextEditingController(text: isResubmit ? _mySubmission?.fileName : 'tugas_${assignment.isGroupAssignment ? "kelompok" : "mandiri"}.pdf');
-    final noteController = TextEditingController(text: isResubmit ? _mySubmission?.note ?? '' : '');
-    final formKey = GlobalKey<FormState>();
-
-    final submitted = await showDialog<bool>(
+    final formData = await showDialog<SubmissionFormData>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(isResubmit ? l10n.assignmentResubmitBtn : l10n.assignmentSubmitBtn),
-        content: SizedBox(
-          width: 440,
-          child: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: urlController,
-                    decoration: InputDecoration(
-                      labelText: l10n.manualBookUrlLabel,
-                      hintText: 'https://res.cloudinary.com/...',
-                      prefixIcon: const Icon(Icons.link_rounded, size: 20),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return l10n.manualBookUrlRequired;
-                      if (!v.trim().startsWith('https://')) return l10n.manualBookUrlInvalid;
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      labelText: l10n.assignmentFileLabel,
-                      prefixIcon: const Icon(Icons.description_outlined, size: 20),
-                    ),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Nama berkas wajib diisi' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: noteController,
-                    decoration: InputDecoration(
-                      labelText: l10n.assignmentFeedbackLabel,
-                      hintText: 'Catatan tambahan (opsional)',
-                    ),
-                    maxLines: 2,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.btnCancel)),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              Navigator.pop(ctx, true);
-            },
-            child: Text(l10n.btnSave),
-          ),
-        ],
+      builder: (ctx) => SubmitAssignmentDialog(
+        isResubmit: isResubmit,
+        initialFileUrl: isResubmit ? _mySubmission?.fileUrl : null,
+        initialFileName: isResubmit ? _mySubmission?.fileName : null,
+        initialNote: isResubmit ? _mySubmission?.note : null,
       ),
     );
 
-    if (submitted != true || !mounted) return;
+    if (formData != null && mounted) {
+      setState(() => _isSubmitting = true);
+      final authProvider = context.read<AuthProvider>();
+      final uid = authProvider.firebaseUser?.uid ?? '';
+      final name = authProvider.appUser?.name ?? 'Mahasiswa';
 
-    setState(() => _isSubmitting = true);
-    final authProvider = context.read<AuthProvider>();
-    final uid = authProvider.firebaseUser?.uid ?? '';
-    final name = authProvider.appUser?.name ?? 'Mahasiswa';
+      try {
+        final now = DateTime.now();
+        final isLate = now.isAfter(assignment.deadline);
+        final status = isLate ? SubmissionStatus.late : SubmissionStatus.submitted;
 
-    try {
-      final now = DateTime.now();
-      final isLate = now.isAfter(assignment.deadline);
-      final status = isLate ? SubmissionStatus.late : SubmissionStatus.submitted;
+        final submissionId = assignment.isGroupAssignment
+            ? 'group_${_myMemberDoc?.groupId}'
+            : uid;
 
-      final submissionId = assignment.isGroupAssignment
-          ? 'group_${_myMemberDoc?.groupId}'
-          : uid;
-
-      final sub = AssignmentSubmission(
-        id: submissionId,
-        assignmentId: assignment.id,
-        classId: widget.classId,
-        isGroup: assignment.isGroupAssignment,
-        studentUid: assignment.isGroupAssignment ? null : uid,
-        studentName: assignment.isGroupAssignment ? null : name,
-        groupId: assignment.isGroupAssignment ? _myMemberDoc?.groupId : null,
-        groupName: assignment.isGroupAssignment ? _myGroupDoc?.name : null,
-        contributorIds: assignment.isGroupAssignment ? (_myGroupDoc?.memberUids ?? [uid]) : [uid],
-        submittedByUid: uid,
-        submittedByName: name,
-        fileUrl: urlController.text.trim(),
-        fileName: nameController.text.trim(),
-        fileSize: 1048576, // default 1 MB placeholder
-        note: noteController.text.trim(),
-        status: status,
-      );
-
-      await _assignmentRepository.submitAssignment(sub);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.assignmentSubmitSuccess), backgroundColor: AppTheme.success),
+        final sub = AssignmentSubmission(
+          id: submissionId,
+          assignmentId: assignment.id,
+          classId: widget.classId,
+          isGroup: assignment.isGroupAssignment,
+          studentUid: assignment.isGroupAssignment ? null : uid,
+          studentName: assignment.isGroupAssignment ? null : name,
+          groupId: assignment.isGroupAssignment ? _myMemberDoc?.groupId : null,
+          groupName: assignment.isGroupAssignment ? _myGroupDoc?.name : null,
+          contributorIds: assignment.isGroupAssignment ? (_myGroupDoc?.memberUids ?? [uid]) : [uid],
+          submittedByUid: uid,
+          submittedByName: name,
+          fileUrl: formData.fileUrl,
+          fileName: formData.fileName,
+          fileSize: 1048576,
+          note: formData.note,
+          status: status,
         );
-        _loadData();
+
+        await _assignmentRepository.submitAssignment(sub);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.assignmentSubmitSuccess), backgroundColor: AppTheme.success),
+          );
+          _loadData(isSoftRefresh: true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.assignmentUploadFailed(e.toString())), backgroundColor: AppTheme.error),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isSubmitting = false);
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.assignmentUploadFailed(e.toString())), backgroundColor: AppTheme.error),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
   Future<void> _showGradeDialog(AssignmentSubmission submission) async {
     final l10n = AppLocalizations.of(context);
-    final scoreController = TextEditingController(text: submission.score?.toStringAsFixed(0) ?? '');
-    final feedbackController = TextEditingController(text: submission.feedback ?? '');
-    final formKey = GlobalKey<FormState>();
-
-    final saved = await showDialog<bool>(
+    final formData = await showDialog<GradeFormData>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.assignmentGradeTitle),
-        content: SizedBox(
-          width: 440,
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: scoreController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: l10n.assignmentScoreLabel,
-                    prefixIcon: const Icon(Icons.star_outline_rounded, size: 20),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Nilai wajib diisi';
-                    final numVal = double.tryParse(v.trim());
-                    if (numVal == null || numVal < 0 || numVal > 100) {
-                      return 'Masukkan angka 0 - 100';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: feedbackController,
-                  decoration: InputDecoration(
-                    labelText: l10n.assignmentFeedbackLabel,
-                    hintText: 'Umpan balik untuk mahasiswa/kelompok',
-                  ),
-                  maxLines: 3,
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.btnCancel)),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              Navigator.pop(ctx, true);
-            },
-            child: Text(l10n.btnSave),
-          ),
-        ],
+      builder: (ctx) => GradeSubmissionDialog(
+        initialScore: submission.score,
+        initialFeedback: submission.feedback,
       ),
     );
 
-    if (saved != true || !mounted) return;
+    if (formData != null && mounted) {
+      final authProvider = context.read<AuthProvider>();
+      final graderUid = authProvider.firebaseUser?.uid ?? '';
 
-    final authProvider = context.read<AuthProvider>();
-    final graderUid = authProvider.firebaseUser?.uid ?? '';
-
-    try {
-      final scoreVal = double.parse(scoreController.text.trim());
-      await _assignmentRepository.gradeSubmission(
-        classId: widget.classId,
-        assignmentId: widget.assignmentId,
-        submissionId: submission.id,
-        score: scoreVal,
-        feedback: feedbackController.text.trim(),
-        graderUid: graderUid,
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.assignmentGradedSuccess), backgroundColor: AppTheme.success),
+      try {
+        await _assignmentRepository.gradeSubmission(
+          classId: widget.classId,
+          assignmentId: widget.assignmentId,
+          submissionId: submission.id,
+          score: formData.score,
+          feedback: formData.feedback,
+          graderUid: graderUid,
         );
-        _loadData();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
-        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.assignmentGradedSuccess), backgroundColor: AppTheme.success),
+          );
+          _loadData(isSoftRefresh: true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+          );
+        }
       }
     }
   }

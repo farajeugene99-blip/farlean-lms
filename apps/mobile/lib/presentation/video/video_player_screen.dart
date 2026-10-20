@@ -11,6 +11,7 @@ import '../../services/ai_service.dart';
 import '../../services/auth_provider.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
+import 'edit_video_dialog.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final String videoId;
@@ -337,121 +338,35 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     if (video == null) return;
     final l10n = AppLocalizations.of(context);
 
-    final titleCtrl = TextEditingController(text: video.title);
-    final descCtrl = TextEditingController(text: video.description);
-    final formKey = GlobalKey<FormState>();
-    bool isDrafting = false;
-
-    final updated = await showDialog<bool>(
+    final formData = await showDialog<VideoFormData>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(l10n.videoEditTitle),
-          content: SizedBox(
-            width: 440,
-            child: Form(
-              key: formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: titleCtrl,
-                      decoration: InputDecoration(
-                        labelText: l10n.videoTitleLabel,
-                        hintText: 'Contoh: Penjelasan State Management',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Text(l10n.videoDescLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                        const Spacer(),
-                        TextButton.icon(
-                          onPressed: isDrafting
-                              ? null
-                              : () async {
-                                  setDialogState(() => isDrafting = true);
-                                  try {
-                                    final draft = await _aiService.generateVideoDescription(
-                                      title: titleCtrl.text.trim().isNotEmpty ? titleCtrl.text.trim() : 'Video Pembelajaran',
-                                      existingDescription: descCtrl.text.trim(),
-                                    );
-                                    if (ctx.mounted) {
-                                      setDialogState(() {
-                                        descCtrl.text = draft;
-                                        isDrafting = false;
-                                      });
-                                      ScaffoldMessenger.of(ctx).showSnackBar(
-                                        SnackBar(content: Text(l10n.aiVideoDraftSuccess), backgroundColor: AppTheme.success),
-                                      );
-                                    }
-                                  } catch (e) {
-                                    if (ctx.mounted) {
-                                      setDialogState(() => isDrafting = false);
-                                      ScaffoldMessenger.of(ctx).showSnackBar(
-                                        SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
-                                      );
-                                    }
-                                  }
-                                },
-                          icon: isDrafting
-                              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                              : const Icon(Icons.auto_awesome_rounded, size: 16),
-                          label: Text(l10n.aiVideoDraftBtn, style: const TextStyle(fontSize: 11)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    TextFormField(
-                      controller: descCtrl,
-                      decoration: const InputDecoration(
-                        hintText: 'Tuliskan deskripsi atau rangkuman video...',
-                      ),
-                      maxLines: 5,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.btnCancel)),
-            ElevatedButton(
-              onPressed: () async {
-                final updatedVideo = video.copyWith(
-                  title: titleCtrl.text.trim(),
-                  description: descCtrl.text.trim(),
-                );
-                try {
-                  await _videoRepository.updateVideo(updatedVideo);
-                  if (mounted) {
-                    setState(() => _video = updatedVideo);
-                  }
-                  if (ctx.mounted) Navigator.pop(ctx, true);
-                } catch (e) {
-                  if (ctx.mounted) {
-                    ScaffoldMessenger.of(ctx).showSnackBar(
-                      SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
-                    );
-                  }
-                }
-              },
-              child: Text(l10n.btnSave),
-            ),
-          ],
-        ),
+      builder: (ctx) => EditVideoDialog(
+        initialTitle: video.title,
+        initialDescription: video.description,
+        aiService: _aiService,
       ),
     );
 
-    titleCtrl.dispose();
-    descCtrl.dispose();
-
-    if (updated == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.videoEditSuccess), backgroundColor: AppTheme.success),
+    if (formData != null && mounted) {
+      final updatedVideo = video.copyWith(
+        title: formData.title,
+        description: formData.description,
       );
+      try {
+        await _videoRepository.updateVideo(updatedVideo);
+        if (mounted) {
+          setState(() => _video = updatedVideo);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.videoEditSuccess), backgroundColor: AppTheme.success),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+          );
+        }
+      }
     }
   }
 

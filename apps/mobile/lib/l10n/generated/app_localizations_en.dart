@@ -2344,4 +2344,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoEditSuccess => 'Video information updated successfully';
+
+  @override
+  String get classPendingTitle => 'Enrollment Pending Approval';
+
+  @override
+  String get classPendingBody =>
+      'Your request to join this class has been sent and is awaiting confirmation from the instructor.';
+
+  @override
+  String get classPendingBackBtn => 'Back to Home';
 }

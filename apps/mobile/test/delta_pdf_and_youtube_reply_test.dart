@@ -32,7 +32,7 @@ class _FakeDiscussionRepoForPhase3 extends DiscussionRepository {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('DeltaPdfConverter Tests (Fitur C)', () {
+  group('DeltaPdfConverter Tests', () {
     test('1. Mengonversi Delta JSON dengan header, list, formatting, dan simbol Unicode ke format PDF yang valid', () async {
       // 1x1 transparent PNG byte dummy
       final dummyPngBytes = base64Decode(
@@ -81,7 +81,7 @@ void main() {
     });
   });
 
-  group('ThreadDetailScreen YouTube-style Collapse/Expand & Clean Mention (Fitur G)', () {
+  group('ThreadDetailScreen YouTube-style Collapse/Expand & Clean Mention Tests', () {
     late Discussion testThread;
     late List<DiscussionReply> testReplies;
 

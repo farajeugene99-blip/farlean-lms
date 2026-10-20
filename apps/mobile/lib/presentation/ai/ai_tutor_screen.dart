@@ -105,11 +105,16 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
       _scrollToBottom();
     } catch (e) {
       if (!mounted) return;
+      final displayMsg = e.toString()
+          .replaceFirst('Exception: ', '')
+          .replaceFirst('StateError: ', '')
+          .replaceFirst('Bad state: ', '')
+          .trim();
       setState(() {
         _isLoading = false;
         _messages.add(
           _ChatMessage(
-            text: e.toString().replaceFirst('Exception: ', '').replaceFirst('StateError: ', ''),
+            text: displayMsg.isNotEmpty ? displayMsg : 'Gagal memproses pertanyaan Anda.',
             isUser: false,
             time: DateTime.now(),
             isWarning: true,
