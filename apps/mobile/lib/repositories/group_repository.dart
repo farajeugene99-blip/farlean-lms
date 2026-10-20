@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import '../models/app_user.dart';
 import '../models/class_group.dart';
 import '../models/class_member.dart';
 
@@ -53,8 +54,12 @@ class GroupRepository {
           .get();
 
       final allMembers = snapshot.docs.map((doc) => ClassMember.fromFirestore(doc)).toList();
-      // Filter di memori: hanya anggota mahasiswa yang group_id == null atau kosong
-      return allMembers.where((m) => m.groupId == null || m.groupId!.isEmpty).toList();
+      // Filter di memori: HANYA anggota MAHASISWA aktif yang belum memiliki kelompok
+      return allMembers.where((m) =>
+          m.accountType == AccountType.mahasiswa &&
+          m.status == MemberStatus.active &&
+          (m.groupId == null || m.groupId!.isEmpty)
+      ).toList();
     } catch (e) {
       debugPrint('Catatan baca available members: $e');
       rethrow;
@@ -190,6 +195,40 @@ class GroupRepository {
       await batch.commit();
     } catch (e) {
       debugPrint('Gagal menghapus group: $e');
+      rethrow;
+    }
+  }
+
+  /// Menyimpan sejumlah kelompok acak sekaligus secara ATOMIK
+  Future<void> createRandomizedGroups({
+    required String classId,
+    required List<ClassGroup> groups,
+  }) async {
+    final cleanClassId = classId.trim();
+    if (cleanClassId.isEmpty) throw ArgumentError('classId tidak boleh kosong.');
+    if (groups.isEmpty) return;
+
+    final firestore = _firestore;
+    if (firestore == null) throw StateError('Firestore belum diinisialisasi.');
+
+    final batch = firestore.batch();
+    final groupsCollection = firestore.collection('classes').doc(cleanClassId).collection('groups');
+    final membersCollection = firestore.collection('classes').doc(cleanClassId).collection('members');
+
+    for (final group in groups) {
+      final docRef = group.id.isNotEmpty ? groupsCollection.doc(group.id) : groupsCollection.doc();
+      final effectiveGroup = group.id.isNotEmpty ? group : group.copyWith(id: docRef.id);
+      batch.set(docRef, effectiveGroup.toMap());
+
+      for (final uid in effectiveGroup.memberUids) {
+        batch.update(membersCollection.doc(uid), {'group_id': docRef.id});
+      }
+    }
+
+    try {
+      await batch.commit();
+    } catch (e) {
+      debugPrint('Gagal menyimpan kelompok acak: $e');
       rethrow;
     }
   }

@@ -112,18 +112,28 @@ class _EditVideoDialogState extends State<EditVideoDialog> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Text(l10n.videoDescLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                    const Spacer(),
-                    TextButton.icon(
-                      onPressed: _isDrafting ? null : _requestAiDraft,
-                      icon: _isDrafting
-                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.auto_awesome_rounded, size: 16),
-                      label: Text(l10n.aiVideoDraftBtn, style: const TextStyle(fontSize: 11)),
-                    ),
-                  ],
+                SizedBox(
+                  width: double.infinity,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      Text(l10n.videoDescLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        onPressed: _isDrafting ? null : _requestAiDraft,
+                        icon: _isDrafting
+                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.auto_awesome_rounded, size: 16),
+                        label: Text(l10n.aiVideoDraftBtn, style: const TextStyle(fontSize: 11)),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 4),
                 TextFormField(

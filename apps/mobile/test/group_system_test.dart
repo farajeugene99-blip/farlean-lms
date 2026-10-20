@@ -73,6 +73,14 @@ class MockGroupRepo extends GroupRepository {
   }
 
   @override
+  Future<void> createRandomizedGroups({
+    required String classId,
+    required List<ClassGroup> groups,
+  }) async {
+    this.groups.addAll(groups);
+  }
+
+  @override
   Future<void> deleteGroup({
     required String classId,
     required String groupId,

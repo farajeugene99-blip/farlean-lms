@@ -136,6 +136,31 @@ class AssignmentRepository {
     }
   }
 
+  /// Memeriksa apakah suatu tugas sudah memiliki setidaknya satu submission (anti-overwrite tipe tugas)
+  Future<bool> hasSubmissions(String classId, String assignmentId) async {
+    final cleanClassId = classId.trim();
+    final cleanAssignmentId = assignmentId.trim();
+    if (cleanClassId.isEmpty || cleanAssignmentId.isEmpty) return false;
+
+    final firestore = _firestore;
+    if (firestore == null) return false;
+
+    try {
+      final snap = await firestore
+          .collection('classes')
+          .doc(cleanClassId)
+          .collection('assignments')
+          .doc(cleanAssignmentId)
+          .collection('submissions')
+          .limit(1)
+          .get();
+      return snap.docs.isNotEmpty;
+    } catch (e) {
+      debugPrint('Catatan cek hasSubmissions: $e');
+      return false;
+    }
+  }
+
   /// Mengambil dokumen pengumpulan spesifik (oleh mahasiswa atau kelompok)
   Future<AssignmentSubmission?> getSubmission({
     required String classId,

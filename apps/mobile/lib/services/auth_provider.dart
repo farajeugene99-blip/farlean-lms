@@ -115,9 +115,20 @@ class AuthProvider extends ChangeNotifier {
       final claimsRole = rawClaimsRole != null ? UserRole.fromString(rawClaimsRole) : null;
 
       // 2. Sinkronisasi via bootstrap Admin SDK
+      UserRole? updatedClaimsRole = claimsRole;
       if (token != null) {
         await _authService.callBootstrap(token: token, name: user.displayName);
         if (currentGen != _sessionGeneration) return;
+
+        // Force refresh ID Token lokal agar Custom Claims (role) terbaru dari server langsung aktif
+        try {
+          final refreshedResult = await user.getIdTokenResult(true);
+          if (currentGen != _sessionGeneration) return;
+          final refreshedRawRole = refreshedResult.claims?['role'] as String?;
+          if (refreshedRawRole != null) {
+            updatedClaimsRole = UserRole.fromString(refreshedRawRole);
+          }
+        } catch (_) {}
       }
 
       // 3. Ambil profil dari Firestore
@@ -177,7 +188,7 @@ class AuthProvider extends ChangeNotifier {
 
       // 5. Evaluasi hasil profil (JANGAN FALLBACK KE UMUM/USER!)
       if (profile != null) {
-        _appUser = profile.copyWith(claimsRole: claimsRole);
+        _appUser = profile.copyWith(claimsRole: updatedClaimsRole);
         _profileStatus = ProfileStatus.loaded;
         _profileErrorReason = ProfileErrorReason.none;
         _profileErrorMessage = null;

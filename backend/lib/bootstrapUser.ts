@@ -1,4 +1,4 @@
-import { db, FieldValue } from './firebaseAdmin';
+import { db, auth, FieldValue } from './firebaseAdmin';
 import { resolveAccountType } from './domains';
 
 export interface BootstrapUserParams {
@@ -106,6 +106,10 @@ export async function bootstrapUser(params: BootstrapUserParams): Promise<Bootst
 
     await userRef.set(newUserData);
 
+    try {
+      await auth.setCustomUserClaims(uid, { role: initialRole });
+    } catch (_) {}
+
     const autofilledNim = await checkAndAutofillUnesaNim(userRef, email, emailVerified);
 
     return {
@@ -142,6 +146,10 @@ export async function bootstrapUser(params: BootstrapUserParams): Promise<Bootst
     }
 
     await userRef.update(updates);
+
+    try {
+      await auth.setCustomUserClaims(uid, { role: currentData.role || 'USER' });
+    } catch (_) {}
 
     const autofilledNim = await checkAndAutofillUnesaNim(userRef, email, emailVerified);
 

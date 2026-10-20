@@ -76,6 +76,7 @@ class ClassGroup {
   }
 
   ClassGroup copyWith({
+    String? id,
     String? name,
     String? leaderUid,
     bool clearLeader = false,
@@ -84,7 +85,7 @@ class ClassGroup {
     DateTime? updatedAt,
   }) {
     return ClassGroup(
-      id: id,
+      id: id ?? this.id,
       classId: classId,
       name: name ?? this.name,
       leaderUid: clearLeader ? null : (leaderUid ?? this.leaderUid),

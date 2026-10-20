@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../models/assignment.dart';
 
 class AssignmentFormData {
   final String title;
@@ -18,29 +19,44 @@ class AssignmentFormData {
   });
 }
 
-class CreateAssignmentDialog extends StatefulWidget {
+class AssignmentFormDialog extends StatefulWidget {
+  final Assignment? initialAssignment;
+  final bool hasSubmissions;
   final DateTime? initialDeadline;
 
-  const CreateAssignmentDialog({super.key, this.initialDeadline});
+  const AssignmentFormDialog({
+    super.key,
+    this.initialAssignment,
+    this.hasSubmissions = false,
+    this.initialDeadline,
+  });
+
+  bool get isEdit => initialAssignment != null;
 
   @override
-  State<CreateAssignmentDialog> createState() => _CreateAssignmentDialogState();
+  State<AssignmentFormDialog> createState() => _AssignmentFormDialogState();
 }
 
-class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
+// Alias untuk backward compatibility
+typedef CreateAssignmentDialog = AssignmentFormDialog;
+
+class _AssignmentFormDialogState extends State<AssignmentFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
   late final TextEditingController _instructionsController;
   late DateTime _deadline;
-  bool _isGroup = false;
-  bool _allowLate = true;
+  late bool _isGroup;
+  late bool _allowLate;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController();
-    _instructionsController = TextEditingController();
-    _deadline = widget.initialDeadline ?? DateTime.now().add(const Duration(days: 7));
+    final init = widget.initialAssignment;
+    _titleController = TextEditingController(text: init?.title ?? '');
+    _instructionsController = TextEditingController(text: init?.instructions ?? '');
+    _deadline = init?.deadline ?? widget.initialDeadline ?? DateTime.now().add(const Duration(days: 7));
+    _isGroup = init?.isGroupAssignment ?? false;
+    _allowLate = init?.allowLateSubmission ?? true;
   }
 
   @override
@@ -66,9 +82,10 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isEdit = widget.isEdit;
 
     return AlertDialog(
-      title: Text(l10n.assignmentCreateTitle),
+      title: Text(isEdit ? 'Ubah Tugas' : l10n.assignmentCreateTitle),
       content: SizedBox(
         width: 440,
         child: Form(
@@ -102,10 +119,13 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
                   icon: const Icon(Icons.calendar_today_rounded, size: 16),
                   label: Text(DateFormatter.formatWib(_deadline)),
                   onPressed: () async {
+                    final firstAllowed = _deadline.isBefore(DateTime.now())
+                        ? _deadline.subtract(const Duration(days: 30))
+                        : DateTime.now().subtract(const Duration(days: 1));
                     final pickedDate = await showDatePicker(
                       context: context,
                       initialDate: _deadline,
-                      firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                      firstDate: firstAllowed,
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
                     if (pickedDate != null) {
@@ -126,8 +146,16 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
                   contentPadding: EdgeInsets.zero,
                   dense: true,
                   title: Text(l10n.assignmentIsGroupLabel, style: const TextStyle(fontSize: 13)),
+                  subtitle: widget.hasSubmissions
+                      ? const Text(
+                          'Tipe tugas terkunci karena sudah ada mahasiswa yang mengumpulkan tugas.',
+                          style: TextStyle(fontSize: 11, color: Colors.orange),
+                        )
+                      : null,
                   value: _isGroup,
-                  onChanged: (val) => setState(() => _isGroup = val),
+                  onChanged: widget.hasSubmissions
+                      ? null
+                      : (val) => setState(() => _isGroup = val),
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,

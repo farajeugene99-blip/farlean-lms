@@ -13,6 +13,7 @@ import '../../repositories/assignment_repository.dart';
 import '../../repositories/class_repository.dart';
 import '../../repositories/group_repository.dart';
 import '../../services/auth_provider.dart';
+import '../class/create_assignment_dialog.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
 import 'grade_submission_dialog.dart';
@@ -275,6 +276,45 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     }
   }
 
+  Future<void> _showEditAssignmentDialog() async {
+    final assignment = _assignment;
+    if (assignment == null) return;
+
+    final formData = await showDialog<AssignmentFormData>(
+      context: context,
+      builder: (ctx) => AssignmentFormDialog(
+        initialAssignment: assignment,
+        hasSubmissions: _allSubmissions.isNotEmpty,
+      ),
+    );
+
+    if (formData != null && mounted) {
+      try {
+        final updated = assignment.copyWith(
+          title: formData.title,
+          instructions: formData.instructions,
+          deadline: formData.deadline,
+          allowLateSubmission: formData.allowLate,
+          isGroupAssignment: formData.isGroup,
+        );
+        await _assignmentRepository.updateAssignment(updated);
+        setState(() => _assignment = updated);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tugas berhasil diperbarui.'), backgroundColor: AppTheme.success),
+          );
+          _loadData(isSoftRefresh: true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -304,10 +344,16 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
       appBar: AppBar(
         title: Text(assignment.title),
         actions: [
+          if (isStaff)
+            IconButton(
+              icon: const Icon(Icons.edit_note_rounded),
+              tooltip: 'Edit Tugas',
+              onPressed: _showEditAssignmentDialog,
+            ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             tooltip: l10n.meetingRefreshTooltip,
-            onPressed: _loadData,
+            onPressed: () => _loadData(isSoftRefresh: true),
           ),
           const SizedBox(width: 8),
         ],

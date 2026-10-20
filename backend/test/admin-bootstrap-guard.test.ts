@@ -123,6 +123,32 @@ async function runTests() {
 
   console.log('  [PASS] 3. Guard self-healing berhasil memproteksi ADMIN dari penimpaan MAHASISWA');
 
+  // Test 4: Verifikasi aturan Firestore Security Rules untuk Lifecycle Kelas & Pertemuan
+  const fs = await import('fs');
+  const path = await import('path');
+  const rulesPath = path.resolve(__dirname, '../../firestore.rules');
+  const rulesContent = fs.readFileSync(rulesPath, 'utf8');
+
+  // A. Reaktivasi kelas arsip
+  assert.ok(
+    rulesContent.includes("isClassTeacher(classId)") &&
+    rulesContent.includes("(resource.data.status == 'Active' || request.resource.data.status == 'Active')"),
+    'Rules kelas wajib mengizinkan reaktivasi oleh isClassTeacher dan membatasi kelas Archived'
+  );
+
+  // B. Meetings delete oleh isClassTeacher
+  assert.ok(
+    rulesContent.includes("allow delete: if isClassTeacher(resource.data.class_id);"),
+    'Rules pertemuan wajib mengizinkan penghapusan pertemuan oleh isClassTeacher'
+  );
+
+  // C. Immutability class_id pada update pertemuan
+  assert.ok(
+    rulesContent.includes("request.resource.data.class_id == resource.data.class_id"),
+    'Rules pertemuan wajib memvalidasi kesamaan class_id saat update'
+  );
+  console.log('  [PASS] 4. Integritas Firestore Security Rules (Class Lifecycle & Meetings) terverifikasi');
+
   console.log('\n========================================');
   console.log('✅ SEMUA TEST PROTEKSI ROLE ADMIN & DOMAIN BERHASIL!');
   console.log('========================================\n');

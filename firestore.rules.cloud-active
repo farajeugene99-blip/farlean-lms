@@ -166,8 +166,10 @@ service cloud.firestore {
       // Pembuatan kelas WAJIB melalui backend (/api/create-class) demi atomisitas unik kode
       allow create: if false;
       // Update kelas: hanya owner/admin; kode kelas dan teacher_id IMMUTABLE
-      allow update: if isClassOwner(classId)
+      // Kelas aktif boleh diedit/diarsip; kelas arsip HANYA boleh direaktivasi menjadi Active
+      allow update: if isClassTeacher(classId)
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['code', 'teacher_id'])
+        && (resource.data.status == 'Active' || request.resource.data.status == 'Active')
         && (!('status' in request.resource.data) || request.resource.data.status in ['Active', 'Archived']);
       // Penghapusan kelas dari client DILARANG (hanya melalui admin purge backend)
       allow delete: if false;
@@ -291,9 +293,9 @@ service cloud.firestore {
       allow create: if isValidMeetingWrite()
                     && isClassOwner(request.resource.data.class_id);
       allow update: if isValidMeetingWrite()
-                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && request.resource.data.class_id == resource.data.class_id
                     && isClassOwner(resource.data.class_id);
-      allow delete: if isClassOwner(resource.data.class_id);
+      allow delete: if isClassTeacher(resource.data.class_id);
 
       match /materi_views/{uid} {
         allow read: if (isOwner(uid) && isClassMemberActive(get(/databases/$(database)/documents/meetings/$(meetingId)).data.class_id))
@@ -318,7 +320,7 @@ service cloud.firestore {
       allow create: if isValidMaterialWrite()
                     && isClassOwner(request.resource.data.class_id);
       allow update: if isValidMaterialWrite()
-                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && request.resource.data.class_id == resource.data.class_id
                     && isClassOwner(resource.data.class_id);
       allow delete: if isClassOwner(resource.data.class_id);
     }
@@ -332,7 +334,7 @@ service cloud.firestore {
       allow create: if isValidVideoWrite()
                     && isClassOwner(request.resource.data.class_id);
       allow update: if isValidVideoWrite()
-                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && request.resource.data.class_id == resource.data.class_id
                     && isClassOwner(resource.data.class_id);
       allow delete: if isClassOwner(resource.data.class_id);
     }
@@ -348,7 +350,7 @@ service cloud.firestore {
                     && ((request.resource.data.class_id == 'SYSTEM' && isAdmin())
                         || (request.resource.data.class_id != 'SYSTEM' && isClassOwner(request.resource.data.class_id)));
       allow update: if isValidManualBookWrite()
-                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && request.resource.data.class_id == resource.data.class_id
                     && ((resource.data.class_id == 'SYSTEM' && isAdmin())
                         || (resource.data.class_id != 'SYSTEM' && isClassOwner(resource.data.class_id)));
       allow delete: if (resource.data.class_id == 'SYSTEM' && isAdmin())
@@ -364,7 +366,7 @@ service cloud.firestore {
       allow create: if isValidPretestWrite()
                     && isClassOwner(request.resource.data.class_id);
       allow update: if isValidPretestWrite()
-                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && request.resource.data.class_id == resource.data.class_id
                     && isClassOwner(resource.data.class_id);
       allow delete: if isClassOwner(resource.data.class_id);
 
@@ -385,7 +387,7 @@ service cloud.firestore {
       allow create: if isValidPosttestWrite()
                     && isClassOwner(request.resource.data.class_id);
       allow update: if isValidPosttestWrite()
-                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
+                    && request.resource.data.class_id == resource.data.class_id
                     && isClassOwner(resource.data.class_id);
       allow delete: if isClassOwner(resource.data.class_id);
 

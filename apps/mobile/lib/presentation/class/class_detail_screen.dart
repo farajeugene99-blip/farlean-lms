@@ -8,6 +8,7 @@ import '../../core/utils/date_formatter.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/app_user.dart';
 import '../../models/assignment.dart';
+import '../../models/assignment_submission.dart';
 import '../../models/class_group.dart';
 import '../../models/class_member.dart';
 import '../../models/classroom.dart';
@@ -58,6 +59,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   List<ClassMember> _members = [];
   List<ClassGroup> _groups = [];
   List<Assignment> _assignments = [];
+  Map<String, AssignmentSubmission> _classSubmissions = {};
   Map<String, double> _classPretestScores = {};
   Map<String, double> _classPosttestScores = {};
   Map<String, double> _studentPersonalScores = {};
@@ -170,6 +172,25 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         debugPrint('Catatan getAssignmentsByClass di ClassDetail: $e');
       }
 
+      Map<String, AssignmentSubmission> submissionsMap = _classSubmissions;
+      if (isClassTeacher && assignments.isNotEmpty) {
+        try {
+          final subLists = await Future.wait(
+            assignments.map((a) => _assignmentRepository.getAllSubmissions(classId: widget.classId, assignmentId: a.id)),
+          );
+          final Map<String, AssignmentSubmission> freshMap = {};
+          for (int i = 0; i < assignments.length; i++) {
+            final a = assignments[i];
+            for (final s in subLists[i]) {
+              freshMap['${a.id}_${s.id}'] = s;
+            }
+          }
+          submissionsMap = freshMap;
+        } catch (e) {
+          debugPrint('Catatan prefetch submissions di ClassDetail: $e');
+        }
+      }
+
       Map<String, double> preScores = {};
       Map<String, double> postScores = {};
       Map<String, double> personalScores = {};
@@ -196,6 +217,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           _members = members;
           _groups = groups;
           _assignments = assignments;
+          _classSubmissions = submissionsMap;
           _classPretestScores = preScores;
           _classPosttestScores = postScores;
           _studentPersonalScores = personalScores;
@@ -805,9 +827,20 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                 ? PopupMenuButton<String>(
                     icon: Icon(Icons.more_vert_rounded, color: context.textSecondaryColor, size: 20),
                     onSelected: (val) {
+                      if (val == 'edit') _showEditAssignmentDialog(assignment);
                       if (val == 'delete') _confirmDeleteAssignment(assignment);
                     },
                     itemBuilder: (ctx) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text('Ubah Tugas'),
+                          ],
+                        ),
+                      ),
                       PopupMenuItem(
                         value: 'delete',
                         child: Row(
@@ -850,6 +883,44 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         );
         await _assignmentRepository.createAssignment(newAssignment);
         if (mounted) {
+          _loadAllData(isSoftRefresh: true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _showEditAssignmentDialog(Assignment assignment) async {
+    final hasSubmissions = await _assignmentRepository.hasSubmissions(widget.classId, assignment.id);
+    if (!mounted) return;
+
+    final formData = await showDialog<AssignmentFormData>(
+      context: context,
+      builder: (ctx) => AssignmentFormDialog(
+        initialAssignment: assignment,
+        hasSubmissions: hasSubmissions,
+      ),
+    );
+
+    if (formData != null && mounted) {
+      try {
+        final updated = assignment.copyWith(
+          title: formData.title,
+          instructions: formData.instructions,
+          deadline: formData.deadline,
+          allowLateSubmission: formData.allowLate,
+          isGroupAssignment: formData.isGroup,
+        );
+        await _assignmentRepository.updateAssignment(updated);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tugas berhasil diperbarui.'), backgroundColor: AppTheme.success),
+          );
           _loadAllData(isSoftRefresh: true);
         }
       } catch (e) {
@@ -940,7 +1011,12 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
 
   Widget _buildTeacherGradebook() {
     final l10n = AppLocalizations.of(context);
-    if (_members.isEmpty) {
+    final studentMembers = _members.where((m) =>
+        m.accountType == AccountType.mahasiswa &&
+        m.status == MemberStatus.active
+    ).toList();
+
+    if (studentMembers.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -957,11 +1033,23 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     }
 
     Meeting? selectedMeeting;
+    Assignment? selectedAssignment;
+
     if (_selectedMeetingId != null) {
-      for (final m in _meetings) {
-        if (m.id == _selectedMeetingId) {
-          selectedMeeting = m;
-          break;
+      if (_selectedMeetingId!.startsWith('assignment_')) {
+        final assignId = _selectedMeetingId!.replaceFirst('assignment_', '');
+        for (final a in _assignments) {
+          if (a.id == assignId) {
+            selectedAssignment = a;
+            break;
+          }
+        }
+      } else {
+        for (final m in _meetings) {
+          if (m.id == _selectedMeetingId) {
+            selectedMeeting = m;
+            break;
+          }
         }
       }
     }
@@ -971,7 +1059,11 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     int postSubmittedCount = 0;
     double postTotalScore = 0;
 
-    for (final member in _members) {
+    int assignSubmittedCount = 0;
+    int assignGradedCount = 0;
+    double assignTotalScore = 0;
+
+    for (final member in studentMembers) {
       if (selectedMeeting != null) {
         if (selectedMeeting.pretestId != null) {
           final s = _classPretestScores['${selectedMeeting.pretestId}_${member.uid}'];
@@ -987,17 +1079,35 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
             postTotalScore += s;
           }
         }
+      } else if (selectedAssignment != null) {
+        AssignmentSubmission? sub;
+        if (selectedAssignment.isGroupAssignment) {
+          if (member.groupId != null && member.groupId!.isNotEmpty) {
+            sub = _classSubmissions['${selectedAssignment.id}_group_${member.groupId}'];
+          }
+        } else {
+          sub = _classSubmissions['${selectedAssignment.id}_${member.uid}'];
+        }
+
+        if (sub != null) {
+          assignSubmittedCount++;
+          if (sub.status == SubmissionStatus.graded && sub.score != null) {
+            assignGradedCount++;
+            assignTotalScore += sub.score!;
+          }
+        }
       }
     }
 
     final preAvg = preSubmittedCount > 0 ? (preTotalScore / preSubmittedCount).toStringAsFixed(1) : '-';
     final postAvg = postSubmittedCount > 0 ? (postTotalScore / postSubmittedCount).toStringAsFixed(1) : '-';
+    final assignAvg = assignGradedCount > 0 ? (assignTotalScore / assignGradedCount).toStringAsFixed(1) : '-';
 
-    final totalStudents = _members.length;
+    final totalStudents = studentMembers.length;
     final totalPages = (totalStudents / _pageSize).ceil();
     final safePage = _gradebookPage.clamp(0, totalPages > 0 ? totalPages - 1 : 0);
     final startIndex = safePage * _pageSize;
-    final pagedMembers = _members.skip(startIndex).take(_pageSize).toList();
+    final pagedMembers = studentMembers.skip(startIndex).take(_pageSize).toList();
     final endIndex = (startIndex + pagedMembers.length);
 
     return ListView(
@@ -1023,6 +1133,14 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                 ..._meetings.map((m) => DropdownMenuItem<String?>(
                       value: m.id,
                       child: Text(l10n.classMeetingNumberTitle(m.number, m.title), style: const TextStyle(fontSize: 13)),
+                    )),
+                ..._assignments.map((a) => DropdownMenuItem<String?>(
+                      value: 'assignment_${a.id}',
+                      child: Text(
+                        '${a.isGroupAssignment ? "[Kelompok] " : "[Tugas] "}${a.title}',
+                        style: const TextStyle(fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     )),
               ],
               onChanged: (val) {
@@ -1054,6 +1172,29 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                   value: postAvg,
                   subtitle: l10n.classKpiSubCount(postSubmittedCount, totalStudents),
                   color: Colors.deepPurple,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+        ] else if (selectedAssignment != null) ...[
+          Row(
+            children: [
+              Expanded(
+                child: _buildKpiCard(
+                  title: 'Rata-rata Nilai Tugas',
+                  value: assignAvg,
+                  subtitle: '$assignGradedCount dari $totalStudents mahasiswa dinilai',
+                  color: AppTheme.primary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildKpiCard(
+                  title: 'Terkumpul',
+                  value: '$assignSubmittedCount',
+                  subtitle: '$assignSubmittedCount dari $totalStudents telah mengumpulkan',
+                  color: AppTheme.success,
                 ),
               ),
             ],
@@ -1180,7 +1321,9 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                     ],
                   ),
                   const SizedBox(height: 10),
-                  if (selectedMeeting != null)
+                  if (selectedAssignment != null)
+                    _buildAssignmentStatusChip(assignment: selectedAssignment, student: member)
+                  else if (selectedMeeting != null)
                     Row(
                       children: [
                         Expanded(
@@ -1228,6 +1371,21 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
                           }
                         }
 
+                        // Ringkasan tugas
+                        for (final a in _assignments) {
+                          AssignmentSubmission? sub;
+                          if (a.isGroupAssignment) {
+                            if (member.groupId != null && member.groupId!.isNotEmpty) {
+                              sub = _classSubmissions['${a.id}_group_${member.groupId}'];
+                            }
+                          } else {
+                            sub = _classSubmissions['${a.id}_${member.uid}'];
+                          }
+                          if (sub != null && sub.score != null) {
+                            summaryChips.add(_buildMiniSummaryChip(a.title.length > 8 ? '${a.title.substring(0, 8)}..' : a.title, sub.score!, AppTheme.primary));
+                          }
+                        }
+
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -1265,6 +1423,79 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           );
         }),
       ],
+    );
+  }
+
+  Widget _buildAssignmentStatusChip({
+    required Assignment assignment,
+    required ClassMember student,
+  }) {
+    AssignmentSubmission? sub;
+    if (assignment.isGroupAssignment) {
+      if (student.groupId == null || student.groupId!.isEmpty) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: context.surfaceColor,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: context.borderColor),
+          ),
+          child: const Text('Belum ada kelompok', style: TextStyle(fontSize: 11, color: Colors.grey)),
+        );
+      }
+      sub = _classSubmissions['${assignment.id}_group_${student.groupId}'];
+    } else {
+      sub = _classSubmissions['${assignment.id}_${student.uid}'];
+    }
+
+    if (sub == null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: context.surfaceColor,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: context.borderColor),
+        ),
+        child: const Text('Belum Mengerjakan (-)', style: TextStyle(fontSize: 11, color: Colors.grey)),
+      );
+    }
+
+    if (sub.status == SubmissionStatus.graded) {
+      final isLate = (sub.submittedAt != null && sub.submittedAt!.isAfter(assignment.deadline));
+      final label = isLate
+          ? 'DINILAI (TERLAMBAT): ${sub.score!.toStringAsFixed(0)}'
+          : 'DINILAI: ${sub.score!.toStringAsFixed(0)}';
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppTheme.success.withAlpha(20),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: isLate ? AppTheme.warning : AppTheme.success.withAlpha(50)),
+        ),
+        child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isLate ? AppTheme.warning : AppTheme.success)),
+      );
+    }
+
+    if (sub.status == SubmissionStatus.late) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppTheme.warning.withAlpha(20),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppTheme.warning.withAlpha(50)),
+        ),
+        child: const Text('TERLAMBAT (Menunggu Nilai)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.warning)),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withAlpha(20),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: AppTheme.primary.withAlpha(50)),
+      ),
+      child: const Text('DIKUMPULKAN (Menunggu Nilai)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primary)),
     );
   }
 
@@ -1814,27 +2045,46 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     }
     if (!mounted) return;
 
-    final formData = await showDialog<GroupFormData>(
+    final result = await showDialog<GroupDialogResult>(
       context: context,
       builder: (ctx) => GroupFormDialog(
         pool: availableMembers,
         initialSelected: const {},
         isEdit: false,
+        existingGroupCount: _groups.length,
+        classId: widget.classId,
       ),
     );
 
-    if (formData != null && mounted) {
+    if (result != null && mounted) {
       try {
-        await _groupRepository.createGroup(
-          classId: widget.classId,
-          name: formData.name,
-          members: formData.selectedMembers,
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.groupsCreateSuccess), backgroundColor: AppTheme.success),
+        if (result.isRandom && result.randomGroups != null) {
+          await _groupRepository.createRandomizedGroups(
+            classId: widget.classId,
+            groups: result.randomGroups!,
           );
-          _loadAllData(isSoftRefresh: true);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${result.randomGroups!.length} kelompok berhasil dibentuk secara acak.'),
+                backgroundColor: AppTheme.success,
+              ),
+            );
+            _loadAllData(isSoftRefresh: true);
+          }
+        } else if (result.manualGroup != null) {
+          final formData = result.manualGroup!;
+          await _groupRepository.createGroup(
+            classId: widget.classId,
+            name: formData.name,
+            members: formData.selectedMembers,
+          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.groupsCreateSuccess), backgroundColor: AppTheme.success),
+            );
+            _loadAllData(isSoftRefresh: true);
+          }
         }
       } catch (e) {
         if (mounted) {
@@ -1861,17 +2111,19 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     }
     if (!mounted) return;
 
-    final formData = await showDialog<GroupFormData>(
+    final result = await showDialog<GroupDialogResult>(
       context: context,
       builder: (ctx) => GroupFormDialog(
         initialName: group.name,
         pool: pool,
         initialSelected: currentMembers.toSet(),
         isEdit: true,
+        classId: widget.classId,
       ),
     );
 
-    if (formData != null && mounted) {
+    if (result != null && result.manualGroup != null && mounted) {
+      final formData = result.manualGroup!;
       try {
         final initialUids = group.memberUids.toSet();
         final currentSelectedUids = formData.selectedMembers.map((m) => m.uid).toSet();
