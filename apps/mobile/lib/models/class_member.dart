@@ -25,6 +25,7 @@ class ClassMember {
   final MemberStatus status;
   final DateTime? joinedAt;
   final String? nim;
+  final String? groupId;
 
   const ClassMember({
     required this.uid,
@@ -33,6 +34,7 @@ class ClassMember {
     required this.status,
     this.joinedAt,
     this.nim,
+    this.groupId,
   });
 
   factory ClassMember.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -49,6 +51,7 @@ class ClassMember {
     }
 
     final nimRaw = map['nim'] as String?;
+    final groupRaw = map['group_id'] as String?;
     return ClassMember(
       uid: uid,
       displayName: map['display_name'] as String? ?? 'Anggota',
@@ -56,6 +59,7 @@ class ClassMember {
       status: MemberStatus.fromString(map['status'] as String?),
       joinedAt: parseDate(map['joined_at']),
       nim: nimRaw != null && nimRaw.trim().isNotEmpty ? nimRaw.trim() : null,
+      groupId: groupRaw != null && groupRaw.trim().isNotEmpty ? groupRaw.trim() : null,
     );
   }
 
@@ -66,6 +70,27 @@ class ClassMember {
       'status': status.value,
       'joined_at': joinedAt != null ? Timestamp.fromDate(joinedAt!) : FieldValue.serverTimestamp(),
       if (nim != null && nim!.trim().isNotEmpty) 'nim': nim,
+      if (groupId != null && groupId!.trim().isNotEmpty) 'group_id': groupId,
     };
+  }
+
+  ClassMember copyWith({
+    String? displayName,
+    AccountType? accountType,
+    MemberStatus? status,
+    DateTime? joinedAt,
+    String? nim,
+    String? groupId,
+    bool clearGroupId = false,
+  }) {
+    return ClassMember(
+      uid: uid,
+      displayName: displayName ?? this.displayName,
+      accountType: accountType ?? this.accountType,
+      status: status ?? this.status,
+      joinedAt: joinedAt ?? this.joinedAt,
+      nim: nim ?? this.nim,
+      groupId: clearGroupId ? null : (groupId ?? this.groupId),
+    );
   }
 }

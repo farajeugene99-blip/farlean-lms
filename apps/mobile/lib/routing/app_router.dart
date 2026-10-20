@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/config/app_constants.dart';
+import '../models/assignment.dart';
 import '../models/material_content.dart';
 import '../models/meeting.dart';
 import '../models/video_item.dart';
+import '../presentation/ai/ai_tutor_screen.dart';
+import '../presentation/assignment/assignment_detail_screen.dart';
 import '../presentation/auth/forgot_password_screen.dart';
 import '../presentation/auth/login_screen.dart';
 import '../presentation/auth/register_screen.dart';
@@ -14,7 +17,6 @@ import '../presentation/discussion/thread_detail_screen.dart';
 import '../presentation/main/dashboard_screen.dart';
 import '../presentation/main/join_class_screen.dart';
 import '../presentation/main/main_shell.dart';
-import '../presentation/main/placeholder_screen.dart';
 import '../presentation/main/profile_screen.dart';
 import '../presentation/manual_book/manual_book_list_screen.dart';
 import '../presentation/material/material_editor_screen.dart';
@@ -161,6 +163,20 @@ class AppRouter {
           },
         ),
         GoRoute(
+          path: '/assignments/:assignmentId',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final assignmentId = state.pathParameters['assignmentId'] ?? '';
+            final classId = state.uri.queryParameters['classId'] ?? '';
+            final initialAssignment = state.extra as Assignment?;
+            return AssignmentDetailScreen(
+              assignmentId: assignmentId,
+              classId: classId,
+              initialAssignment: initialAssignment,
+            );
+          },
+        ),
+        GoRoute(
           path: '/pretests/:pretestId',
           parentNavigatorKey: _rootNavigatorKey,
           builder: (context, state) {
@@ -224,13 +240,7 @@ class AppRouter {
             GoRoute(
               path: AppConstants.aiRoute,
               pageBuilder: (context, state) => const NoTransitionPage(
-                child: PlaceholderScreen(
-                  title: 'AI Tutor Pintar',
-                  description:
-                      'Asisten belajar cerdas bertenaga AI untuk bimbingan personal akan hadir pada Phase 3.',
-                  icon: Icons.auto_awesome_rounded,
-                  targetPhase: 'Segera Hadir di Phase 3',
-                ),
+                child: AiTutorScreen(),
               ),
             ),
             GoRoute(

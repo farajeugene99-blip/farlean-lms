@@ -211,6 +211,13 @@ void main() {
       expect(find.text('Detail Diskusi'), findsOneWidget);
       expect(find.text('Thread Diskusi Aktif'), findsOneWidget);
       expect(find.text('Balasan (2)'), findsOneWidget);
+
+      // Buka balasan anak (Pola YouTube)
+      expect(find.text('Lihat 1 balasan'), findsOneWidget);
+      await tester.tap(find.text('Lihat 1 balasan'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sembunyikan balasan'), findsOneWidget);
       expect(find.text('Balas'), findsNWidgets(2));
 
       // Konten pengguna utuh
@@ -229,6 +236,13 @@ void main() {
       expect(find.text('Discussion Details'), findsOneWidget);
       expect(find.text('Active Discussion Thread'), findsOneWidget);
       expect(find.text('Replies (2)'), findsOneWidget);
+
+      // Expand child replies (YouTube pattern)
+      expect(find.text('View 1 reply'), findsOneWidget);
+      await tester.tap(find.text('View 1 reply'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hide replies'), findsOneWidget);
       expect(find.text('Reply'), findsNWidgets(2));
 
       // Konten pengguna utuh

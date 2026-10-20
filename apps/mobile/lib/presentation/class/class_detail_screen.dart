@@ -4,13 +4,18 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth/role_guard.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/date_formatter.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/app_user.dart';
+import '../../models/assignment.dart';
+import '../../models/class_group.dart';
 import '../../models/class_member.dart';
 import '../../models/classroom.dart';
 import '../../models/content_status.dart';
 import '../../models/meeting.dart';
+import '../../repositories/assignment_repository.dart';
 import '../../repositories/class_repository.dart';
+import '../../repositories/group_repository.dart';
 import '../../repositories/meeting_repository.dart';
 import '../../services/auth_provider.dart';
 import '../../services/class_provider.dart';
@@ -22,12 +27,16 @@ class ClassDetailScreen extends StatefulWidget {
   final String classId;
   final ClassRepository? classRepository;
   final MeetingRepository? meetingRepository;
+  final GroupRepository? groupRepository;
+  final AssignmentRepository? assignmentRepository;
 
   const ClassDetailScreen({
     super.key,
     required this.classId,
     this.classRepository,
     this.meetingRepository,
+    this.groupRepository,
+    this.assignmentRepository,
   });
 
   @override
@@ -38,17 +47,23 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     with SingleTickerProviderStateMixin {
   late final ClassRepository _classRepository;
   late final MeetingRepository _meetingRepository;
+  late final GroupRepository _groupRepository;
+  late final AssignmentRepository _assignmentRepository;
   late final TabController _tabController;
 
   Classroom? _classroom;
   List<Meeting> _meetings = [];
   List<ClassMember> _members = [];
+  List<ClassGroup> _groups = [];
+  List<Assignment> _assignments = [];
   Map<String, double> _classPretestScores = {};
   Map<String, double> _classPosttestScores = {};
   Map<String, double> _studentPersonalScores = {};
   String? _selectedMeetingId;
   int _gradebookPage = 0;
   static const int _pageSize = 50;
+  int _memberSubTab = 0;
+  int _meetingsSubTab = 0;
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -58,6 +73,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     super.initState();
     _classRepository = widget.classRepository ?? ClassRepository();
     _meetingRepository = widget.meetingRepository ?? MeetingRepository();
+    _groupRepository = widget.groupRepository ?? GroupRepository();
+    _assignmentRepository = widget.assignmentRepository ?? AssignmentRepository();
     _tabController = TabController(length: 3, vsync: this);
     _loadAllData();
   }
@@ -87,6 +104,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         isStaff: isStaff,
       );
       final members = await _classRepository.getClassMembers(widget.classId);
+      final groups = await _groupRepository.getGroups(widget.classId);
+      final assignments = await _assignmentRepository.getAssignmentsByClass(widget.classId);
 
       Map<String, double> preScores = {};
       Map<String, double> postScores = {};
@@ -104,6 +123,8 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
           _classroom = classroom;
           _meetings = meetings;
           _members = members;
+          _groups = groups;
+          _assignments = assignments;
           _classPretestScores = preScores;
           _classPosttestScores = postScores;
           _studentPersonalScores = personalScores;
@@ -426,7 +447,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               children: [
                 _buildMeetingsTab(isOwner),
                 _buildGradebookTab(isOwner, isStaff),
-                _buildMembersTab(isStaff),
+                _buildMembersTab(isOwner, isStaff),
               ],
             ),
           ),
@@ -436,6 +457,47 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Widget _buildMeetingsTab(bool isOwner) {
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: SegmentedButton<int>(
+                  segments: [
+                    ButtonSegment<int>(
+                      value: 0,
+                      label: Text('${_meetings.length} ${l10n.classTabMeetings}'),
+                      icon: const Icon(Icons.calendar_month_rounded, size: 16),
+                    ),
+                    ButtonSegment<int>(
+                      value: 1,
+                      label: Text(l10n.assignmentCount(_assignments.length)),
+                      icon: const Icon(Icons.assignment_rounded, size: 16),
+                    ),
+                  ],
+                  selected: {_meetingsSubTab},
+                  onSelectionChanged: (set) {
+                    setState(() => _meetingsSubTab = set.first);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: _meetingsSubTab == 1
+              ? _buildAssignmentsList(isOwner)
+              : _buildMeetingsList(isOwner),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMeetingsList(bool isOwner) {
     final l10n = AppLocalizations.of(context);
     if (_meetings.isEmpty) {
       return Center(
@@ -503,6 +565,321 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         );
       },
     );
+  }
+
+  // ============================================================================
+  // SUBTAB TUGAS (FITUR D)
+  // ============================================================================
+
+  Widget _buildAssignmentsList(bool isOwner) {
+    final l10n = AppLocalizations.of(context);
+
+    if (_assignments.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.assignment_outlined, size: 48, color: context.textSecondaryColor.withAlpha(128)),
+              const SizedBox(height: 12),
+              Text(l10n.assignmentEmptyTitle, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 6),
+              Text(
+                l10n.assignmentEmptyDesc,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              if (isOwner && _classroom?.isActive == true) ...[
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: _showCreateAssignmentDialog,
+                  icon: const Icon(Icons.add_task_rounded),
+                  label: Text(l10n.assignmentCreateBtn),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+      itemCount: _assignments.length + (isOwner && _classroom?.isActive == true ? 1 : 0),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        if (isOwner && _classroom?.isActive == true && index == 0) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              children: [
+                Text(
+                  '${_assignments.length} ${l10n.tabAssignments}',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(color: context.textSecondaryColor),
+                ),
+                const Spacer(),
+                ElevatedButton.icon(
+                  onPressed: _showCreateAssignmentDialog,
+                  icon: const Icon(Icons.add_task_rounded, size: 16),
+                  label: Text(l10n.assignmentCreateBtn),
+                  style: ElevatedButton.styleFrom(visualDensity: VisualDensity.compact),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final assignmentIndex = (isOwner && _classroom?.isActive == true) ? index - 1 : index;
+        final assignment = _assignments[assignmentIndex];
+        final deadlineStr = DateFormatter.formatWib(assignment.deadline);
+        final isPast = DateTime.now().isAfter(assignment.deadline);
+
+        return Card(
+          elevation: 0.5,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: context.borderColor)),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            leading: CircleAvatar(
+              backgroundColor: (assignment.isGroupAssignment ? AppTheme.secondary : AppTheme.primary).withAlpha(25),
+              child: Icon(
+                assignment.isGroupAssignment ? Icons.groups_rounded : Icons.person_rounded,
+                color: assignment.isGroupAssignment ? AppTheme.secondary : AppTheme.primary,
+                size: 20,
+              ),
+            ),
+            title: Text(assignment.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.event_outlined, size: 14, color: context.textSecondaryColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      deadlineStr,
+                      style: TextStyle(fontSize: 11, color: isPast ? AppTheme.error : context.textSecondaryColor),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 6,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: (assignment.isGroupAssignment ? AppTheme.secondary : AppTheme.primary).withAlpha(20),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        assignment.isGroupAssignment ? l10n.assignmentGroupBadge : l10n.assignmentIndividualBadge,
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: assignment.isGroupAssignment ? AppTheme.secondary : AppTheme.primary),
+                      ),
+                    ),
+                    if (isPast)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(color: AppTheme.error.withAlpha(20), borderRadius: BorderRadius.circular(4)),
+                        child: Text(l10n.assignmentStatusLate.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.error)),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            trailing: isOwner
+                ? PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert_rounded, color: context.textSecondaryColor, size: 20),
+                    onSelected: (val) {
+                      if (val == 'delete') _confirmDeleteAssignment(assignment);
+                    },
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 18),
+                            const SizedBox(width: 8),
+                            Text(l10n.meetingDeleteAction, style: const TextStyle(color: AppTheme.error)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+            onTap: () async {
+              await context.push('/assignments/${assignment.id}?classId=${widget.classId}', extra: assignment);
+              _loadAllData();
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showCreateAssignmentDialog() async {
+    final l10n = AppLocalizations.of(context);
+    final titleController = TextEditingController();
+    final instructionsController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    DateTime deadline = DateTime.now().add(const Duration(days: 7));
+    bool isGroup = false;
+    bool allowLate = true;
+
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(l10n.assignmentCreateTitle),
+          content: SizedBox(
+            width: 440,
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: titleController,
+                      decoration: InputDecoration(
+                        labelText: l10n.assignmentTitleLabel,
+                        hintText: 'Contoh: Tugas 1 - Desain ERD',
+                      ),
+                      validator: (v) => v == null || v.trim().isEmpty ? l10n.assignmentTitleRequired : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: instructionsController,
+                      decoration: InputDecoration(
+                        labelText: l10n.assignmentInstructionsLabel,
+                        hintText: 'Petunjuk pengerjaan dan format berkas...',
+                      ),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 16),
+                    Text('${l10n.assignmentDeadlineLabel}:', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 6),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.calendar_today_rounded, size: 16),
+                      label: Text(DateFormatter.formatWib(deadline)),
+                      onPressed: () async {
+                        final pickedDate = await showDatePicker(
+                          context: ctx,
+                          initialDate: deadline,
+                          firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (pickedDate != null) {
+                          setDialogState(() {
+                            deadline = DateTime(
+                              pickedDate.year,
+                              pickedDate.month,
+                              pickedDate.day,
+                              23,
+                              59,
+                            );
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      title: Text(l10n.assignmentIsGroupLabel, style: const TextStyle(fontSize: 13)),
+                      value: isGroup,
+                      onChanged: (val) => setDialogState(() => isGroup = val),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      title: Text(l10n.assignmentAllowLateLabel, style: const TextStyle(fontSize: 13)),
+                      value: allowLate,
+                      onChanged: (val) => setDialogState(() => allowLate = val),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.btnCancel)),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                try {
+                  final newAssignment = Assignment(
+                    id: '',
+                    classId: widget.classId,
+                    title: titleController.text.trim(),
+                    instructions: instructionsController.text.trim(),
+                    deadline: deadline,
+                    isGroupAssignment: isGroup,
+                    allowLateSubmission: allowLate,
+                  );
+                  await _assignmentRepository.createAssignment(newAssignment);
+                  if (ctx.mounted) Navigator.pop(ctx, true);
+                } catch (e) {
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+                    );
+                  }
+                }
+              },
+              child: Text(l10n.btnSave),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    titleController.dispose();
+    instructionsController.dispose();
+
+    if (created == true && mounted) {
+      _loadAllData();
+    }
+  }
+
+  Future<void> _confirmDeleteAssignment(Assignment assignment) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.assignmentDeleteConfirmTitle),
+        content: Text(l10n.assignmentDeleteConfirmDesc(assignment.title)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.btnCancel)),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.meetingDeleteAction),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await _assignmentRepository.deleteAssignment(widget.classId, assignment.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.assignmentDeleteSuccess), backgroundColor: AppTheme.success),
+          );
+          _loadAllData();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+          );
+        }
+      }
+    }
   }
 
   Widget _buildGradebookTab(bool isOwner, bool isStaff) {
@@ -1044,7 +1421,48 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     );
   }
 
-  Widget _buildMembersTab(bool isStaff) {
+  Widget _buildMembersTab(bool isOwner, bool isStaff) {
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: SegmentedButton<int>(
+                  segments: [
+                    ButtonSegment<int>(
+                      value: 0,
+                      label: Text(l10n.classMemberCount(_members.length)),
+                      icon: const Icon(Icons.person_rounded, size: 16),
+                    ),
+                    ButtonSegment<int>(
+                      value: 1,
+                      label: Text('${_groups.length} ${l10n.tabGroups}'),
+                      icon: const Icon(Icons.groups_rounded, size: 16),
+                    ),
+                  ],
+                  selected: {_memberSubTab},
+                  onSelectionChanged: (set) {
+                    setState(() => _memberSubTab = set.first);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: _memberSubTab == 1
+              ? _buildGroupsTab(isOwner, isStaff)
+              : _buildMembersList(isStaff),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMembersList(bool isStaff) {
     final l10n = AppLocalizations.of(context);
     if (_members.isEmpty) {
       return Center(
@@ -1167,5 +1585,559 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
         style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
       ),
     );
+  }
+
+  // ============================================================================
+  // TAB KELOMPOK (FITUR E)
+  // ============================================================================
+
+  Widget _buildGroupsTab(bool isOwner, bool isStaff) {
+    final l10n = AppLocalizations.of(context);
+
+    if (_groups.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.groups_outlined,
+                size: 56,
+                color: context.textSecondaryColor.withAlpha(128),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.groupsEmptyTitle,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.groupsEmptyDesc,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: context.textSecondaryColor),
+              ),
+              if (isOwner) ...[
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: _showCreateGroupDialog,
+                  icon: const Icon(Icons.group_add_rounded),
+                  label: Text(l10n.groupsCreateBtn),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadAllData,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          if (isOwner)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Text(
+                    '${_groups.length} ${l10n.tabGroups}',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: context.textSecondaryColor,
+                        ),
+                  ),
+                  const Spacer(),
+                  ElevatedButton.icon(
+                    onPressed: _showCreateGroupDialog,
+                    icon: const Icon(Icons.group_add_rounded, size: 18),
+                    label: Text(l10n.groupsCreateBtn),
+                    style: ElevatedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ..._groups.map((group) => _buildGroupCard(group, isOwner)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupCard(ClassGroup group, bool isOwner) {
+    final l10n = AppLocalizations.of(context);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 0.5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: context.borderColor),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withAlpha(20),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.groups_rounded, color: AppTheme.primary, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        group.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.groupsMemberCount(group.memberUids.length),
+                        style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isOwner) ...[
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    tooltip: l10n.meetingEditAction,
+                    onPressed: () => _showEditGroupDialog(group),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.error, size: 20),
+                    tooltip: l10n.meetingDeleteAction,
+                    onPressed: () => _confirmDeleteGroup(group),
+                  ),
+                ],
+              ],
+            ),
+            if (group.memberUids.isNotEmpty) ...[
+              const Divider(height: 20),
+              ...group.memberUids.map((uid) {
+                final name = group.memberNames[uid] ?? 'Mahasiswa';
+                final isLeader = uid == group.leaderUid;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 12,
+                        backgroundColor: isLeader ? AppTheme.warning.withAlpha(30) : context.borderColor,
+                        child: Icon(
+                          isLeader ? Icons.star_rounded : Icons.person_rounded,
+                          size: 14,
+                          color: isLeader ? AppTheme.warning : context.textSecondaryColor,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: isLeader ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                      if (isLeader)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppTheme.warning.withAlpha(20),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            l10n.groupsLeaderLabel,
+                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.warning),
+                          ),
+                        ),
+                      if (isOwner && !isLeader)
+                        PopupMenuButton<String>(
+                          icon: Icon(Icons.more_vert_rounded, size: 16, color: context.textSecondaryColor),
+                          onSelected: (val) {
+                            if (val == 'leader') {
+                              _setGroupLeader(group, uid);
+                            }
+                          },
+                          itemBuilder: (ctx) => [
+                            PopupMenuItem(
+                              value: 'leader',
+                              child: Text(l10n.groupsSetLeader, style: const TextStyle(fontSize: 13)),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showCreateGroupDialog() async {
+    final l10n = AppLocalizations.of(context);
+    List<ClassMember> availableMembers = [];
+    bool loadingAvailable = true;
+
+    try {
+      availableMembers = await _groupRepository.getAvailableMembers(widget.classId);
+    } catch (_) {
+      availableMembers = [];
+    }
+    loadingAvailable = false;
+
+    if (!mounted) return;
+
+    final nameController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final selectedMembers = <ClassMember>{};
+
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(l10n.groupsCreateTitle),
+          content: SizedBox(
+            width: 440,
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: l10n.groupsNameLabel,
+                        hintText: l10n.groupsNameHint,
+                      ),
+                      validator: (v) => v == null || v.trim().isEmpty ? l10n.groupsNameRequired : null,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.groupsSelectMembersTitle(selectedMembers.length),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    const SizedBox(height: 8),
+                    if (loadingAvailable)
+                      const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (availableMembers.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          l10n.groupsNoAvailableMembers,
+                          style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
+                        ),
+                      )
+                    else
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 220),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: context.borderColor),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: availableMembers.length,
+                          separatorBuilder: (context, index) => const Divider(height: 1),
+                          itemBuilder: (ctx, i) {
+                            final m = availableMembers[i];
+                            final isChecked = selectedMembers.contains(m);
+                            return CheckboxListTile(
+                              dense: true,
+                              title: Text(m.displayName, style: const TextStyle(fontSize: 13)),
+                              subtitle: m.nim != null ? Text('NIM: ${m.nim}', style: const TextStyle(fontSize: 11)) : null,
+                              value: isChecked,
+                              onChanged: (val) {
+                                setDialogState(() {
+                                  if (val == true) {
+                                    selectedMembers.add(m);
+                                  } else {
+                                    selectedMembers.remove(m);
+                                  }
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.btnCancel),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                try {
+                  await _groupRepository.createGroup(
+                    classId: widget.classId,
+                    name: nameController.text.trim(),
+                    members: selectedMembers.toList(),
+                  );
+                  if (ctx.mounted) Navigator.pop(ctx, true);
+                } catch (e) {
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+                    );
+                  }
+                }
+              },
+              child: Text(l10n.btnSave),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    nameController.dispose();
+
+    if (created == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.groupsCreateSuccess), backgroundColor: AppTheme.success),
+      );
+      _loadAllData();
+    }
+  }
+
+  Future<void> _showEditGroupDialog(ClassGroup group) async {
+    final l10n = AppLocalizations.of(context);
+    List<ClassMember> pool = [];
+    bool loadingPool = true;
+
+    // Anggota saat ini dari kelompok ini
+    final currentMembers = _members.where((m) => group.memberUids.contains(m.uid)).toList();
+
+    try {
+      final available = await _groupRepository.getAvailableMembers(widget.classId);
+      // Kolam pilihan = anggota kelompok saat ini + mahasiswa yang belum berkelompok
+      final currentUids = currentMembers.map((m) => m.uid).toSet();
+      final extraAvailable = available.where((m) => !currentUids.contains(m.uid)).toList();
+      pool = [...currentMembers, ...extraAvailable];
+    } catch (_) {
+      pool = List.from(currentMembers);
+    }
+    loadingPool = false;
+
+    if (!mounted) return;
+
+    final nameController = TextEditingController(text: group.name);
+    final formKey = GlobalKey<FormState>();
+    final selectedMembers = Set<ClassMember>.from(currentMembers);
+
+    final updated = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(l10n.groupsEditTitle),
+          content: SizedBox(
+            width: 440,
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: l10n.groupsNameLabel,
+                        hintText: l10n.groupsNameHint,
+                      ),
+                      validator: (v) => v == null || v.trim().isEmpty ? l10n.groupsNameRequired : null,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.groupsSelectMembersTitle(selectedMembers.length),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    const SizedBox(height: 8),
+                    if (loadingPool)
+                      const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (pool.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          l10n.groupsNoAvailableMembers,
+                          style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
+                        ),
+                      )
+                    else
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 220),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: context.borderColor),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: pool.length,
+                          separatorBuilder: (context, index) => const Divider(height: 1),
+                          itemBuilder: (ctx, i) {
+                            final m = pool[i];
+                            final isChecked = selectedMembers.contains(m);
+                            return CheckboxListTile(
+                              dense: true,
+                              title: Text(m.displayName, style: const TextStyle(fontSize: 13)),
+                              subtitle: m.nim != null ? Text('NIM: ${m.nim}', style: const TextStyle(fontSize: 11)) : null,
+                              value: isChecked,
+                              onChanged: (val) {
+                                setDialogState(() {
+                                  if (val == true) {
+                                    selectedMembers.add(m);
+                                  } else {
+                                    selectedMembers.remove(m);
+                                  }
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.btnCancel),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                try {
+                  final initialUids = group.memberUids.toSet();
+                  final currentSelectedUids = selectedMembers.map((m) => m.uid).toSet();
+
+                  final newMembers = selectedMembers.where((m) => !initialUids.contains(m.uid)).toList();
+                  final removedUids = initialUids.where((uid) => !currentSelectedUids.contains(uid)).toList();
+
+                  String? newLeader = group.leaderUid;
+                  if (newLeader != null && !currentSelectedUids.contains(newLeader)) {
+                    newLeader = selectedMembers.isNotEmpty ? selectedMembers.first.uid : null;
+                  }
+
+                  await _groupRepository.updateGroup(
+                    classId: widget.classId,
+                    groupId: group.id,
+                    name: nameController.text.trim(),
+                    leaderUid: newLeader,
+                    newMembers: newMembers,
+                    removedMemberUids: removedUids,
+                  );
+                  if (ctx.mounted) Navigator.pop(ctx, true);
+                } catch (e) {
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+                    );
+                  }
+                }
+              },
+              child: Text(l10n.btnSave),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    nameController.dispose();
+
+    if (updated == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.groupsEditSuccess), backgroundColor: AppTheme.success),
+      );
+      _loadAllData();
+    }
+  }
+
+  Future<void> _confirmDeleteGroup(ClassGroup group) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.groupsDeleteConfirmTitle),
+        content: Text(l10n.groupsDeleteConfirmDesc(group.name)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.btnCancel)),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.meetingDeleteAction),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await _groupRepository.deleteGroup(
+          classId: widget.classId,
+          groupId: group.id,
+          memberUids: group.memberUids,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.groupsDeleteSuccess), backgroundColor: AppTheme.success),
+          );
+          _loadAllData();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _setGroupLeader(ClassGroup group, String leaderUid) async {
+    try {
+      await _groupRepository.updateGroup(
+        classId: widget.classId,
+        groupId: group.id,
+        name: group.name,
+        leaderUid: leaderUid,
+        newMembers: [],
+        removedMemberUids: [],
+      );
+      _loadAllData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+        );
+      }
+    }
   }
 }

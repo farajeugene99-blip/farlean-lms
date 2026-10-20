@@ -3481,6 +3481,486 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Inisialisasi Firebase Gagal'**
   String get startupFirebaseInitFailed;
+
+  /// Judul kartu buku panduan di dashboard
+  ///
+  /// In id, this message translates to:
+  /// **'Buku Panduan LMS'**
+  String get dashboardManualBookTitle;
+
+  /// Deskripsi kartu buku panduan di dashboard
+  ///
+  /// In id, this message translates to:
+  /// **'Akses panduan sistem Farlean LMS untuk mahasiswa dan pengajar'**
+  String get dashboardManualBookDesc;
+
+  /// Badge admin pada buku panduan
+  ///
+  /// In id, this message translates to:
+  /// **'Dikelola Admin'**
+  String get dashboardManualBookAdminBadge;
+
+  /// Judul panduan sistem global
+  ///
+  /// In id, this message translates to:
+  /// **'Buku Panduan Sistem'**
+  String get manualBookSystemTitle;
+
+  /// Pesan saat buku panduan sistem kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Belum ada buku panduan sistem yang dipublikasikan oleh Administrator.'**
+  String get manualBookSystemEmpty;
+
+  /// Peringatan hak akses panduan sistem
+  ///
+  /// In id, this message translates to:
+  /// **'Hanya Admin yang berhak mengelola buku panduan sistem global.'**
+  String get manualBookOnlyAdminCanManage;
+
+  /// Nama tab kelompok pada detail kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Kelompok'**
+  String get tabGroups;
+
+  /// Judul state kosong daftar kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Belum Ada Kelompok'**
+  String get groupsEmptyTitle;
+
+  /// Deskripsi state kosong daftar kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Dosen dapat membuat kelompok mahasiswa untuk kegiatan tugas dan diskusi kelompok.'**
+  String get groupsEmptyDesc;
+
+  /// Tombol buat kelompok baru
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Kelompok'**
+  String get groupsCreateBtn;
+
+  /// Judul dialog pembuatan kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Kelompok Baru'**
+  String get groupsCreateTitle;
+
+  /// Label input nama kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Nama Kelompok'**
+  String get groupsNameLabel;
+
+  /// Hint text input nama kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Contoh: Kelompok 1 - Pemrograman Mobile'**
+  String get groupsNameHint;
+
+  /// Validasi nama kelompok kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Nama kelompok wajib diisi'**
+  String get groupsNameRequired;
+
+  /// Judul pemilih anggota kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Pilih Anggota ({count} terpilih)'**
+  String groupsSelectMembersTitle(int count);
+
+  /// Pesan jika tidak ada mahasiswa yang belum berkelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Semua mahasiswa aktif di kelas ini sudah memiliki kelompok.'**
+  String get groupsNoAvailableMembers;
+
+  /// Jumlah anggota dalam kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'{count, plural, =0{Belum ada anggota} =1{1 anggota} other{{count} anggota}}'**
+  String groupsMemberCount(int count);
+
+  /// Judul konfirmasi hapus kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Hapus Kelompok?'**
+  String get groupsDeleteConfirmTitle;
+
+  /// Konfirmasi penghapusan kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Kelompok \'{name}\' akan dihapus dan anggotanya akan kembali belum memiliki kelompok.'**
+  String groupsDeleteConfirmDesc(String name);
+
+  /// Notifikasi sukses hapus kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Kelompok berhasil dihapus'**
+  String get groupsDeleteSuccess;
+
+  /// Notifikasi sukses buat kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Kelompok berhasil dibuat'**
+  String get groupsCreateSuccess;
+
+  /// Label ketua kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Ketua Kelompok'**
+  String get groupsLeaderLabel;
+
+  /// Aksi memilih ketua kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Pilih Sebagai Ketua'**
+  String get groupsSetLeader;
+
+  /// Indikator loading data kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Memuat data kelompok...'**
+  String get groupsLoading;
+
+  /// Judul dialog ubah kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Ubah Kelompok'**
+  String get groupsEditTitle;
+
+  /// Notifikasi sukses ubah kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Kelompok berhasil diperbarui'**
+  String get groupsEditSuccess;
+
+  /// Nama tab tugas kelas
+  ///
+  /// In id, this message translates to:
+  /// **'Tugas'**
+  String get tabAssignments;
+
+  /// Jumlah tugas di kelas
+  ///
+  /// In id, this message translates to:
+  /// **'{count, plural, =0{Belum ada tugas} =1{1 tugas} other{{count} tugas}}'**
+  String assignmentCount(int count);
+
+  /// Judul state kosong daftar tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Belum Ada Tugas'**
+  String get assignmentEmptyTitle;
+
+  /// Deskripsi state kosong daftar tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Pengajar belum memberikan tugas untuk kelas ini.'**
+  String get assignmentEmptyDesc;
+
+  /// Tombol buat tugas baru
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Tugas'**
+  String get assignmentCreateBtn;
+
+  /// Judul dialog pembuatan tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Buat Tugas Baru'**
+  String get assignmentCreateTitle;
+
+  /// Label judul tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Judul Tugas'**
+  String get assignmentTitleLabel;
+
+  /// Validasi judul tugas kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Judul tugas wajib diisi'**
+  String get assignmentTitleRequired;
+
+  /// Label petunjuk pengerjaan tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Petunjuk Pengerjaan'**
+  String get assignmentInstructionsLabel;
+
+  /// Label batas waktu tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Batas Waktu (Deadline)'**
+  String get assignmentDeadlineLabel;
+
+  /// Switch izinkan pengumpulan terlambat
+  ///
+  /// In id, this message translates to:
+  /// **'Izinkan Pengumpulan Terlambat'**
+  String get assignmentAllowLateLabel;
+
+  /// Switch penanda tugas kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Tugas Kelompok'**
+  String get assignmentIsGroupLabel;
+
+  /// Badge tugas individu
+  ///
+  /// In id, this message translates to:
+  /// **'Individu'**
+  String get assignmentIndividualBadge;
+
+  /// Badge tugas kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Kelompok'**
+  String get assignmentGroupBadge;
+
+  /// Status pengumpulan tepat waktu
+  ///
+  /// In id, this message translates to:
+  /// **'Dikumpulkan'**
+  String get assignmentStatusSubmitted;
+
+  /// Status pengumpulan terlambat
+  ///
+  /// In id, this message translates to:
+  /// **'Terlambat'**
+  String get assignmentStatusLate;
+
+  /// Status pengumpulan sudah dinilai
+  ///
+  /// In id, this message translates to:
+  /// **'Sudah Dinilai'**
+  String get assignmentStatusGraded;
+
+  /// Status belum mengumpulkan
+  ///
+  /// In id, this message translates to:
+  /// **'Belum Mengumpulkan'**
+  String get assignmentStatusNotSubmitted;
+
+  /// Tombol kumpulkan tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Kumpulkan Tugas'**
+  String get assignmentSubmitBtn;
+
+  /// Tombol kumpulkan ulang tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Kumpulkan Ulang'**
+  String get assignmentResubmitBtn;
+
+  /// Label input berkas tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Berkas Tugas (PDF, DOCX, ZIP)'**
+  String get assignmentFileLabel;
+
+  /// Pesan error gagal unggah berkas tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal mengunggah berkas: {error}'**
+  String assignmentUploadFailed(String error);
+
+  /// Pesan sukses pengumpulan tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Tugas berhasil dikumpulkan!'**
+  String get assignmentSubmitSuccess;
+
+  /// Tombol buka dialog penilaian
+  ///
+  /// In id, this message translates to:
+  /// **'Beri Nilai'**
+  String get assignmentGradeBtn;
+
+  /// Judul dialog penilaian tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Penilaian Tugas'**
+  String get assignmentGradeTitle;
+
+  /// Label input nilai
+  ///
+  /// In id, this message translates to:
+  /// **'Nilai (0 - 100)'**
+  String get assignmentScoreLabel;
+
+  /// Label input feedback dosen
+  ///
+  /// In id, this message translates to:
+  /// **'Catatan / Umpan Balik'**
+  String get assignmentFeedbackLabel;
+
+  /// Pesan sukses simpan nilai
+  ///
+  /// In id, this message translates to:
+  /// **'Nilai berhasil disimpan'**
+  String get assignmentGradedSuccess;
+
+  /// Peringatan mahasiswa belum punya kelompok pada tugas kelompok
+  ///
+  /// In id, this message translates to:
+  /// **'Anda belum tergabung dalam kelompok mana pun di kelas ini. Hubungi pengajar untuk dimasukkan ke kelompok sebelum mengumpulkan tugas kelompok.'**
+  String get assignmentNoGroupWarning;
+
+  /// Peringatan deadline kaku terkunci
+  ///
+  /// In id, this message translates to:
+  /// **'Batas waktu pengumpulan telah berakhir dan pengajar tidak mengizinkan pengumpulan terlambat.'**
+  String get assignmentDeadlinePassedLocked;
+
+  /// Jumlah submission terkumpul
+  ///
+  /// In id, this message translates to:
+  /// **'{count} Pengumpulan'**
+  String assignmentSubmissionsCount(int count);
+
+  /// Judul AppBar detail tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Detail Tugas'**
+  String get assignmentDetailTitle;
+
+  /// Judul konfirmasi hapus tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Hapus Tugas?'**
+  String get assignmentDeleteConfirmTitle;
+
+  /// Deskripsi konfirmasi hapus tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Tugas \'{title}\' dan seluruh pengumpulan mahasiswa akan dihapus permanen.'**
+  String assignmentDeleteConfirmDesc(String title);
+
+  /// Notifikasi sukses hapus tugas
+  ///
+  /// In id, this message translates to:
+  /// **'Tugas berhasil dihapus'**
+  String get assignmentDeleteSuccess;
+
+  /// Tombol buka balasan diskusi ala YouTube
+  ///
+  /// In id, this message translates to:
+  /// **'{count, plural, =1{Lihat 1 balasan} other{Lihat {count} balasan}}'**
+  String discussionShowReplies(int count);
+
+  /// Tombol sembunyikan balasan diskusi
+  ///
+  /// In id, this message translates to:
+  /// **'Sembunyikan balasan'**
+  String get discussionHideReplies;
+
+  /// Tooltip ikon unduh materi sebagai PDF
+  ///
+  /// In id, this message translates to:
+  /// **'Unduh Materi sebagai PDF'**
+  String get materialExportPdfTooltip;
+
+  /// Pesan loading saat render materi ke PDF
+  ///
+  /// In id, this message translates to:
+  /// **'Menyiapkan dokumen PDF...'**
+  String get materialExportingPdf;
+
+  /// Pesan sukses ekspor materi ke PDF
+  ///
+  /// In id, this message translates to:
+  /// **'Dokumen PDF berhasil dibuat'**
+  String get materialExportPdfSuccess;
+
+  /// Pesan gagal ekspor materi ke PDF
+  ///
+  /// In id, this message translates to:
+  /// **'Gagal membuat PDF: {error}'**
+  String materialExportPdfFailed(String error);
+
+  /// Judul AppBar layar AI Tutor
+  ///
+  /// In id, this message translates to:
+  /// **'AI Tutor Pintar'**
+  String get aiTutorTitle;
+
+  /// Subjudul sambutan AI Tutor
+  ///
+  /// In id, this message translates to:
+  /// **'Asisten belajar cerdas bimbingan konsep pembelajaran'**
+  String get aiTutorSubtitle;
+
+  /// Placeholder input pesan AI Tutor
+  ///
+  /// In id, this message translates to:
+  /// **'Tanyakan konsep materi, rumus, atau logika pemrograman...'**
+  String get aiTutorHint;
+
+  /// Pesan sambutan pembuka AI Tutor
+  ///
+  /// In id, this message translates to:
+  /// **'Halo! Saya Farlean AI Tutor. Ada konsep materi pembelajaran yang ingin kamu diskusikan hari ini?'**
+  String get aiTutorWelcome;
+
+  /// Peringatan input pertanyaan kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Pertanyaan tidak boleh kosong'**
+  String get aiTutorPromptEmpty;
+
+  /// Peringatan penguncian AI saat ujian aktif
+  ///
+  /// In id, this message translates to:
+  /// **'Fitur AI Tutor dinonaktifkan sementara saat Anda sedang menempuh sesi kuis/ujian.'**
+  String get aiTutorExamLocked;
+
+  /// Tombol pemicu AI pembuat draf deskripsi video
+  ///
+  /// In id, this message translates to:
+  /// **'Bantu Buat Draf (AI)'**
+  String get aiVideoDraftBtn;
+
+  /// Pesan loading AI deskripsi video
+  ///
+  /// In id, this message translates to:
+  /// **'Menyusun draf deskripsi dengan AI...'**
+  String get aiVideoDrafting;
+
+  /// Notifikasi sukses pembuatan draf video AI
+  ///
+  /// In id, this message translates to:
+  /// **'Draf deskripsi berhasil dibuat! Anda dapat mengedit sebelum menyimpan.'**
+  String get aiVideoDraftSuccess;
+
+  /// Judul dialog edit video
+  ///
+  /// In id, this message translates to:
+  /// **'Edit Video Pembelajaran'**
+  String get videoEditTitle;
+
+  /// Label field judul video
+  ///
+  /// In id, this message translates to:
+  /// **'Judul Video'**
+  String get videoTitleLabel;
+
+  /// Label field deskripsi video
+  ///
+  /// In id, this message translates to:
+  /// **'Deskripsi Video'**
+  String get videoDescLabel;
+
+  /// Notifikasi sukses update video
+  ///
+  /// In id, this message translates to:
+  /// **'Informasi video berhasil diperbarui'**
+  String get videoEditSuccess;
 }
 
 class _AppLocalizationsDelegate

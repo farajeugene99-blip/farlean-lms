@@ -8,6 +8,7 @@
     "test:rules": "tsx test/firestore-rules.test.ts",
     "test:api": "tsx test/api-endpoints.test.ts",
     "test:cors": "tsx test/cors.test.ts",
+    "test:ai": "tsx test/ai-endpoint.test.ts",
     "test:join-class": "tsx test/join-class.test.ts",
     "test:publish-test": "tsx test/publish-test.test.ts",
     "test:publish-meetings": "tsx test/publish-meetings.test.ts",

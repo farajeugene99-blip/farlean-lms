@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:go_router/go_router.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth/role_guard.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/delta_pdf_converter.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/material_content.dart';
 import '../../repositories/material_repository.dart';
@@ -40,6 +42,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
   bool _isRecordingView = false;
   bool _recordSuccess = false;
   String? _recordError;
+  bool _isExportingPdf = false;
 
   @override
   void initState() {
@@ -148,6 +151,36 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     }
   }
 
+  Future<void> _exportPdf() async {
+    final material = _material;
+    if (material == null || _isExportingPdf) return;
+    final l10n = AppLocalizations.of(context);
+
+    setState(() => _isExportingPdf = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.materialExportingPdf), duration: const Duration(seconds: 1)),
+    );
+
+    try {
+      final pdfBytes = await DeltaPdfConverter.convertToPdf(
+        title: material.title,
+        subtitle: widget.classId.isNotEmpty ? 'Kelas: ${widget.classId}' : null,
+        deltaContent: material.content,
+      );
+
+      final cleanTitle = material.title.replaceAll(RegExp(r'[^\w\s-]'), '_');
+      await Printing.sharePdf(bytes: pdfBytes, filename: '$cleanTitle.pdf');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.materialExportPdfFailed(e.toString())), backgroundColor: AppTheme.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isExportingPdf = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -176,6 +209,11 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       appBar: AppBar(
         title: Text(material.title),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf_rounded),
+            tooltip: l10n.materialExportPdfTooltip,
+            onPressed: _isExportingPdf ? null : _exportPdf,
+          ),
           if (isStaff)
             IconButton(
               icon: const Icon(Icons.edit_note_rounded),

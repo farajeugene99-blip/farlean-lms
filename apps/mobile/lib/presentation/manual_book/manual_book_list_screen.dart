@@ -233,10 +233,14 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
     final l10n = AppLocalizations.of(context);
     final authProvider = context.watch<AuthProvider>();
     final isStaff = RoleGuard.isStaff(authProvider.appUser);
+    final isAdmin = RoleGuard.canAccessAdmin(authProvider.appUser);
+    final effectiveClassId = widget.classId?.trim() ?? '';
+    final isSystem = effectiveClassId == 'SYSTEM';
+    final canManage = isSystem ? isAdmin : isStaff;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.manualBookAppBarTitle),
+        title: Text(isSystem ? l10n.manualBookSystemTitle : l10n.manualBookAppBarTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -246,7 +250,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      floatingActionButton: isStaff
+      floatingActionButton: canManage
           ? FloatingActionButton.extended(
               onPressed: _showAddBookDialog,
               icon: const Icon(Icons.upload_file_rounded),
@@ -324,7 +328,7 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                l10n.manualBookEmptyBody,
+                effectiveClassId == 'SYSTEM' ? l10n.manualBookSystemEmpty : l10n.manualBookEmptyBody,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: context.textSecondaryColor),
               ),

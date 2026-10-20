@@ -314,9 +314,16 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // Verifikasi kedua balasan tampil
+      // Verifikasi balasan root tampil
       expect(find.text('Dosen Pembimbing'), findsOneWidget);
       expect(find.text('Gunakan pendekatan divide and conquer.'), findsOneWidget);
+
+      // Buka balasan anak dengan toggle pola YouTube
+      expect(find.text('Lihat 1 balasan'), findsOneWidget);
+      await tester.tap(find.text('Lihat 1 balasan'));
+      await tester.pumpAndSettle();
+
+      // Verifikasi kedua balasan kini tampil
       expect(find.text('Mahasiswa 2'), findsOneWidget);
       expect(find.text('@Dosen Pembimbing'), findsOneWidget);
       expect(find.text('Apakah kompleksitasnya O(n log n)?'), findsOneWidget);

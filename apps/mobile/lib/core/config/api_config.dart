@@ -70,4 +70,6 @@ class ApiConfig {
   static String get gradeUrl => '$baseUrl/api/grade';
   static String get discussionThreadUrl => '$baseUrl/api/discussion-thread';
   static String get discussionReplyUrl => '$baseUrl/api/discussion-reply';
+  static String get uploadSignUrl => '$baseUrl/api/upload-sign';
+  static String get aiUrl => '$baseUrl/api/ai';
 }

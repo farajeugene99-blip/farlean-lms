@@ -22,6 +22,8 @@ class VideoItem {
   final String classId;
   final String url;
   final VideoProvider provider;
+  final String title;
+  final String description;
   final String? thumbnail;
   final int? duration; // dalam detik
 
@@ -31,6 +33,8 @@ class VideoItem {
     required this.classId,
     required this.url,
     required this.provider,
+    this.title = '',
+    this.description = '',
     this.thumbnail,
     this.duration,
   });
@@ -46,6 +50,8 @@ class VideoItem {
       classId: map['class_id'] as String? ?? '',
       url: map['url'] as String? ?? '',
       provider: VideoProvider.fromString(map['provider'] as String?),
+      title: map['title'] as String? ?? '',
+      description: map['description'] as String? ?? '',
       thumbnail: map['thumbnail'] as String?,
       duration: (map['duration'] as num?)?.toInt(),
     );
@@ -57,8 +63,33 @@ class VideoItem {
       'class_id': classId,
       'url': url,
       'provider': provider.value,
+      if (title.isNotEmpty) 'title': title,
+      if (description.isNotEmpty) 'description': description,
       'thumbnail': thumbnail,
       'duration': duration,
     };
+  }
+
+  VideoItem copyWith({
+    String? meetingId,
+    String? classId,
+    String? url,
+    VideoProvider? provider,
+    String? title,
+    String? description,
+    String? thumbnail,
+    int? duration,
+  }) {
+    return VideoItem(
+      id: id,
+      meetingId: meetingId ?? this.meetingId,
+      classId: classId ?? this.classId,
+      url: url ?? this.url,
+      provider: provider ?? this.provider,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      thumbnail: thumbnail ?? this.thumbnail,
+      duration: duration ?? this.duration,
+    );
   }
 }

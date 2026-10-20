@@ -13,12 +13,14 @@ class ThreadDetailScreen extends StatefulWidget {
   final String discussionId;
   final String classId;
   final DiscussionRepository? discussionRepository;
+  final bool defaultExpandReplies;
 
   const ThreadDetailScreen({
     super.key,
     required this.discussionId,
     required this.classId,
     this.discussionRepository,
+    this.defaultExpandReplies = false,
   });
 
   @override
@@ -31,6 +33,8 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
   List<DiscussionReply> _replies = [];
   bool _isLoading = true;
   String? _errorMessage;
+  final Set<String> _expandedParentIds = <String>{};
+  String? _replyingRootId;
 
   final TextEditingController _replyController = TextEditingController();
   final FocusNode _replyFocusNode = FocusNode();
@@ -79,6 +83,9 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
       );
 
       if (mounted) {
+        if (widget.defaultExpandReplies) {
+          _expandedParentIds.addAll(replies.map((r) => r.id));
+        }
         setState(() {
           _thread = thread;
           _replies = replies;
@@ -128,8 +135,12 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
           )
           .timeout(const Duration(seconds: 15));
 
+      if (_replyingRootId != null) {
+        _expandedParentIds.add(_replyingRootId!);
+      }
       _replyController.clear();
       _replyingTo = null;
+      _replyingRootId = null;
       // Reload replies dan thread metadata (agar reply_count naik)
       await _loadThreadAndReplies();
     } catch (e) {
@@ -258,6 +269,7 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
     required bool isArchived,
     required bool isStaff,
     required dynamic currentUser,
+    required String rootParentId,
   }) {
     final l10n = AppLocalizations.of(context);
     final isReplyAuthor = currentUser?.uid == reply.authorId;
@@ -346,7 +358,15 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(4),
                   onTap: () {
-                    setState(() => _replyingTo = reply);
+                    setState(() {
+                      _replyingTo = reply;
+                      _replyingRootId = rootParentId;
+                      final targetName = reply.authorDisplayName;
+                      final currentText = _replyController.text;
+                      final withoutMention = currentText.replaceFirst(RegExp(r'^@[\w\s\.-]+\s*'), '');
+                      _replyController.text = '@$targetName $withoutMention';
+                      _replyController.selection = TextSelection.fromPosition(TextPosition(offset: _replyController.text.length));
+                    });
                     _replyFocusNode.requestFocus();
                   },
                   child: Padding(
@@ -538,6 +558,8 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
 
                     return rootReplies.map((rootReply) {
                       final children = childrenMap[rootReply.id] ?? const [];
+                      final isExpanded = _expandedParentIds.contains(rootReply.id);
+
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -547,40 +569,77 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                             isArchived: isArchived,
                             isStaff: isStaff,
                             currentUser: currentUser,
+                            rootParentId: rootReply.id,
                           ),
-                          if (children.isNotEmpty)
+                          if (children.isNotEmpty) ...[
                             Padding(
-                              padding: const EdgeInsets.only(left: 16, bottom: 8),
-                              child: IntrinsicHeight(
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    Container(
-                                      width: 2,
-                                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                                      decoration: BoxDecoration(
-                                        color: context.borderColor,
-                                        borderRadius: BorderRadius.circular(1),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Column(
-                                        children: children
-                                            .map((child) => _buildReplyCard(
-                                                  reply: child,
-                                                  isChild: true,
-                                                  isArchived: isArchived,
-                                                  isStaff: isStaff,
-                                                  currentUser: currentUser,
-                                                ))
-                                            .toList(),
-                                      ),
-                                    ),
-                                  ],
+                              padding: const EdgeInsets.only(left: 12, bottom: 6),
+                              child: TextButton.icon(
+                                style: TextButton.styleFrom(
+                                  visualDensity: VisualDensity.compact,
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    if (isExpanded) {
+                                      _expandedParentIds.remove(rootReply.id);
+                                    } else {
+                                      _expandedParentIds.add(rootReply.id);
+                                    }
+                                  });
+                                },
+                                icon: Icon(
+                                  isExpanded ? Icons.arrow_drop_up_rounded : Icons.arrow_drop_down_rounded,
+                                  size: 20,
+                                  color: AppTheme.primary,
+                                ),
+                                label: Text(
+                                  isExpanded
+                                      ? l10n.discussionHideReplies
+                                      : l10n.discussionShowReplies(children.length),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primary,
+                                  ),
                                 ),
                               ),
                             ),
+                            if (isExpanded)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 16, bottom: 8),
+                                child: IntrinsicHeight(
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      Container(
+                                        width: 2,
+                                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                                        decoration: BoxDecoration(
+                                          color: context.borderColor,
+                                          borderRadius: BorderRadius.circular(1),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Column(
+                                          children: children
+                                              .map((child) => _buildReplyCard(
+                                                    reply: child,
+                                                    isChild: true,
+                                                    isArchived: isArchived,
+                                                    isStaff: isStaff,
+                                                    currentUser: currentUser,
+                                                    rootParentId: rootReply.id,
+                                                  ))
+                                              .toList(),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
                         ],
                       );
                     }).toList();
@@ -614,7 +673,13 @@ class _ThreadDetailScreenState extends State<ThreadDetailScreen> {
                     ),
                   ),
                   InkWell(
-                    onTap: () => setState(() => _replyingTo = null),
+                    onTap: () {
+                      setState(() {
+                        _replyingTo = null;
+                        _replyingRootId = null;
+                        _replyController.text = _replyController.text.replaceFirst(RegExp(r'^@[\w\s\.-]+\s*'), '');
+                      });
+                    },
                     child: Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: Icon(Icons.close_rounded, size: 16, color: context.textSecondaryColor),

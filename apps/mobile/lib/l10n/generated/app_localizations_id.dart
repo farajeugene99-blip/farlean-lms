@@ -2050,4 +2050,295 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get startupFirebaseInitFailed => 'Inisialisasi Firebase Gagal';
+
+  @override
+  String get dashboardManualBookTitle => 'Buku Panduan LMS';
+
+  @override
+  String get dashboardManualBookDesc =>
+      'Akses panduan sistem Farlean LMS untuk mahasiswa dan pengajar';
+
+  @override
+  String get dashboardManualBookAdminBadge => 'Dikelola Admin';
+
+  @override
+  String get manualBookSystemTitle => 'Buku Panduan Sistem';
+
+  @override
+  String get manualBookSystemEmpty =>
+      'Belum ada buku panduan sistem yang dipublikasikan oleh Administrator.';
+
+  @override
+  String get manualBookOnlyAdminCanManage =>
+      'Hanya Admin yang berhak mengelola buku panduan sistem global.';
+
+  @override
+  String get tabGroups => 'Kelompok';
+
+  @override
+  String get groupsEmptyTitle => 'Belum Ada Kelompok';
+
+  @override
+  String get groupsEmptyDesc =>
+      'Dosen dapat membuat kelompok mahasiswa untuk kegiatan tugas dan diskusi kelompok.';
+
+  @override
+  String get groupsCreateBtn => 'Buat Kelompok';
+
+  @override
+  String get groupsCreateTitle => 'Buat Kelompok Baru';
+
+  @override
+  String get groupsNameLabel => 'Nama Kelompok';
+
+  @override
+  String get groupsNameHint => 'Contoh: Kelompok 1 - Pemrograman Mobile';
+
+  @override
+  String get groupsNameRequired => 'Nama kelompok wajib diisi';
+
+  @override
+  String groupsSelectMembersTitle(int count) {
+    return 'Pilih Anggota ($count terpilih)';
+  }
+
+  @override
+  String get groupsNoAvailableMembers =>
+      'Semua mahasiswa aktif di kelas ini sudah memiliki kelompok.';
+
+  @override
+  String groupsMemberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count anggota',
+      one: '1 anggota',
+      zero: 'Belum ada anggota',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupsDeleteConfirmTitle => 'Hapus Kelompok?';
+
+  @override
+  String groupsDeleteConfirmDesc(String name) {
+    return 'Kelompok \'$name\' akan dihapus dan anggotanya akan kembali belum memiliki kelompok.';
+  }
+
+  @override
+  String get groupsDeleteSuccess => 'Kelompok berhasil dihapus';
+
+  @override
+  String get groupsCreateSuccess => 'Kelompok berhasil dibuat';
+
+  @override
+  String get groupsLeaderLabel => 'Ketua Kelompok';
+
+  @override
+  String get groupsSetLeader => 'Pilih Sebagai Ketua';
+
+  @override
+  String get groupsLoading => 'Memuat data kelompok...';
+
+  @override
+  String get groupsEditTitle => 'Ubah Kelompok';
+
+  @override
+  String get groupsEditSuccess => 'Kelompok berhasil diperbarui';
+
+  @override
+  String get tabAssignments => 'Tugas';
+
+  @override
+  String assignmentCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tugas',
+      one: '1 tugas',
+      zero: 'Belum ada tugas',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get assignmentEmptyTitle => 'Belum Ada Tugas';
+
+  @override
+  String get assignmentEmptyDesc =>
+      'Pengajar belum memberikan tugas untuk kelas ini.';
+
+  @override
+  String get assignmentCreateBtn => 'Buat Tugas';
+
+  @override
+  String get assignmentCreateTitle => 'Buat Tugas Baru';
+
+  @override
+  String get assignmentTitleLabel => 'Judul Tugas';
+
+  @override
+  String get assignmentTitleRequired => 'Judul tugas wajib diisi';
+
+  @override
+  String get assignmentInstructionsLabel => 'Petunjuk Pengerjaan';
+
+  @override
+  String get assignmentDeadlineLabel => 'Batas Waktu (Deadline)';
+
+  @override
+  String get assignmentAllowLateLabel => 'Izinkan Pengumpulan Terlambat';
+
+  @override
+  String get assignmentIsGroupLabel => 'Tugas Kelompok';
+
+  @override
+  String get assignmentIndividualBadge => 'Individu';
+
+  @override
+  String get assignmentGroupBadge => 'Kelompok';
+
+  @override
+  String get assignmentStatusSubmitted => 'Dikumpulkan';
+
+  @override
+  String get assignmentStatusLate => 'Terlambat';
+
+  @override
+  String get assignmentStatusGraded => 'Sudah Dinilai';
+
+  @override
+  String get assignmentStatusNotSubmitted => 'Belum Mengumpulkan';
+
+  @override
+  String get assignmentSubmitBtn => 'Kumpulkan Tugas';
+
+  @override
+  String get assignmentResubmitBtn => 'Kumpulkan Ulang';
+
+  @override
+  String get assignmentFileLabel => 'Berkas Tugas (PDF, DOCX, ZIP)';
+
+  @override
+  String assignmentUploadFailed(String error) {
+    return 'Gagal mengunggah berkas: $error';
+  }
+
+  @override
+  String get assignmentSubmitSuccess => 'Tugas berhasil dikumpulkan!';
+
+  @override
+  String get assignmentGradeBtn => 'Beri Nilai';
+
+  @override
+  String get assignmentGradeTitle => 'Penilaian Tugas';
+
+  @override
+  String get assignmentScoreLabel => 'Nilai (0 - 100)';
+
+  @override
+  String get assignmentFeedbackLabel => 'Catatan / Umpan Balik';
+
+  @override
+  String get assignmentGradedSuccess => 'Nilai berhasil disimpan';
+
+  @override
+  String get assignmentNoGroupWarning =>
+      'Anda belum tergabung dalam kelompok mana pun di kelas ini. Hubungi pengajar untuk dimasukkan ke kelompok sebelum mengumpulkan tugas kelompok.';
+
+  @override
+  String get assignmentDeadlinePassedLocked =>
+      'Batas waktu pengumpulan telah berakhir dan pengajar tidak mengizinkan pengumpulan terlambat.';
+
+  @override
+  String assignmentSubmissionsCount(int count) {
+    return '$count Pengumpulan';
+  }
+
+  @override
+  String get assignmentDetailTitle => 'Detail Tugas';
+
+  @override
+  String get assignmentDeleteConfirmTitle => 'Hapus Tugas?';
+
+  @override
+  String assignmentDeleteConfirmDesc(String title) {
+    return 'Tugas \'$title\' dan seluruh pengumpulan mahasiswa akan dihapus permanen.';
+  }
+
+  @override
+  String get assignmentDeleteSuccess => 'Tugas berhasil dihapus';
+
+  @override
+  String discussionShowReplies(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Lihat $count balasan',
+      one: 'Lihat 1 balasan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discussionHideReplies => 'Sembunyikan balasan';
+
+  @override
+  String get materialExportPdfTooltip => 'Unduh Materi sebagai PDF';
+
+  @override
+  String get materialExportingPdf => 'Menyiapkan dokumen PDF...';
+
+  @override
+  String get materialExportPdfSuccess => 'Dokumen PDF berhasil dibuat';
+
+  @override
+  String materialExportPdfFailed(String error) {
+    return 'Gagal membuat PDF: $error';
+  }
+
+  @override
+  String get aiTutorTitle => 'AI Tutor Pintar';
+
+  @override
+  String get aiTutorSubtitle =>
+      'Asisten belajar cerdas bimbingan konsep pembelajaran';
+
+  @override
+  String get aiTutorHint =>
+      'Tanyakan konsep materi, rumus, atau logika pemrograman...';
+
+  @override
+  String get aiTutorWelcome =>
+      'Halo! Saya Farlean AI Tutor. Ada konsep materi pembelajaran yang ingin kamu diskusikan hari ini?';
+
+  @override
+  String get aiTutorPromptEmpty => 'Pertanyaan tidak boleh kosong';
+
+  @override
+  String get aiTutorExamLocked =>
+      'Fitur AI Tutor dinonaktifkan sementara saat Anda sedang menempuh sesi kuis/ujian.';
+
+  @override
+  String get aiVideoDraftBtn => 'Bantu Buat Draf (AI)';
+
+  @override
+  String get aiVideoDrafting => 'Menyusun draf deskripsi dengan AI...';
+
+  @override
+  String get aiVideoDraftSuccess =>
+      'Draf deskripsi berhasil dibuat! Anda dapat mengedit sebelum menyimpan.';
+
+  @override
+  String get videoEditTitle => 'Edit Video Pembelajaran';
+
+  @override
+  String get videoTitleLabel => 'Judul Video';
+
+  @override
+  String get videoDescLabel => 'Deskripsi Video';
+
+  @override
+  String get videoEditSuccess => 'Informasi video berhasil diperbarui';
 }

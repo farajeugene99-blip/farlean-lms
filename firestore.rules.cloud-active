@@ -1,6 +1,3 @@
-// Cloud Active Security Rules - Deployed successfully to project `farlean-lms`
-// Verified active in production on Sun Oct 18 2026 via `firebase deploy --only firestore:rules,firestore:indexes`
-
 rules_version = '2';
 
 service cloud.firestore {
@@ -123,6 +120,8 @@ service cloud.firestore {
         && request.resource.data.class_id.size() > 0
         && request.resource.data.url is string
         && request.resource.data.url.size() > 0
+        && (!('title' in request.resource.data) || (request.resource.data.title is string && request.resource.data.title.size() <= 200))
+        && (!('description' in request.resource.data) || (request.resource.data.description is string && request.resource.data.description.size() <= 5000))
         && (!('status' in request.resource.data) || request.resource.data.status in ['Draft', 'Published', 'Archived']);
     }
 
@@ -177,7 +176,99 @@ service cloud.firestore {
         allow read: if (isVerified() && request.auth.uid == memberUid)
                     || isClassMemberActive(classId)
                     || isClassTeacher(classId);
-        allow write: if false;
+        allow create, delete: if false;
+        // Dosen pemilik kelas boleh menetapkan atau menghapus group_id anggota kelas
+        allow update: if isClassOwner(classId)
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['group_id'])
+                      && (request.resource.data.group_id == null || request.resource.data.group_id is string);
+      }
+
+      // Subkoleksi Kelompok Mahasiswa (Fitur E)
+      match /groups/{groupId} {
+        allow read: if isClassMemberActive(classId) || isClassTeacher(classId);
+        allow create, update, delete: if isClassOwner(classId);
+      }
+
+      // ========================================================================
+      // SUBKOLEKSI TUGAS & PENGUMPULAN (FITUR D)
+      // ========================================================================
+      match /assignments/{assignmentId} {
+        allow read: if isClassMemberActive(classId) || isClassTeacher(classId);
+        allow create, update, delete: if isClassOwner(classId);
+
+        match /submissions/{submissionId} {
+          // BACA: Dosen/admin, atau mahasiswa pemilik tugas (individu), atau anggota kelompok
+          allow read: if isClassTeacher(classId)
+                      || (isClassMemberActive(classId) && (
+                          resource.data.student_uid == request.auth.uid
+                          || ('contributor_ids' in resource.data && request.auth.uid in resource.data.contributor_ids)
+                          || ('group_id' in resource.data && get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.group_id == resource.data.group_id)
+                      ));
+
+          // CREATE OLEH MAHASISWA AKTIF:
+          allow create: if isClassMemberActive(classId)
+            && request.resource.data.file_url is string
+            && request.resource.data.file_url.size() > 0
+            && request.resource.data.submitted_by_uid == request.auth.uid
+            && (!('score' in request.resource.data) || request.resource.data.score == null)
+            // Validasi batas waktu server (request.time)
+            && (
+              (request.time <= get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.deadline
+                && request.resource.data.status == 'SUBMITTED')
+              ||
+              (request.time > get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.deadline
+                && get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.allow_late_submission == true
+                && request.resource.data.status == 'LATE')
+            )
+            // Validasi tipe tugas (Individu vs Kelompok)
+            && (
+              // Tugas Individu
+              (!get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.is_group_assignment
+                && submissionId == request.auth.uid
+                && request.resource.data.student_uid == request.auth.uid)
+              ||
+              // Tugas Kelompok
+              (get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.is_group_assignment
+                && 'group_id' in request.resource.data
+                && submissionId == ('group_' + request.resource.data.group_id)
+                && get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.group_id == request.resource.data.group_id)
+            );
+
+          // UPDATE: Dosen grading ATAU Mahasiswa revisi sebelum dinilai
+          allow update: if (
+            // Dosen grading
+            isClassOwner(classId)
+            && request.resource.data.status == 'GRADED'
+            && request.resource.data.score is number
+            && request.resource.data.score >= 0
+            && request.resource.data.score <= 100
+          ) || (
+            // Mahasiswa revisi sebelum dinilai
+            isClassMemberActive(classId)
+            && resource.data.status != 'GRADED'
+            && request.resource.data.file_url is string
+            && request.resource.data.file_url.size() > 0
+            && request.resource.data.submitted_by_uid == request.auth.uid
+            && (!('score' in request.resource.data) || request.resource.data.score == resource.data.score)
+            && (
+              (request.time <= get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.deadline
+                && request.resource.data.status == 'SUBMITTED')
+              ||
+              (request.time > get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.deadline
+                && get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.allow_late_submission == true
+                && request.resource.data.status == 'LATE')
+            )
+            && (
+              (!get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.is_group_assignment
+                && resource.data.student_uid == request.auth.uid)
+              ||
+              (get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.is_group_assignment
+                && get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.group_id == resource.data.group_id)
+            )
+          );
+
+          allow delete: if isClassOwner(classId);
+        }
       }
 
       match /pretest_scores/{scoreDoc} {
@@ -250,14 +341,18 @@ service cloud.firestore {
     // 6. MANUAL BOOKS (BUKU PANDUAN PDF)
     // ============================================================================
     match /manual_books/{bookId} {
-      allow read: if (isClassMemberActive(resource.data.class_id) && (!('status' in resource.data) || resource.data.status == 'Published'))
+      allow read: if (resource.data.class_id == 'SYSTEM' && isVerified() && (!('status' in resource.data) || resource.data.status == 'Published' || isAdmin()))
+                  || (isClassMemberActive(resource.data.class_id) && (!('status' in resource.data) || resource.data.status == 'Published'))
                   || isClassTeacher(resource.data.class_id);
       allow create: if isValidManualBookWrite()
-                    && isClassOwner(request.resource.data.class_id);
+                    && ((request.resource.data.class_id == 'SYSTEM' && isAdmin())
+                        || (request.resource.data.class_id != 'SYSTEM' && isClassOwner(request.resource.data.class_id)));
       allow update: if isValidManualBookWrite()
                     && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['class_id'])
-                    && isClassOwner(resource.data.class_id);
-      allow delete: if isClassOwner(resource.data.class_id);
+                    && ((resource.data.class_id == 'SYSTEM' && isAdmin())
+                        || (resource.data.class_id != 'SYSTEM' && isClassOwner(resource.data.class_id)));
+      allow delete: if (resource.data.class_id == 'SYSTEM' && isAdmin())
+                    || (resource.data.class_id != 'SYSTEM' && isClassOwner(resource.data.class_id));
     }
 
     // ============================================================================

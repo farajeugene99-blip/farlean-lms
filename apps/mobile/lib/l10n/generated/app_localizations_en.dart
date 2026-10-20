@@ -2053,4 +2053,295 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startupFirebaseInitFailed => 'Firebase Initialization Failed';
+
+  @override
+  String get dashboardManualBookTitle => 'LMS Manual Books';
+
+  @override
+  String get dashboardManualBookDesc =>
+      'Access Farlean LMS system user guides for students and instructors';
+
+  @override
+  String get dashboardManualBookAdminBadge => 'Admin Managed';
+
+  @override
+  String get manualBookSystemTitle => 'System Manual Books';
+
+  @override
+  String get manualBookSystemEmpty =>
+      'No system manual books have been published by the Administrator.';
+
+  @override
+  String get manualBookOnlyAdminCanManage =>
+      'Only Admins can manage global system manual books.';
+
+  @override
+  String get tabGroups => 'Groups';
+
+  @override
+  String get groupsEmptyTitle => 'No Groups Yet';
+
+  @override
+  String get groupsEmptyDesc =>
+      'Instructors can create student groups for assignments and group discussions.';
+
+  @override
+  String get groupsCreateBtn => 'Create Group';
+
+  @override
+  String get groupsCreateTitle => 'Create New Group';
+
+  @override
+  String get groupsNameLabel => 'Group Name';
+
+  @override
+  String get groupsNameHint => 'e.g., Group 1 - Mobile Programming';
+
+  @override
+  String get groupsNameRequired => 'Group name is required';
+
+  @override
+  String groupsSelectMembersTitle(int count) {
+    return 'Select Members ($count selected)';
+  }
+
+  @override
+  String get groupsNoAvailableMembers =>
+      'All active students in this class already have a group.';
+
+  @override
+  String groupsMemberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+      zero: 'No members',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupsDeleteConfirmTitle => 'Delete Group?';
+
+  @override
+  String groupsDeleteConfirmDesc(String name) {
+    return 'Group \'$name\' will be deleted and its members will be unassigned.';
+  }
+
+  @override
+  String get groupsDeleteSuccess => 'Group deleted successfully';
+
+  @override
+  String get groupsCreateSuccess => 'Group created successfully';
+
+  @override
+  String get groupsLeaderLabel => 'Group Leader';
+
+  @override
+  String get groupsSetLeader => 'Set as Leader';
+
+  @override
+  String get groupsLoading => 'Loading groups data...';
+
+  @override
+  String get groupsEditTitle => 'Edit Group';
+
+  @override
+  String get groupsEditSuccess => 'Group updated successfully';
+
+  @override
+  String get tabAssignments => 'Assignments';
+
+  @override
+  String assignmentCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count assignments',
+      one: '1 assignment',
+      zero: 'No assignments',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get assignmentEmptyTitle => 'No Assignments Yet';
+
+  @override
+  String get assignmentEmptyDesc =>
+      'The instructor has not added any assignments for this class yet.';
+
+  @override
+  String get assignmentCreateBtn => 'Create Assignment';
+
+  @override
+  String get assignmentCreateTitle => 'Create New Assignment';
+
+  @override
+  String get assignmentTitleLabel => 'Assignment Title';
+
+  @override
+  String get assignmentTitleRequired => 'Assignment title is required';
+
+  @override
+  String get assignmentInstructionsLabel => 'Instructions';
+
+  @override
+  String get assignmentDeadlineLabel => 'Deadline';
+
+  @override
+  String get assignmentAllowLateLabel => 'Allow Late Submission';
+
+  @override
+  String get assignmentIsGroupLabel => 'Group Assignment';
+
+  @override
+  String get assignmentIndividualBadge => 'Individual';
+
+  @override
+  String get assignmentGroupBadge => 'Group';
+
+  @override
+  String get assignmentStatusSubmitted => 'Submitted';
+
+  @override
+  String get assignmentStatusLate => 'Late';
+
+  @override
+  String get assignmentStatusGraded => 'Graded';
+
+  @override
+  String get assignmentStatusNotSubmitted => 'Not Submitted';
+
+  @override
+  String get assignmentSubmitBtn => 'Submit Assignment';
+
+  @override
+  String get assignmentResubmitBtn => 'Resubmit Assignment';
+
+  @override
+  String get assignmentFileLabel => 'Assignment File (PDF, DOCX, ZIP)';
+
+  @override
+  String assignmentUploadFailed(String error) {
+    return 'Failed to upload file: $error';
+  }
+
+  @override
+  String get assignmentSubmitSuccess => 'Assignment submitted successfully!';
+
+  @override
+  String get assignmentGradeBtn => 'Grade';
+
+  @override
+  String get assignmentGradeTitle => 'Grade Submission';
+
+  @override
+  String get assignmentScoreLabel => 'Score (0 - 100)';
+
+  @override
+  String get assignmentFeedbackLabel => 'Feedback / Notes';
+
+  @override
+  String get assignmentGradedSuccess => 'Grade saved successfully';
+
+  @override
+  String get assignmentNoGroupWarning =>
+      'You are not enrolled in any group in this class yet. Contact your instructor to be added to a group before submitting this assignment.';
+
+  @override
+  String get assignmentDeadlinePassedLocked =>
+      'The deadline has passed and late submissions are not allowed by the instructor.';
+
+  @override
+  String assignmentSubmissionsCount(int count) {
+    return '$count Submissions';
+  }
+
+  @override
+  String get assignmentDetailTitle => 'Assignment Detail';
+
+  @override
+  String get assignmentDeleteConfirmTitle => 'Delete Assignment?';
+
+  @override
+  String assignmentDeleteConfirmDesc(String title) {
+    return 'Assignment \'$title\' and all student submissions will be permanently deleted.';
+  }
+
+  @override
+  String get assignmentDeleteSuccess => 'Assignment deleted successfully';
+
+  @override
+  String discussionShowReplies(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'View $count replies',
+      one: 'View 1 reply',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discussionHideReplies => 'Hide replies';
+
+  @override
+  String get materialExportPdfTooltip => 'Download Material as PDF';
+
+  @override
+  String get materialExportingPdf => 'Preparing PDF document...';
+
+  @override
+  String get materialExportPdfSuccess => 'PDF document generated successfully';
+
+  @override
+  String materialExportPdfFailed(String error) {
+    return 'Failed to generate PDF: $error';
+  }
+
+  @override
+  String get aiTutorTitle => 'Smart AI Tutor';
+
+  @override
+  String get aiTutorSubtitle =>
+      'Intelligent study assistant for conceptual learning guidance';
+
+  @override
+  String get aiTutorHint =>
+      'Ask about material concepts, formulas, or programming logic...';
+
+  @override
+  String get aiTutorWelcome =>
+      'Hello! I\'m Farlean AI Tutor. Is there any learning concept you would like to discuss today?';
+
+  @override
+  String get aiTutorPromptEmpty => 'Question cannot be empty';
+
+  @override
+  String get aiTutorExamLocked =>
+      'AI Tutor feature is temporarily disabled while you are taking a quiz/exam session.';
+
+  @override
+  String get aiVideoDraftBtn => 'Draft with AI';
+
+  @override
+  String get aiVideoDrafting => 'Generating description draft with AI...';
+
+  @override
+  String get aiVideoDraftSuccess =>
+      'Description draft generated! You can edit before saving.';
+
+  @override
+  String get videoEditTitle => 'Edit Learning Video';
+
+  @override
+  String get videoTitleLabel => 'Video Title';
+
+  @override
+  String get videoDescLabel => 'Video Description';
+
+  @override
+  String get videoEditSuccess => 'Video information updated successfully';
 }

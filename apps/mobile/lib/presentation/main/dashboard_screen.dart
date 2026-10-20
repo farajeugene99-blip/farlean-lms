@@ -250,6 +250,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.menu_book_rounded),
+            tooltip: l10n.dashboardManualBookTitle,
+            onPressed: () => context.push('/manual-books?classId=SYSTEM'),
+          ),
           if (isStaff)
             IconButton(
               icon: const Icon(Icons.add_business_rounded),
@@ -314,6 +319,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _buildEmptyJoinedCard(context)
                   else
                     ...classProvider.joinedClasses.map((c) => _buildClassCard(context, c, isOwner: false)),
+                  const SizedBox(height: 24),
+
+                  // Manual Book Card (Fitur A)
+                  _buildManualBookCard(context),
                 ],
               ),
             ),
@@ -358,6 +367,100 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildManualBookCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final authProvider = context.watch<AuthProvider>();
+    final isAdmin = RoleGuard.canAccessAdmin(authProvider.appUser);
+
+    return Card(
+      elevation: 0.5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: context.borderColor),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push('/manual-books?classId=SYSTEM'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppTheme.secondary.withAlpha(25),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.menu_book_rounded,
+                  color: AppTheme.secondary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            l10n.dashboardManualBookTitle,
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isAdmin) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withAlpha(20),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              l10n.dashboardManualBookAdminBadge,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.dashboardManualBookDesc,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textSecondaryColor,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: context.textSecondaryColor,
+              ),
+            ],
+          ),
         ),
       ),
     );

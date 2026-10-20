@@ -2193,5 +2193,290 @@
   },
 
   "startupFirebaseInitFailed": "Inisialisasi Firebase Gagal",
-  "@startupFirebaseInitFailed": { "description": "Judul error saat startup inisialisasi Firebase gagal" }
+  "@startupFirebaseInitFailed": { "description": "Judul error saat startup inisialisasi Firebase gagal" },
+
+  "dashboardManualBookTitle": "Buku Panduan LMS",
+  "@dashboardManualBookTitle": { "description": "Judul kartu buku panduan di dashboard" },
+
+  "dashboardManualBookDesc": "Akses panduan sistem Farlean LMS untuk mahasiswa dan pengajar",
+  "@dashboardManualBookDesc": { "description": "Deskripsi kartu buku panduan di dashboard" },
+
+  "dashboardManualBookAdminBadge": "Dikelola Admin",
+  "@dashboardManualBookAdminBadge": { "description": "Badge admin pada buku panduan" },
+
+  "manualBookSystemTitle": "Buku Panduan Sistem",
+  "@manualBookSystemTitle": { "description": "Judul panduan sistem global" },
+
+  "manualBookSystemEmpty": "Belum ada buku panduan sistem yang dipublikasikan oleh Administrator.",
+  "@manualBookSystemEmpty": { "description": "Pesan saat buku panduan sistem kosong" },
+
+  "manualBookOnlyAdminCanManage": "Hanya Admin yang berhak mengelola buku panduan sistem global.",
+  "@manualBookOnlyAdminCanManage": { "description": "Peringatan hak akses panduan sistem" },
+
+  "tabGroups": "Kelompok",
+  "@tabGroups": { "description": "Nama tab kelompok pada detail kelas" },
+
+  "groupsEmptyTitle": "Belum Ada Kelompok",
+  "@groupsEmptyTitle": { "description": "Judul state kosong daftar kelompok" },
+
+  "groupsEmptyDesc": "Dosen dapat membuat kelompok mahasiswa untuk kegiatan tugas dan diskusi kelompok.",
+  "@groupsEmptyDesc": { "description": "Deskripsi state kosong daftar kelompok" },
+
+  "groupsCreateBtn": "Buat Kelompok",
+  "@groupsCreateBtn": { "description": "Tombol buat kelompok baru" },
+
+  "groupsCreateTitle": "Buat Kelompok Baru",
+  "@groupsCreateTitle": { "description": "Judul dialog pembuatan kelompok" },
+
+  "groupsNameLabel": "Nama Kelompok",
+  "@groupsNameLabel": { "description": "Label input nama kelompok" },
+
+  "groupsNameHint": "Contoh: Kelompok 1 - Pemrograman Mobile",
+  "@groupsNameHint": { "description": "Hint text input nama kelompok" },
+
+  "groupsNameRequired": "Nama kelompok wajib diisi",
+  "@groupsNameRequired": { "description": "Validasi nama kelompok kosong" },
+
+  "groupsSelectMembersTitle": "Pilih Anggota ({count} terpilih)",
+  "@groupsSelectMembersTitle": {
+    "description": "Judul pemilih anggota kelompok",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "groupsNoAvailableMembers": "Semua mahasiswa aktif di kelas ini sudah memiliki kelompok.",
+  "@groupsNoAvailableMembers": { "description": "Pesan jika tidak ada mahasiswa yang belum berkelompok" },
+
+  "groupsMemberCount": "{count, plural, =0{Belum ada anggota} =1{1 anggota} other{{count} anggota}}",
+  "@groupsMemberCount": {
+    "description": "Jumlah anggota dalam kelompok",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "groupsDeleteConfirmTitle": "Hapus Kelompok?",
+  "@groupsDeleteConfirmTitle": { "description": "Judul konfirmasi hapus kelompok" },
+
+  "groupsDeleteConfirmDesc": "Kelompok '{name}' akan dihapus dan anggotanya akan kembali belum memiliki kelompok.",
+  "@groupsDeleteConfirmDesc": {
+    "description": "Konfirmasi penghapusan kelompok",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "groupsDeleteSuccess": "Kelompok berhasil dihapus",
+  "@groupsDeleteSuccess": { "description": "Notifikasi sukses hapus kelompok" },
+
+  "groupsCreateSuccess": "Kelompok berhasil dibuat",
+  "@groupsCreateSuccess": { "description": "Notifikasi sukses buat kelompok" },
+
+  "groupsLeaderLabel": "Ketua Kelompok",
+  "@groupsLeaderLabel": { "description": "Label ketua kelompok" },
+
+  "groupsSetLeader": "Pilih Sebagai Ketua",
+  "@groupsSetLeader": { "description": "Aksi memilih ketua kelompok" },
+
+  "groupsLoading": "Memuat data kelompok...",
+  "@groupsLoading": { "description": "Indikator loading data kelompok" },
+
+  "groupsEditTitle": "Ubah Kelompok",
+  "@groupsEditTitle": { "description": "Judul dialog ubah kelompok" },
+
+  "groupsEditSuccess": "Kelompok berhasil diperbarui",
+  "@groupsEditSuccess": { "description": "Notifikasi sukses ubah kelompok" },
+
+  "tabAssignments": "Tugas",
+  "@tabAssignments": { "description": "Nama tab tugas kelas" },
+
+  "assignmentCount": "{count, plural, =0{Belum ada tugas} =1{1 tugas} other{{count} tugas}}",
+  "@assignmentCount": {
+    "description": "Jumlah tugas di kelas",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "assignmentEmptyTitle": "Belum Ada Tugas",
+  "@assignmentEmptyTitle": { "description": "Judul state kosong daftar tugas" },
+
+  "assignmentEmptyDesc": "Pengajar belum memberikan tugas untuk kelas ini.",
+  "@assignmentEmptyDesc": { "description": "Deskripsi state kosong daftar tugas" },
+
+  "assignmentCreateBtn": "Buat Tugas",
+  "@assignmentCreateBtn": { "description": "Tombol buat tugas baru" },
+
+  "assignmentCreateTitle": "Buat Tugas Baru",
+  "@assignmentCreateTitle": { "description": "Judul dialog pembuatan tugas" },
+
+  "assignmentTitleLabel": "Judul Tugas",
+  "@assignmentTitleLabel": { "description": "Label judul tugas" },
+
+  "assignmentTitleRequired": "Judul tugas wajib diisi",
+  "@assignmentTitleRequired": { "description": "Validasi judul tugas kosong" },
+
+  "assignmentInstructionsLabel": "Petunjuk Pengerjaan",
+  "@assignmentInstructionsLabel": { "description": "Label petunjuk pengerjaan tugas" },
+
+  "assignmentDeadlineLabel": "Batas Waktu (Deadline)",
+  "@assignmentDeadlineLabel": { "description": "Label batas waktu tugas" },
+
+  "assignmentAllowLateLabel": "Izinkan Pengumpulan Terlambat",
+  "@assignmentAllowLateLabel": { "description": "Switch izinkan pengumpulan terlambat" },
+
+  "assignmentIsGroupLabel": "Tugas Kelompok",
+  "@assignmentIsGroupLabel": { "description": "Switch penanda tugas kelompok" },
+
+  "assignmentIndividualBadge": "Individu",
+  "@assignmentIndividualBadge": { "description": "Badge tugas individu" },
+
+  "assignmentGroupBadge": "Kelompok",
+  "@assignmentGroupBadge": { "description": "Badge tugas kelompok" },
+
+  "assignmentStatusSubmitted": "Dikumpulkan",
+  "@assignmentStatusSubmitted": { "description": "Status pengumpulan tepat waktu" },
+
+  "assignmentStatusLate": "Terlambat",
+  "@assignmentStatusLate": { "description": "Status pengumpulan terlambat" },
+
+  "assignmentStatusGraded": "Sudah Dinilai",
+  "@assignmentStatusGraded": { "description": "Status pengumpulan sudah dinilai" },
+
+  "assignmentStatusNotSubmitted": "Belum Mengumpulkan",
+  "@assignmentStatusNotSubmitted": { "description": "Status belum mengumpulkan" },
+
+  "assignmentSubmitBtn": "Kumpulkan Tugas",
+  "@assignmentSubmitBtn": { "description": "Tombol kumpulkan tugas" },
+
+  "assignmentResubmitBtn": "Kumpulkan Ulang",
+  "@assignmentResubmitBtn": { "description": "Tombol kumpulkan ulang tugas" },
+
+  "assignmentFileLabel": "Berkas Tugas (PDF, DOCX, ZIP)",
+  "@assignmentFileLabel": { "description": "Label input berkas tugas" },
+
+  "assignmentUploadFailed": "Gagal mengunggah berkas: {error}",
+  "@assignmentUploadFailed": {
+    "description": "Pesan error gagal unggah berkas tugas",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "assignmentSubmitSuccess": "Tugas berhasil dikumpulkan!",
+  "@assignmentSubmitSuccess": { "description": "Pesan sukses pengumpulan tugas" },
+
+  "assignmentGradeBtn": "Beri Nilai",
+  "@assignmentGradeBtn": { "description": "Tombol buka dialog penilaian" },
+
+  "assignmentGradeTitle": "Penilaian Tugas",
+  "@assignmentGradeTitle": { "description": "Judul dialog penilaian tugas" },
+
+  "assignmentScoreLabel": "Nilai (0 - 100)",
+  "@assignmentScoreLabel": { "description": "Label input nilai" },
+
+  "assignmentFeedbackLabel": "Catatan / Umpan Balik",
+  "@assignmentFeedbackLabel": { "description": "Label input feedback dosen" },
+
+  "assignmentGradedSuccess": "Nilai berhasil disimpan",
+  "@assignmentGradedSuccess": { "description": "Pesan sukses simpan nilai" },
+
+  "assignmentNoGroupWarning": "Anda belum tergabung dalam kelompok mana pun di kelas ini. Hubungi pengajar untuk dimasukkan ke kelompok sebelum mengumpulkan tugas kelompok.",
+  "@assignmentNoGroupWarning": { "description": "Peringatan mahasiswa belum punya kelompok pada tugas kelompok" },
+
+  "assignmentDeadlinePassedLocked": "Batas waktu pengumpulan telah berakhir dan pengajar tidak mengizinkan pengumpulan terlambat.",
+  "@assignmentDeadlinePassedLocked": { "description": "Peringatan deadline kaku terkunci" },
+
+  "assignmentSubmissionsCount": "{count} Pengumpulan",
+  "@assignmentSubmissionsCount": {
+    "description": "Jumlah submission terkumpul",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "assignmentDetailTitle": "Detail Tugas",
+  "@assignmentDetailTitle": { "description": "Judul AppBar detail tugas" },
+
+  "assignmentDeleteConfirmTitle": "Hapus Tugas?",
+  "@assignmentDeleteConfirmTitle": { "description": "Judul konfirmasi hapus tugas" },
+
+  "assignmentDeleteConfirmDesc": "Tugas '{title}' dan seluruh pengumpulan mahasiswa akan dihapus permanen.",
+  "@assignmentDeleteConfirmDesc": {
+    "description": "Deskripsi konfirmasi hapus tugas",
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+
+  "assignmentDeleteSuccess": "Tugas berhasil dihapus",
+  "@assignmentDeleteSuccess": { "description": "Notifikasi sukses hapus tugas" },
+
+  "discussionShowReplies": "{count, plural, =1{Lihat 1 balasan} other{Lihat {count} balasan}}",
+  "@discussionShowReplies": {
+    "description": "Tombol buka balasan diskusi ala YouTube",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "discussionHideReplies": "Sembunyikan balasan",
+  "@discussionHideReplies": { "description": "Tombol sembunyikan balasan diskusi" },
+
+  "materialExportPdfTooltip": "Unduh Materi sebagai PDF",
+  "@materialExportPdfTooltip": { "description": "Tooltip ikon unduh materi sebagai PDF" },
+
+  "materialExportingPdf": "Menyiapkan dokumen PDF...",
+  "@materialExportingPdf": { "description": "Pesan loading saat render materi ke PDF" },
+
+  "materialExportPdfSuccess": "Dokumen PDF berhasil dibuat",
+  "@materialExportPdfSuccess": { "description": "Pesan sukses ekspor materi ke PDF" },
+
+  "materialExportPdfFailed": "Gagal membuat PDF: {error}",
+  "@materialExportPdfFailed": {
+    "description": "Pesan gagal ekspor materi ke PDF",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "aiTutorTitle": "AI Tutor Pintar",
+  "@aiTutorTitle": { "description": "Judul AppBar layar AI Tutor" },
+
+  "aiTutorSubtitle": "Asisten belajar cerdas bimbingan konsep pembelajaran",
+  "@aiTutorSubtitle": { "description": "Subjudul sambutan AI Tutor" },
+
+  "aiTutorHint": "Tanyakan konsep materi, rumus, atau logika pemrograman...",
+  "@aiTutorHint": { "description": "Placeholder input pesan AI Tutor" },
+
+  "aiTutorWelcome": "Halo! Saya Farlean AI Tutor. Ada konsep materi pembelajaran yang ingin kamu diskusikan hari ini?",
+  "@aiTutorWelcome": { "description": "Pesan sambutan pembuka AI Tutor" },
+
+  "aiTutorPromptEmpty": "Pertanyaan tidak boleh kosong",
+  "@aiTutorPromptEmpty": { "description": "Peringatan input pertanyaan kosong" },
+
+  "aiTutorExamLocked": "Fitur AI Tutor dinonaktifkan sementara saat Anda sedang menempuh sesi kuis/ujian.",
+  "@aiTutorExamLocked": { "description": "Peringatan penguncian AI saat ujian aktif" },
+
+  "aiVideoDraftBtn": "Bantu Buat Draf (AI)",
+  "@aiVideoDraftBtn": { "description": "Tombol pemicu AI pembuat draf deskripsi video" },
+
+  "aiVideoDrafting": "Menyusun draf deskripsi dengan AI...",
+  "@aiVideoDrafting": { "description": "Pesan loading AI deskripsi video" },
+
+  "aiVideoDraftSuccess": "Draf deskripsi berhasil dibuat! Anda dapat mengedit sebelum menyimpan.",
+  "@aiVideoDraftSuccess": { "description": "Notifikasi sukses pembuatan draf video AI" },
+
+  "videoEditTitle": "Edit Video Pembelajaran",
+  "@videoEditTitle": { "description": "Judul dialog edit video" },
+
+  "videoTitleLabel": "Judul Video",
+  "@videoTitleLabel": { "description": "Label field judul video" },
+
+  "videoDescLabel": "Deskripsi Video",
+  "@videoDescLabel": { "description": "Label field deskripsi video" },
+
+  "videoEditSuccess": "Informasi video berhasil diperbarui",
+  "@videoEditSuccess": { "description": "Notifikasi sukses update video" }
 }

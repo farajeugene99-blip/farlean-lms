@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import '../../core/auth/role_guard.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/video_item.dart';
 import '../../repositories/video_repository.dart';
+import '../../services/ai_service.dart';
+import '../../services/auth_provider.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
 
@@ -12,12 +16,14 @@ class VideoPlayerScreen extends StatefulWidget {
   final String videoId;
   final VideoItem? initialVideo;
   final VideoRepository? videoRepository;
+  final AiService? aiService;
 
   const VideoPlayerScreen({
     super.key,
     required this.videoId,
     this.initialVideo,
     this.videoRepository,
+    this.aiService,
   });
 
   @override
@@ -26,6 +32,7 @@ class VideoPlayerScreen extends StatefulWidget {
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late final VideoRepository _videoRepository;
+  late final AiService _aiService;
   VideoItem? _video;
   bool _isLoading = true;
   String? _errorMessage;
@@ -67,6 +74,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   void initState() {
     super.initState();
     _videoRepository = widget.videoRepository ?? VideoRepository();
+    _aiService = widget.aiService ?? AiService();
     _video = widget.initialVideo;
     if (_video == null) {
       _loadVideo();
@@ -160,7 +168,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       );
     }
 
-    if (_errorMessage != null || _errorKey != null || _video == null) {
+    if (_video == null) {
       return Scaffold(
         appBar: AppBar(title: Text(l10n.meetingModuleVideoTitle)),
         body: ErrorView(
@@ -171,11 +179,19 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
 
     final video = _video!;
+    final authProvider = context.watch<AuthProvider>();
+    final isStaff = RoleGuard.isStaff(authProvider.appUser);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.meetingModuleVideoTitle),
         actions: [
+          if (isStaff)
+            IconButton(
+              icon: const Icon(Icons.edit_note_rounded),
+              tooltip: l10n.videoEditTitle,
+              onPressed: _showEditVideoDialog,
+            ),
           Container(
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -201,11 +217,29 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             aspectRatio: 16 / 9,
             child: Container(
               color: Colors.black,
-              child: video.provider == VideoProvider.youtube
-                  ? YoutubePlayer(
-                      controller: _youtubeController!,
+              child: _errorKey != null
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.error_outline_rounded, color: Colors.white70, size: 36),
+                            const SizedBox(height: 8),
+                            Text(
+                              _resolveErrorMessage(l10n),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.white, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
                     )
-                  : _buildCloudinaryPlayer(),
+                  : (video.provider == VideoProvider.youtube
+                      ? YoutubePlayer(
+                          controller: _youtubeController!,
+                        )
+                      : _buildCloudinaryPlayer()),
             ),
           ),
 
@@ -242,7 +276,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  l10n.videoIntegratedTitle,
+                  video.title.isNotEmpty ? video.title : l10n.videoIntegratedTitle,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
@@ -250,6 +284,28 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                   l10n.videoSourceUrlLabel(video.url),
                   style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
                 ),
+                if (video.description.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.videoDescLabel,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  const SizedBox(height: 6),
+                  Card(
+                    elevation: 0.5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: context.borderColor),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Text(
+                        video.description,
+                        style: TextStyle(fontSize: 13, height: 1.4, color: context.textPrimaryColor),
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Card(
                   child: Padding(
@@ -274,6 +330,129 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _showEditVideoDialog() async {
+    final video = _video;
+    if (video == null) return;
+    final l10n = AppLocalizations.of(context);
+
+    final titleCtrl = TextEditingController(text: video.title);
+    final descCtrl = TextEditingController(text: video.description);
+    final formKey = GlobalKey<FormState>();
+    bool isDrafting = false;
+
+    final updated = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(l10n.videoEditTitle),
+          content: SizedBox(
+            width: 440,
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: titleCtrl,
+                      decoration: InputDecoration(
+                        labelText: l10n.videoTitleLabel,
+                        hintText: 'Contoh: Penjelasan State Management',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Text(l10n.videoDescLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        const Spacer(),
+                        TextButton.icon(
+                          onPressed: isDrafting
+                              ? null
+                              : () async {
+                                  setDialogState(() => isDrafting = true);
+                                  try {
+                                    final draft = await _aiService.generateVideoDescription(
+                                      title: titleCtrl.text.trim().isNotEmpty ? titleCtrl.text.trim() : 'Video Pembelajaran',
+                                      existingDescription: descCtrl.text.trim(),
+                                    );
+                                    if (ctx.mounted) {
+                                      setDialogState(() {
+                                        descCtrl.text = draft;
+                                        isDrafting = false;
+                                      });
+                                      ScaffoldMessenger.of(ctx).showSnackBar(
+                                        SnackBar(content: Text(l10n.aiVideoDraftSuccess), backgroundColor: AppTheme.success),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (ctx.mounted) {
+                                      setDialogState(() => isDrafting = false);
+                                      ScaffoldMessenger.of(ctx).showSnackBar(
+                                        SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+                                      );
+                                    }
+                                  }
+                                },
+                          icon: isDrafting
+                              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.auto_awesome_rounded, size: 16),
+                          label: Text(l10n.aiVideoDraftBtn, style: const TextStyle(fontSize: 11)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    TextFormField(
+                      controller: descCtrl,
+                      decoration: const InputDecoration(
+                        hintText: 'Tuliskan deskripsi atau rangkuman video...',
+                      ),
+                      maxLines: 5,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.btnCancel)),
+            ElevatedButton(
+              onPressed: () async {
+                final updatedVideo = video.copyWith(
+                  title: titleCtrl.text.trim(),
+                  description: descCtrl.text.trim(),
+                );
+                try {
+                  await _videoRepository.updateVideo(updatedVideo);
+                  if (mounted) {
+                    setState(() => _video = updatedVideo);
+                  }
+                  if (ctx.mounted) Navigator.pop(ctx, true);
+                } catch (e) {
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.error),
+                    );
+                  }
+                }
+              },
+              child: Text(l10n.btnSave),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    titleCtrl.dispose();
+    descCtrl.dispose();
+
+    if (updated == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.videoEditSuccess), backgroundColor: AppTheme.success),
+      );
+    }
   }
 
   Widget _buildCloudinaryPlayer() {
