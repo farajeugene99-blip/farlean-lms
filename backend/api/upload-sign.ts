@@ -18,18 +18,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!user) return;
 
   // 2. Proteksi Wewenang:
-  // - GURU dan ADMIN boleh mengunggah materi/manual_books/gambar kelas
+  // - GURU dan ADMIN boleh mengunggah materi/manual_books/gambar kelas/lampiran tugas
   // - USER (Mahasiswa) HANYA boleh meminta signature jika folderType === 'assignments'
   const role = (user as any).role || 'USER';
   const { classId, folderType, assignmentId } = req.body || {};
 
-  if (!classId || typeof classId !== 'string') {
-    return res.status(400).json({ error: 'classId wajib diisi.' });
-  }
-
-  const cleanClassId = classId.trim();
+  const cleanClassId = typeof classId === 'string' ? classId.trim() : '';
 
   if (folderType === 'assignments') {
+    if (!cleanClassId) {
+      return res.status(400).json({ error: 'classId wajib diisi untuk folderType assignments.' });
+    }
     if (!assignmentId || typeof assignmentId !== 'string' || assignmentId.trim().length === 0) {
       return res.status(400).json({ error: 'assignmentId wajib diisi untuk folderType assignments.' });
     }
@@ -64,17 +63,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
   } else {
-    // folderType manual_books atau images: HANYA GURU atau ADMIN
+    // folderType manual_books, images, materials, atau assignment_instructions: HANYA GURU atau ADMIN
     if (role !== 'GURU' && role !== 'ADMIN') {
       return res.status(403).json({
         error: 'Akses ditolak: Hanya Pengajar (Guru) atau Admin yang berhak mengunggah berkas modul.',
       });
     }
 
-    // 2b. Validasi wewenang & kepemilikan kelas:
-    // - Jika classId === 'SYSTEM', HANYA role ADMIN yang diizinkan (Manual Book / Aset Sistem Global)
-    // - Jika kelas reguler, Guru wajib pemilik kelas (Admin bebas)
-    if (cleanClassId === 'SYSTEM') {
+    // Khusus assignment_instructions: classId wajib diisi
+    if (folderType === 'assignment_instructions' && !cleanClassId) {
+      return res.status(400).json({ error: 'classId wajib diisi untuk folderType assignment_instructions.' });
+    }
+
+    // Jika classId tidak disediakan / kosong:
+    // Hanya diizinkan untuk 'materials' dan 'images' (fallback berbasis UID pengajar: farlean/materials/${user.uid})
+    if (!cleanClassId) {
+      if (folderType !== 'materials' && folderType !== 'images') {
+        return res.status(400).json({ error: 'classId wajib diisi.' });
+      }
+      // Guru/Admin diizinkan upload tanpa classId untuk materi / gambar materi
+    } else if (cleanClassId === 'SYSTEM') {
       if (role !== 'ADMIN') {
         return res.status(403).json({
           error: 'Akses ditolak: Hanya Admin yang berhak mengunggah berkas sistem global.',
@@ -98,10 +106,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (folderType === 'assignments') {
     const cleanAssignmentId = (assignmentId as string).trim();
     folder = `farlean/classes/${cleanClassId}/assignments/${cleanAssignmentId}/${user.uid}`;
+  } else if (!cleanClassId) {
+    // Fallback berbasis UID pengajar saat materi/gambar dibuat tanpa konteks classId
+    folder = folderType === 'images'
+      ? `farlean/materials/${user.uid}/images`
+      : `farlean/materials/${user.uid}`;
   } else if (cleanClassId === 'SYSTEM') {
-    folder = `farlean/system/${folderType === 'images' ? 'images' : 'manual_books'}`;
+    folder = `farlean/system/${folderType === 'images' ? 'images' : (folderType === 'materials' ? 'materials' : 'manual_books')}`;
   } else if (folderType === 'assignment_instructions') {
     folder = `farlean/classes/${cleanClassId}/assignment_instructions`;
+  } else if (folderType === 'materials') {
+    folder = `farlean/classes/${cleanClassId}/materials`;
   } else {
     folder = `farlean/classes/${cleanClassId}/${folderType === 'images' ? 'images' : 'manual_books'}`;
   }

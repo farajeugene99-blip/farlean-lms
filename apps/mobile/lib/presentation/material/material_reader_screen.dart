@@ -3,6 +3,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:go_router/go_router.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/auth/role_guard.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/delta_pdf_converter.dart';
@@ -10,6 +11,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../models/material_content.dart';
 import '../../repositories/material_repository.dart';
 import '../../services/auth_provider.dart';
+import '../../services/cloudinary_upload_service.dart';
 import '../ai/ai_tutor_screen.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
@@ -349,6 +351,79 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
               ),
             ),
           ),
+
+          // Seksi Lampiran Berkas Dokumen Materi
+          if (material.attachments.isNotEmpty)
+            Material(
+              color: context.surfaceColor,
+              shape: Border(top: BorderSide(color: context.borderColor)),
+              child: ExpansionTile(
+                initiallyExpanded: true,
+                leading: const Icon(Icons.folder_shared_rounded, color: AppTheme.primary),
+                title: Text(
+                  '${l10n.materialAttachmentsTitle} (${material.attachments.length})',
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                children: [
+                  for (final item in material.attachments)
+                    Builder(builder: (ctx) {
+                      final parsed = CloudinaryUploadResult.parseEncodedUrl(item);
+                      final rawUrl = parsed['url'] as String;
+                      final fileName = parsed['fileName'] as String;
+                      final sizeBytes = parsed['sizeBytes'] as int?;
+                      final sizeStr = sizeBytes != null
+                          ? '${(sizeBytes / (1024 * 1024)).toStringAsFixed(1)} MB'
+                          : 'Dokumen Lampiran';
+
+                      return ListTile(
+                        dense: true,
+                        leading: const Icon(Icons.description_outlined, color: AppTheme.primary),
+                        title: Text(
+                          fileName,
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          sizeStr,
+                          style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
+                        ),
+                        trailing: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          ),
+                          icon: const Icon(Icons.open_in_new_rounded, size: 14),
+                          label: Text(l10n.materialAttachmentOpen, style: const TextStyle(fontSize: 11)),
+                          onPressed: () async {
+                            try {
+                              final uri = Uri.tryParse(rawUrl);
+                              if (uri != null && await canLaunchUrl(uri)) {
+                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              } else if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Tidak dapat membuka tautan lampiran.'),
+                                    backgroundColor: AppTheme.error,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Gagal membuka berkas: $e'),
+                                    backgroundColor: AppTheme.error,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                        ),
+                      );
+                    }),
+                ],
+              ),
+            ),
         ],
       ),
     );

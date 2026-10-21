@@ -2066,6 +2066,36 @@ abstract class AppLocalizations {
   /// **'Gambar'**
   String get materialImageBtn;
 
+  /// Tombol toolbar editor untuk melampirkan berkas dokumen
+  ///
+  /// In id, this message translates to:
+  /// **'Lampirkan Berkas'**
+  String get materialAttachFileBtn;
+
+  /// Tombol memilih gambar dari perangkat di dialog gambar
+  ///
+  /// In id, this message translates to:
+  /// **'Pilih dari Perangkat'**
+  String get materialPickImageDevice;
+
+  /// Snackbar konfirmasi lampiran berhasil ditambahkan
+  ///
+  /// In id, this message translates to:
+  /// **'Berkas berhasil dilampirkan'**
+  String get materialAttachmentSuccess;
+
+  /// Judul daftar lampiran dokumen materi
+  ///
+  /// In id, this message translates to:
+  /// **'Berkas Lampiran Materi'**
+  String get materialAttachmentsTitle;
+
+  /// Tombol aksi membuka berkas lampiran materi
+  ///
+  /// In id, this message translates to:
+  /// **'Buka Berkas'**
+  String get materialAttachmentOpen;
+
   /// Tombol sisipkan template struktur materi
   ///
   /// In id, this message translates to:

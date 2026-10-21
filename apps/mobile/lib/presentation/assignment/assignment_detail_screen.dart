@@ -285,6 +285,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
       builder: (ctx) => AssignmentFormDialog(
         initialAssignment: assignment,
         hasSubmissions: _allSubmissions.isNotEmpty,
+        classId: widget.classId,
       ),
     );
 
@@ -426,9 +427,27 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                     icon: const Icon(Icons.open_in_new_rounded, size: 16),
                     label: Text(l10n.assignmentViewInstruction),
                     onPressed: () async {
-                      final uri = Uri.tryParse(assignment.attachmentUrl!);
-                      if (uri != null && await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      try {
+                        final uri = Uri.tryParse(assignment.attachmentUrl!);
+                        if (uri != null && await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        } else if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Tidak dapat membuka tautan berkas lampiran.'),
+                              backgroundColor: AppTheme.error,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Gagal membuka berkas: $e'),
+                              backgroundColor: AppTheme.error,
+                            ),
+                          );
+                        }
                       }
                     },
                   ),

@@ -869,7 +869,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   Future<void> _showCreateAssignmentDialog() async {
     final formData = await showDialog<AssignmentFormData>(
       context: context,
-      builder: (ctx) => const CreateAssignmentDialog(),
+      builder: (ctx) => CreateAssignmentDialog(classId: widget.classId),
     );
 
     if (formData != null && mounted) {
@@ -910,6 +910,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       builder: (ctx) => AssignmentFormDialog(
         initialAssignment: assignment,
         hasSubmissions: hasSubmissions,
+        classId: widget.classId,
       ),
     );
 

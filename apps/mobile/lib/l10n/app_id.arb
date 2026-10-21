@@ -1233,6 +1233,21 @@
   "materialImageBtn": "Gambar",
   "@materialImageBtn": { "description": "Tombol buka dialog sisipkan gambar" },
 
+  "materialAttachFileBtn": "Lampirkan Berkas",
+  "@materialAttachFileBtn": { "description": "Tombol toolbar editor untuk melampirkan berkas dokumen" },
+
+  "materialPickImageDevice": "Pilih dari Perangkat",
+  "@materialPickImageDevice": { "description": "Tombol memilih gambar dari perangkat di dialog gambar" },
+
+  "materialAttachmentSuccess": "Berkas berhasil dilampirkan",
+  "@materialAttachmentSuccess": { "description": "Snackbar konfirmasi lampiran berhasil ditambahkan" },
+
+  "materialAttachmentsTitle": "Berkas Lampiran Materi",
+  "@materialAttachmentsTitle": { "description": "Judul daftar lampiran dokumen materi" },
+
+  "materialAttachmentOpen": "Buka Berkas",
+  "@materialAttachmentOpen": { "description": "Tombol aksi membuka berkas lampiran materi" },
+
   "materialTemplateBtn": "Template",
   "@materialTemplateBtn": { "description": "Tombol sisipkan template struktur materi" },
 

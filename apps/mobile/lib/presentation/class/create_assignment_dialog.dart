@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/assignment.dart';
+import '../../services/cloudinary_upload_service.dart';
 
 class AssignmentFormData {
   final String title;
@@ -33,6 +35,7 @@ class AssignmentFormDialog extends StatefulWidget {
   final DateTime? initialDeadline;
   final String? preselectedMeetingId;
   final String? classId;
+  final CloudinaryUploadService? cloudinaryUploadService;
 
   const AssignmentFormDialog({
     super.key,
@@ -41,6 +44,7 @@ class AssignmentFormDialog extends StatefulWidget {
     this.initialDeadline,
     this.preselectedMeetingId,
     this.classId,
+    this.cloudinaryUploadService,
   });
 
   bool get isEdit => initialAssignment != null;
@@ -58,25 +62,30 @@ class _AssignmentFormDialogState extends State<AssignmentFormDialog> {
   late final TextEditingController _instructionsController;
   late final TextEditingController _attachmentUrlController;
   late final TextEditingController _attachmentNameController;
+  late final CloudinaryUploadService _uploadService;
   late DateTime _deadline;
   late bool _isGroup;
   late bool _allowLate;
   late String? _meetingId;
-  bool _showAttachmentField = false;
+  int? _attachmentFileSize;
+  bool _isUploading = false;
+  String? _uploadError;
+  bool _showManualUrlField = false;
 
   @override
   void initState() {
     super.initState();
     final init = widget.initialAssignment;
+    _uploadService = widget.cloudinaryUploadService ?? CloudinaryUploadService();
     _titleController = TextEditingController(text: init?.title ?? '');
     _instructionsController = TextEditingController(text: init?.instructions ?? '');
     _attachmentUrlController = TextEditingController(text: init?.attachmentUrl ?? '');
     _attachmentNameController = TextEditingController(text: init?.attachmentFileName ?? '');
+    _attachmentFileSize = init?.attachmentFileSize;
     _deadline = init?.deadline ?? widget.initialDeadline ?? DateTime.now().add(const Duration(days: 7));
     _isGroup = init?.isGroupAssignment ?? false;
     _allowLate = init?.allowLateSubmission ?? true;
     _meetingId = init?.meetingId ?? widget.preselectedMeetingId;
-    _showAttachmentField = init?.attachmentUrl != null && init!.attachmentUrl!.isNotEmpty;
   }
 
   @override
@@ -88,7 +97,52 @@ class _AssignmentFormDialogState extends State<AssignmentFormDialog> {
     super.dispose();
   }
 
+  Future<void> _pickAndUploadAttachment() async {
+    setState(() {
+      _uploadError = null;
+    });
+
+    try {
+      final file = await _uploadService.pickDocumentFile();
+      if (file == null) return;
+
+      setState(() => _isUploading = true);
+
+      final result = await _uploadService.uploadFile(
+        file: file,
+        folderType: 'assignment_instructions',
+        classId: widget.classId ?? widget.initialAssignment?.classId,
+      );
+
+      if (mounted) {
+        setState(() {
+          _attachmentUrlController.text = result.secureUrl;
+          _attachmentNameController.text = result.fileName;
+          _attachmentFileSize = result.sizeBytes;
+          _isUploading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+          _uploadError = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    }
+  }
+
+  void _removeAttachment() {
+    setState(() {
+      _attachmentUrlController.clear();
+      _attachmentNameController.clear();
+      _attachmentFileSize = null;
+      _uploadError = null;
+    });
+  }
+
   void _submit() {
+    if (_isUploading) return;
     if (!_formKey.currentState!.validate()) return;
     final rawUrl = _attachmentUrlController.text.trim();
     final rawName = _attachmentNameController.text.trim();
@@ -103,6 +157,7 @@ class _AssignmentFormDialogState extends State<AssignmentFormDialog> {
         meetingId: _meetingId,
         attachmentUrl: rawUrl.isNotEmpty ? rawUrl : null,
         attachmentFileName: rawName.isNotEmpty ? rawName : (rawUrl.isNotEmpty ? 'petunjuk_tugas.pdf' : null),
+        attachmentFileSize: rawUrl.isNotEmpty ? _attachmentFileSize : null,
       ),
     );
   }
@@ -111,6 +166,7 @@ class _AssignmentFormDialogState extends State<AssignmentFormDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isEdit = widget.isEdit;
+    final hasAttachment = _attachmentUrlController.text.trim().isNotEmpty;
 
     return AlertDialog(
       title: Text(isEdit ? 'Ubah Tugas' : l10n.assignmentCreateTitle),
@@ -215,37 +271,142 @@ class _AssignmentFormDialogState extends State<AssignmentFormDialog> {
                       ),
                     ),
                   ),
-                // Lampiran Berkas Instruksi (PDF / Dokumen)
-                InkWell(
-                  onTap: () => setState(() => _showAttachmentField = !_showAttachmentField),
-                  borderRadius: BorderRadius.circular(6),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
+
+                // Bagian Lampiran Berkas Petunjuk
+                const Divider(),
+                const SizedBox(height: 6),
+                const Text(
+                  'Lampiran Berkas Petunjuk (Opsional)',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Dosen dapat mengunggah lembar soal/panduan (PDF, DOCX, ZIP maks 10MB)',
+                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+
+                if (_isUploading)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withAlpha(15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.primary.withAlpha(50)),
+                    ),
+                    child: const Row(
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Mengunggah berkas petunjuk ke Cloudinary...',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else if (hasAttachment)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: context.surfaceColor,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: context.borderColor),
+                    ),
                     child: Row(
                       children: [
-                        Icon(
-                          _showAttachmentField ? Icons.keyboard_arrow_down_rounded : Icons.keyboard_arrow_right_rounded,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 4),
-                        const Expanded(
-                          child: Text(
-                            'Lampirkan Berkas Petunjuk (Opsional)',
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary.withAlpha(20),
+                            borderRadius: BorderRadius.circular(6),
                           ),
+                          child: const Icon(Icons.attach_file_rounded, color: AppTheme.primary, size: 20),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _attachmentNameController.text.trim().isNotEmpty
+                                    ? _attachmentNameController.text.trim()
+                                    : 'Berkas Petunjuk',
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (_attachmentFileSize != null)
+                                Text(
+                                  '${(_attachmentFileSize! / (1024 * 1024)).toStringAsFixed(1)} MB',
+                                  style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
+                                ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.swap_horiz_rounded, size: 20),
+                          tooltip: 'Ganti Berkas',
+                          onPressed: _pickAndUploadAttachment,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, color: AppTheme.error, size: 20),
+                          tooltip: 'Hapus Lampiran',
+                          onPressed: _removeAttachment,
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  OutlinedButton.icon(
+                    onPressed: _pickAndUploadAttachment,
+                    icon: const Icon(Icons.upload_file_rounded, size: 18),
+                    label: const Text('Pilih Berkas dari Perangkat'),
+                  ),
+
+                if (_uploadError != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    _uploadError!,
+                    style: const TextStyle(fontSize: 11, color: AppTheme.error),
+                  ),
+                ],
+
+                const SizedBox(height: 6),
+                InkWell(
+                  onTap: () => setState(() => _showManualUrlField = !_showManualUrlField),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _showManualUrlField ? Icons.arrow_drop_down_rounded : Icons.arrow_right_rounded,
+                          size: 18,
+                          color: context.textSecondaryColor,
+                        ),
+                        Text(
+                          'Opsi URL manual',
+                          style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
                         ),
                       ],
                     ),
                   ),
                 ),
-                if (_showAttachmentField) ...[
-                  const SizedBox(height: 8),
+                if (_showManualUrlField) ...[
+                  const SizedBox(height: 6),
                   TextFormField(
                     controller: _attachmentUrlController,
                     decoration: const InputDecoration(
                       labelText: 'URL Berkas Petunjuk',
                       hintText: 'https://res.cloudinary.com/.../petunjuk.pdf',
-                      prefixIcon: Icon(Icons.attach_file_rounded, size: 20),
+                      prefixIcon: Icon(Icons.link_rounded, size: 18),
                     ),
                     validator: (v) {
                       if (v != null && v.trim().isNotEmpty && !v.trim().startsWith('https://')) {
@@ -254,19 +415,14 @@ class _AssignmentFormDialogState extends State<AssignmentFormDialog> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   TextFormField(
                     controller: _attachmentNameController,
                     decoration: const InputDecoration(
                       labelText: 'Nama Berkas Lampiran',
-                      hintText: 'Contoh: Panduan_Tugas.pdf',
-                      prefixIcon: Icon(Icons.description_outlined, size: 20),
+                      hintText: 'Panduan_Tugas.pdf',
+                      prefixIcon: Icon(Icons.description_outlined, size: 18),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Format didukung: PDF, DOCX, ZIP (Maks 10 MB)',
-                    style: TextStyle(fontSize: 11, color: Colors.grey),
                   ),
                 ],
               ],
@@ -275,12 +431,22 @@ class _AssignmentFormDialogState extends State<AssignmentFormDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(null), child: Text(l10n.btnCancel)),
+        TextButton(
+          onPressed: _isUploading ? null : () => Navigator.of(context).pop(null),
+          child: Text(l10n.btnCancel),
+        ),
         ElevatedButton(
-          onPressed: _submit,
-          child: Text(l10n.btnSave),
+          onPressed: _isUploading ? null : _submit,
+          child: _isUploading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : Text(l10n.btnSave),
         ),
       ],
     );
   }
 }
+

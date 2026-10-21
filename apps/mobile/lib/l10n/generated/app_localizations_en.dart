@@ -1177,6 +1177,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get materialImageBtn => 'Image';
 
   @override
+  String get materialAttachFileBtn => 'Attach File';
+
+  @override
+  String get materialPickImageDevice => 'Pick from Device';
+
+  @override
+  String get materialAttachmentSuccess => 'File successfully attached';
+
+  @override
+  String get materialAttachmentsTitle => 'Material Attachment Files';
+
+  @override
+  String get materialAttachmentOpen => 'Open File';
+
+  @override
   String get materialTemplateBtn => 'Template';
 
   @override

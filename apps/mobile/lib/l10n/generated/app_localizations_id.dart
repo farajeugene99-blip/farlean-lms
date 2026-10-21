@@ -1179,6 +1179,21 @@ class AppLocalizationsId extends AppLocalizations {
   String get materialImageBtn => 'Gambar';
 
   @override
+  String get materialAttachFileBtn => 'Lampirkan Berkas';
+
+  @override
+  String get materialPickImageDevice => 'Pilih dari Perangkat';
+
+  @override
+  String get materialAttachmentSuccess => 'Berkas berhasil dilampirkan';
+
+  @override
+  String get materialAttachmentsTitle => 'Berkas Lampiran Materi';
+
+  @override
+  String get materialAttachmentOpen => 'Buka Berkas';
+
+  @override
   String get materialTemplateBtn => 'Template';
 
   @override

@@ -219,6 +219,84 @@ async function runApiTests() {
     }
   });
 
+  // Skenario: /api/upload-sign folderType materials dengan classId
+  await test('10c. /api/upload-sign folderType materials mengizinkan GURU pemilik kelas', async () => {
+    setTokenVerifier(async () => ({
+      uid: guruUid,
+      email_verified: true,
+      role: 'GURU',
+    }));
+
+    try {
+      const req = {
+        method: 'POST',
+        headers: { authorization: 'Bearer valid_token' },
+        body: { classId: testClassId, folderType: 'materials' },
+      } as any;
+      const res = createMockRes();
+      await uploadSignHandler(req, res as any);
+
+      if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+      if (res.jsonData?.folder !== `farlean/classes/${testClassId}/materials`) {
+        throw new Error(`Folder mismatch: ${res.jsonData?.folder}`);
+      }
+    } finally {
+      resetTokenVerifier();
+    }
+  });
+
+  // Skenario: /api/upload-sign folderType materials tanpa classId (fallback UID)
+  await test('10d. /api/upload-sign folderType materials fallback ke farlean/materials/${user.uid} jika tanpa classId', async () => {
+    setTokenVerifier(async () => ({
+      uid: guruUid,
+      email_verified: true,
+      role: 'GURU',
+    }));
+
+    try {
+      const req = {
+        method: 'POST',
+        headers: { authorization: 'Bearer valid_token' },
+        body: { folderType: 'materials' },
+      } as any;
+      const res = createMockRes();
+      await uploadSignHandler(req, res as any);
+
+      if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+      if (res.jsonData?.folder !== `farlean/materials/${guruUid}`) {
+        throw new Error(`Folder mismatch: ${res.jsonData?.folder}`);
+      }
+    } finally {
+      resetTokenVerifier();
+    }
+  });
+
+  // Skenario: /api/upload-sign folderType images tanpa classId (fallback UID)
+  await test('10e. /api/upload-sign folderType images fallback ke farlean/materials/${user.uid}/images jika tanpa classId', async () => {
+    setTokenVerifier(async () => ({
+      uid: guruUid,
+      email_verified: true,
+      role: 'GURU',
+    }));
+
+    try {
+      const req = {
+        method: 'POST',
+        headers: { authorization: 'Bearer valid_token' },
+        body: { folderType: 'images' },
+      } as any;
+      const res = createMockRes();
+      await uploadSignHandler(req, res as any);
+
+      if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+      if (res.jsonData?.folder !== `farlean/materials/${guruUid}/images`) {
+        throw new Error(`Folder mismatch: ${res.jsonData?.folder}`);
+      }
+    } finally {
+      resetTokenVerifier();
+    }
+  });
+
   // Skenario 4b: Anti-Instant-Finish (Tolak pengumpulan 0 jawaban < 5 detik)
   await test('4b. /api/grade menolak pengumpulan kuis kosong < 5 detik tanpa autoSubmit (Anti-Instant-Finish)', async () => {
     const emptyInstantAttemptRef = db.collection('attempts').doc('attempt_empty_instant_test');
