@@ -3,60 +3,176 @@ import { GoogleGenAI } from '@google/genai';
 import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
 import { applyCors } from '../lib/cors';
 
-const TUTOR_WINDOW_MS = 15 * 60 * 1000;
-const TUTOR_MAX_REQUESTS = 10;
+export interface QuotaConfig {
+  burstMax: number;
+  burstWindowMs: number;
+  dailyMax: number;
+  dailyWindowMs: number;
+}
 
-const VIDEO_WINDOW_MS = 15 * 60 * 1000;
-const VIDEO_MAX_REQUESTS = 5;
+export const AI_QUOTA_CONFIG: Record<string, Record<string, QuotaConfig>> = {
+  USER: {
+    tutor: {
+      burstMax: 10,
+      burstWindowMs: 15 * 60 * 1000,
+      dailyMax: 30,
+      dailyWindowMs: 24 * 60 * 60 * 1000,
+    },
+  },
+  GURU: {
+    tutor: {
+      burstMax: 20,
+      burstWindowMs: 15 * 60 * 1000,
+      dailyMax: 100,
+      dailyWindowMs: 24 * 60 * 60 * 1000,
+    },
+    'video-description': {
+      burstMax: 5,
+      burstWindowMs: 15 * 60 * 1000,
+      dailyMax: 25,
+      dailyWindowMs: 24 * 60 * 60 * 1000,
+    },
+  },
+  ADMIN: {
+    tutor: {
+      burstMax: 30,
+      burstWindowMs: 15 * 60 * 1000,
+      dailyMax: 200,
+      dailyWindowMs: 24 * 60 * 60 * 1000,
+    },
+    'video-description': {
+      burstMax: 30,
+      burstWindowMs: 15 * 60 * 1000,
+      dailyMax: 200,
+      dailyWindowMs: 24 * 60 * 60 * 1000,
+    },
+  },
+};
 
-async function checkRateLimit(
+export function getAiQuotaConfig(role: string, feature: string): QuotaConfig {
+  const roleConfig = AI_QUOTA_CONFIG[role] || AI_QUOTA_CONFIG.USER;
+  const config = roleConfig[feature];
+  if (config) return config;
+  return {
+    burstMax: 10,
+    burstWindowMs: 15 * 60 * 1000,
+    dailyMax: 30,
+    dailyWindowMs: 24 * 60 * 60 * 1000,
+  };
+}
+
+export interface RateLimitResult {
+  allowed: boolean;
+  remainingBurst: number;
+  remainingDaily: number;
+  remainingQuota: number;
+  resetAt?: number;
+  retryAfterSeconds?: number;
+  reason?: 'burst' | 'daily';
+}
+
+export async function checkRateLimit(
   docId: string,
-  maxAttempts: number,
-  windowMs: number
-): Promise<{ allowed: boolean; remaining: number }> {
+  config: QuotaConfig
+): Promise<RateLimitResult> {
   const rateLimitRef = db.collection('rate_limits').doc(docId);
-  let allowed = true;
-  let remaining = maxAttempts;
+  let result: RateLimitResult = {
+    allowed: true,
+    remainingBurst: config.burstMax,
+    remainingDaily: config.dailyMax,
+    remainingQuota: Math.min(config.burstMax, config.dailyMax),
+  };
 
   await db.runTransaction(async (transaction) => {
     const now = Date.now();
     const rateDoc = await transaction.get(rateLimitRef);
-    let attempts = 0;
-    let windowStart = now;
+    let burstCount = 0;
+    let burstResetAt = now + config.burstWindowMs;
+    let dailyCount = 0;
+    let dailyResetAt = now + config.dailyWindowMs;
 
     if (rateDoc.exists) {
       const data = rateDoc.data() || {};
-      const lastStart = data.window_start?.toMillis
-        ? data.window_start.toMillis()
-        : (data.window_start || 0);
 
-      if (now - lastStart < windowMs) {
-        attempts = data.attempts || 0;
-        windowStart = lastStart;
-        if (attempts >= maxAttempts) {
-          allowed = false;
-          remaining = 0;
-          return;
-        }
+      const storedBurstReset = typeof data.burstResetAt === 'number'
+        ? data.burstResetAt
+        : (data.window_start?.toMillis ? data.window_start.toMillis() + config.burstWindowMs : 0);
+
+      if (storedBurstReset > now) {
+        burstCount = typeof data.burstCount === 'number' ? data.burstCount : (data.attempts || 0);
+        burstResetAt = storedBurstReset;
       } else {
-        attempts = 0;
-        windowStart = now;
+        burstCount = 0;
+        burstResetAt = now + config.burstWindowMs;
+      }
+
+      const storedDailyReset = typeof data.dailyResetAt === 'number' ? data.dailyResetAt : 0;
+      if (storedDailyReset > now) {
+        dailyCount = typeof data.dailyCount === 'number' ? data.dailyCount : burstCount;
+        dailyResetAt = storedDailyReset;
+      } else {
+        dailyCount = 0;
+        dailyResetAt = now + config.dailyWindowMs;
+      }
+
+      if (burstCount >= config.burstMax) {
+        const retryAfterSeconds = Math.max(1, Math.ceil((burstResetAt - now) / 1000));
+        result = {
+          allowed: false,
+          remainingBurst: 0,
+          remainingDaily: Math.max(0, config.dailyMax - dailyCount),
+          remainingQuota: 0,
+          resetAt: burstResetAt,
+          retryAfterSeconds,
+          reason: 'burst',
+        };
+        return;
+      }
+
+      if (dailyCount >= config.dailyMax) {
+        const retryAfterSeconds = Math.max(1, Math.ceil((dailyResetAt - now) / 1000));
+        result = {
+          allowed: false,
+          remainingBurst: Math.max(0, config.burstMax - burstCount),
+          remainingDaily: 0,
+          remainingQuota: 0,
+          resetAt: dailyResetAt,
+          retryAfterSeconds,
+          reason: 'daily',
+        };
+        return;
       }
     }
+
+    const newBurstCount = burstCount + 1;
+    const newDailyCount = dailyCount + 1;
 
     transaction.set(
       rateLimitRef,
       {
-        attempts: attempts + 1,
-        window_start: typeof windowStart === 'number' ? new Date(windowStart) : windowStart,
+        burstCount: newBurstCount,
+        burstResetAt,
+        dailyCount: newDailyCount,
+        dailyResetAt,
+        attempts: newBurstCount,
+        window_start: new Date(burstResetAt - config.burstWindowMs),
         last_request_at: FieldValue.serverTimestamp(),
       },
       { merge: true }
     );
-    remaining = maxAttempts - (attempts + 1);
+
+    const remainingBurst = config.burstMax - newBurstCount;
+    const remainingDaily = config.dailyMax - newDailyCount;
+
+    result = {
+      allowed: true,
+      remainingBurst,
+      remainingDaily,
+      remainingQuota: Math.min(remainingBurst, remainingDaily),
+    };
   });
 
-  return { allowed, remaining };
+  return result;
 }
 
 async function isActivelyTakingExam(userId: string): Promise<boolean> {
@@ -126,15 +242,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Rate Limit Kuota Dosen (5 request / 15 menit)
-    const { allowed, remaining } = await checkRateLimit(
-      `ai_video_${user.uid}`,
-      VIDEO_MAX_REQUESTS,
-      VIDEO_WINDOW_MS
-    );
-    if (!allowed) {
+    // Rate Limit Kuota Dual-Tier (Burst 15 Menit & Daily 24 Jam)
+    const quotaConfig = getAiQuotaConfig(role, 'video-description');
+    const rateLimit = await checkRateLimit(`ai_video_${user.uid}`, quotaConfig);
+    if (!rateLimit.allowed) {
+      if (typeof res.setHeader === 'function' && rateLimit.retryAfterSeconds) {
+        res.setHeader('Retry-After', String(rateLimit.retryAfterSeconds));
+      }
+      const resetMinutes = Math.max(1, Math.ceil((rateLimit.retryAfterSeconds || 60) / 60));
+      const errorMessage = rateLimit.reason === 'daily'
+        ? `Batas kuota harian AI Video Generator tercapai (${quotaConfig.dailyMax} draf / 24 jam). Kuota harian Anda akan direset dalam ${resetMinutes} menit.`
+        : `Batas penggunaan AI Video Generator tercapai (${quotaConfig.burstMax} draf / 15 menit). Harap tunggu ${rateLimit.retryAfterSeconds} detik sebelum mencoba kembali.`;
+
       return res.status(429).json({
-        error: 'Batas penggunaan AI Video Generator tercapai (5 request / 15 menit). Silakan coba lagi nanti.',
+        success: false,
+        error: errorMessage,
+        message: errorMessage,
+        remainingBurst: rateLimit.remainingBurst,
+        remainingDaily: rateLimit.remainingDaily,
+        remainingQuota: 0,
+        resetAt: rateLimit.resetAt,
+        retryAfterSeconds: rateLimit.retryAfterSeconds,
+        reason: rateLimit.reason,
       });
     }
 
@@ -147,8 +276,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!apiKey) {
       return res.status(503).json({
         success: false,
-        error: 'Layanan AI belum dikonfigurasi di server (GEMINI_API_KEY tidak ditemukan).',
-        message: 'Layanan AI belum dikonfigurasi di server (GEMINI_API_KEY tidak ditemukan).',
+        error: 'Layanan AI Assistant sedang tidak dapat diakses sementara karena konfigurasi server belum lengkap (GEMINI_API_KEY).',
+        message: 'Layanan AI Assistant sedang tidak dapat diakses sementara karena konfigurasi server belum lengkap (GEMINI_API_KEY).',
       });
     }
 
@@ -181,7 +310,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({
         success: true,
         draftDescription,
-        remainingQuota: remaining,
+        remainingQuota: rateLimit.remainingQuota,
+        remainingBurst: rateLimit.remainingBurst,
+        remainingDaily: rateLimit.remainingDaily,
       });
     } catch (e: any) {
       console.error('Gemini video description error:', e);
@@ -204,15 +335,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // B. Rate Limit Kuota Mahasiswa (10 prompt / 15 menit)
-    const { allowed, remaining } = await checkRateLimit(
-      `ai_tutor_${user.uid}`,
-      TUTOR_MAX_REQUESTS,
-      TUTOR_WINDOW_MS
-    );
-    if (!allowed) {
+    // B. Rate Limit Kuota Dual-Tier (Burst 15 Menit & Daily 24 Jam)
+    const quotaConfig = getAiQuotaConfig(role, 'tutor');
+    const rateLimit = await checkRateLimit(`ai_tutor_${user.uid}`, quotaConfig);
+    if (!rateLimit.allowed) {
+      if (typeof res.setHeader === 'function' && rateLimit.retryAfterSeconds) {
+        res.setHeader('Retry-After', String(rateLimit.retryAfterSeconds));
+      }
+      const resetMinutes = Math.max(1, Math.ceil((rateLimit.retryAfterSeconds || 60) / 60));
+      const errorMessage = rateLimit.reason === 'daily'
+        ? `Batas kuota harian AI Tutor tercapai (${quotaConfig.dailyMax} pertanyaan / 24 jam). Kuota harian Anda akan direset dalam ${resetMinutes} menit.`
+        : `Batas kuota AI Tutor tercapai (${quotaConfig.burstMax} pertanyaan / 15 menit). Harap tunggu ${rateLimit.retryAfterSeconds} detik sebelum bertanya kembali.`;
+
       return res.status(429).json({
-        error: 'Batas kuota AI Tutor tercapai (10 pertanyaan / 15 menit). Harap tunggu beberapa saat sebelum bertanya kembali.',
+        success: false,
+        error: errorMessage,
+        message: errorMessage,
+        remainingBurst: rateLimit.remainingBurst,
+        remainingDaily: rateLimit.remainingDaily,
+        remainingQuota: 0,
+        resetAt: rateLimit.resetAt,
+        retryAfterSeconds: rateLimit.retryAfterSeconds,
+        reason: rateLimit.reason,
       });
     }
 
@@ -320,8 +464,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!apiKey) {
       return res.status(503).json({
         success: false,
-        error: 'Layanan AI belum dikonfigurasi di server (GEMINI_API_KEY tidak ditemukan).',
-        message: 'Layanan AI belum dikonfigurasi di server (GEMINI_API_KEY tidak ditemukan).',
+        error: 'Layanan AI Assistant sedang tidak dapat diakses sementara karena konfigurasi server belum lengkap (GEMINI_API_KEY).',
+        message: 'Layanan AI Assistant sedang tidak dapat diakses sementara karena konfigurasi server belum lengkap (GEMINI_API_KEY).',
       });
     }
 
@@ -359,7 +503,9 @@ Gunakan konteks materi di atas untuk menjawab dan membimbing mahasiswa secara ko
       return res.status(200).json({
         success: true,
         reply,
-        remainingQuota: remaining,
+        remainingQuota: rateLimit.remainingQuota,
+        remainingBurst: rateLimit.remainingBurst,
+        remainingDaily: rateLimit.remainingDaily,
       });
     } catch (e: any) {
       console.error('Gemini tutor error:', e);

@@ -7,6 +7,7 @@ class AppConstants {
   static const String registerRoute = '/register';
   static const String verifyEmailRoute = '/verify-email';
   static const String forgotPasswordRoute = '/forgot-password';
+  static const String completeProfileRoute = '/complete-profile';
 
   // Main navigation routes
   static const String dashboardRoute = '/dashboard';

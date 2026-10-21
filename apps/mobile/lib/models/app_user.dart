@@ -49,6 +49,7 @@ class AppUser {
   final String? photoUrl;
   final DateTime? lastActive;
   final bool mfaEnabled;
+  final bool profileCompleted;
 
   const AppUser({
     required this.uid,
@@ -60,6 +61,7 @@ class AppUser {
     this.photoUrl,
     this.lastActive,
     this.mfaEnabled = false,
+    this.profileCompleted = true,
   });
 
   /// Peran efektif yang digunakan untuk otorisasi & gating fitur.
@@ -92,6 +94,7 @@ class AppUser {
       photoUrl: map['photo_url'] as String?,
       lastActive: parseDate(map['last_active']),
       mfaEnabled: map['mfa_enabled'] as bool? ?? false,
+      profileCompleted: map['profile_completed'] as bool? ?? true,
     );
   }
 
@@ -105,6 +108,7 @@ class AppUser {
       'photo_url': photoUrl,
       'last_active': lastActive != null ? Timestamp.fromDate(lastActive!) : FieldValue.serverTimestamp(),
       'mfa_enabled': mfaEnabled,
+      'profile_completed': profileCompleted,
     };
   }
 
@@ -113,6 +117,7 @@ class AppUser {
     String? photoUrl,
     DateTime? lastActive,
     UserRole? claimsRole,
+    bool? profileCompleted,
   }) {
     return AppUser(
       uid: uid,
@@ -124,6 +129,7 @@ class AppUser {
       photoUrl: photoUrl ?? this.photoUrl,
       lastActive: lastActive ?? this.lastActive,
       mfaEnabled: mfaEnabled,
+      profileCompleted: profileCompleted ?? this.profileCompleted,
     );
   }
 }

@@ -9,6 +9,9 @@ export interface BootstrapUserParams {
   photoUrl?: string | null;
   initialRole?: 'USER' | 'GURU' | 'ADMIN';
   initialAccountType?: 'MAHASISWA' | 'DOSEN' | 'UMUM';
+  completeProfile?: boolean;
+  nimNip?: string | null;
+  signInProvider?: string;
 }
 
 export interface BootstrapUserResult {
@@ -18,6 +21,7 @@ export interface BootstrapUserResult {
   role: string;
   message: string;
   nim?: string | null;
+  profileCompleted: boolean;
 }
 
 /**
@@ -71,10 +75,14 @@ export async function bootstrapUser(params: BootstrapUserParams): Promise<Bootst
     photoUrl,
     initialRole = 'USER',
     initialAccountType,
+    completeProfile,
+    nimNip,
+    signInProvider,
   } = params;
 
   const userRef = db.collection('users').doc(uid);
   const existingDoc = await userRef.get();
+  const cleanNimNip = typeof nimNip === 'string' && nimNip.trim().length > 0 ? nimNip.trim() : null;
 
   // Aturan Addendum Farlean LMS:
   // - Jika initialAccountType ditentukan: gunakan nilai tersebut
@@ -93,6 +101,19 @@ export async function bootstrapUser(params: BootstrapUserParams): Promise<Bootst
   }
 
   if (!existingDoc.exists) {
+    // Penentuan status kelengkapan profil pengguna baru:
+    // 1. Jika completeProfile bernilai boolean eksplisit: ikuti nilai tersebut.
+    // 2. Jika provider login adalah Google dan belum completeProfile: set false (wajib onboarding).
+    // 3. Jika registrasi biasa Email & Password (sudah mengisi nama/data lengkap): set true.
+    let isProfileCompleted: boolean;
+    if (typeof completeProfile === 'boolean') {
+      isProfileCompleted = completeProfile;
+    } else if (signInProvider === 'google.com') {
+      isProfileCompleted = false;
+    } else {
+      isProfileCompleted = true;
+    }
+
     const newUserData = {
       uid,
       name: typeof name === 'string' && name.trim().length > 0 ? name.trim() : email.split('@')[0] || 'Pengguna',
@@ -102,22 +123,42 @@ export async function bootstrapUser(params: BootstrapUserParams): Promise<Bootst
       photo_url: typeof photoUrl === 'string' ? photoUrl : null,
       last_active: FieldValue.serverTimestamp(),
       mfa_enabled: false,
+      profile_completed: isProfileCompleted,
     };
 
-    await userRef.set(newUserData);
+    const batch = db.batch();
+    batch.set(userRef, newUserData);
+
+    const identityRef = userRef.collection('private').doc('identity');
+    if (cleanNimNip) {
+      batch.set(
+        identityRef,
+        {
+          nim_nip: cleanNimNip,
+          updated_at: FieldValue.serverTimestamp(),
+          auto_filled: false,
+        },
+        { merge: true }
+      );
+    }
+    await batch.commit();
 
     try {
       await auth.setCustomUserClaims(uid, { role: initialRole });
     } catch (_) {}
 
-    const autofilledNim = await checkAndAutofillUnesaNim(userRef, email, emailVerified);
+    let savedNim = cleanNimNip;
+    if (!savedNim) {
+      savedNim = await checkAndAutofillUnesaNim(userRef, email, emailVerified);
+    }
 
     return {
       isNew: true,
       accountType: calculatedAccountType,
       emailVerified,
       role: initialRole,
-      nim: autofilledNim,
+      nim: savedNim,
+      profileCompleted: isProfileCompleted,
       message: 'Profil pengguna berhasil diinisialisasi.',
     };
   } else {
@@ -145,20 +186,53 @@ export async function bootstrapUser(params: BootstrapUserParams): Promise<Bootst
       updates.name = name.trim();
     }
 
-    await userRef.update(updates);
+    // Pembaruan profile_completed secara aman & idempoten:
+    // - Jika completeProfile diberikan: update ke nilai tersebut
+    // - Jika dokumen existing sudah punya nilai: pertahankan nilai tersebut
+    // - Default untuk akun legacy (sebelum fitur onboarding): anggap true agar tidak terkunci
+    let finalProfileCompleted: boolean;
+    if (typeof completeProfile === 'boolean') {
+      updates.profile_completed = completeProfile;
+      finalProfileCompleted = completeProfile;
+    } else if (currentData.profile_completed !== undefined) {
+      finalProfileCompleted = Boolean(currentData.profile_completed);
+    } else {
+      finalProfileCompleted = true;
+    }
+
+    const batch = db.batch();
+    batch.update(userRef, updates);
+
+    const identityRef = userRef.collection('private').doc('identity');
+    if (cleanNimNip) {
+      batch.set(
+        identityRef,
+        {
+          nim_nip: cleanNimNip,
+          updated_at: FieldValue.serverTimestamp(),
+          auto_filled: false,
+        },
+        { merge: true }
+      );
+    }
+    await batch.commit();
 
     try {
       await auth.setCustomUserClaims(uid, { role: currentData.role || 'USER' });
     } catch (_) {}
 
-    const autofilledNim = await checkAndAutofillUnesaNim(userRef, email, emailVerified);
+    let savedNim = cleanNimNip;
+    if (!savedNim) {
+      savedNim = await checkAndAutofillUnesaNim(userRef, email, emailVerified);
+    }
 
     return {
       isNew: false,
       accountType: finalAccountType,
       emailVerified,
       role: currentData.role || 'USER',
-      nim: autofilledNim,
+      nim: savedNim,
+      profileCompleted: finalProfileCompleted,
       message: updates.account_type
         ? 'Tipe akun berhasil diperbarui sesuai domain institusi.'
         : 'Profil pengguna berhasil diperbarui.',

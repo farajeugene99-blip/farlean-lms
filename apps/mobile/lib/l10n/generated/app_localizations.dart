@@ -437,14 +437,20 @@ abstract class AppLocalizations {
   /// Pesan error Firebase wrong-password
   ///
   /// In id, this message translates to:
-  /// **'Kata sandi yang Anda masukkan salah.'**
+  /// **'Kata sandi yang Anda masukkan salah. Jika sebelumnya Anda mendaftar dengan Google, silakan gunakan tombol Masuk dengan Google.'**
   String get authErrWrongPassword;
 
   /// Pesan error Firebase invalid-credential (enum protection)
   ///
   /// In id, this message translates to:
-  /// **'Email atau kata sandi yang dimasukkan tidak sesuai.'**
+  /// **'Email atau kata sandi yang dimasukkan tidak sesuai. Jika sebelumnya Anda mendaftar dengan Google, silakan gunakan tombol Masuk dengan Google.'**
   String get authErrInvalidCredential;
+
+  /// Pesan error Firebase account-exists-with-different-credential
+  ///
+  /// In id, this message translates to:
+  /// **'Alamat email ini sudah terdaftar menggunakan metode masuk lain. Silakan masuk menggunakan metode tersebut.'**
+  String get authErrAccountExistsDifferentCredential;
 
   /// Pesan error Firebase email-already-in-use
   ///
@@ -4093,6 +4099,90 @@ abstract class AppLocalizations {
   /// In id, this message translates to:
   /// **'Kembali ke Beranda'**
   String get classPendingBackBtn;
+
+  /// Judul halaman pelengkapan profil onboarding
+  ///
+  /// In id, this message translates to:
+  /// **'Lengkapi Profil Anda'**
+  String get completeProfileTitle;
+
+  /// Subjudul halaman pelengkapan profil onboarding
+  ///
+  /// In id, this message translates to:
+  /// **'Sebelum melanjutkan, silakan periksa dan lengkapi data profil Anda.'**
+  String get completeProfileSubtitle;
+
+  /// Label field email terverifikasi onboarding
+  ///
+  /// In id, this message translates to:
+  /// **'Alamat Email Terverifikasi'**
+  String get completeProfileEmailLabel;
+
+  /// Label badge tipe akun terdeteksi onboarding
+  ///
+  /// In id, this message translates to:
+  /// **'Tipe Akun Terdeteksi'**
+  String get completeProfileAccountType;
+
+  /// Label input nama lengkap onboarding
+  ///
+  /// In id, this message translates to:
+  /// **'Nama Lengkap'**
+  String get completeProfileNameLabel;
+
+  /// Peringatan validasi nama lengkap kosong
+  ///
+  /// In id, this message translates to:
+  /// **'Nama lengkap wajib diisi'**
+  String get completeProfileNameRequired;
+
+  /// Peringatan validasi identitas NIM/NIP kosong
+  ///
+  /// In id, this message translates to:
+  /// **'{label} wajib diisi'**
+  String completeProfileIdentityRequired(String label);
+
+  /// Placeholder input identitas NIM/NIP
+  ///
+  /// In id, this message translates to:
+  /// **'Masukkan {label} Anda'**
+  String completeProfileIdentityHint(String label);
+
+  /// Teks checkbox persetujuan syarat dan ketentuan
+  ///
+  /// In id, this message translates to:
+  /// **'Saya menyetujui Syarat & Ketentuan Penggunaan dan Kebijakan Privasi Farlean LMS.'**
+  String get completeProfileTermsCheckbox;
+
+  /// Peringatan belum mencentang syarat dan ketentuan
+  ///
+  /// In id, this message translates to:
+  /// **'Anda wajib menyetujui syarat & ketentuan untuk melanjutkan.'**
+  String get completeProfileTermsRequired;
+
+  /// Tombol submit onboarding profil
+  ///
+  /// In id, this message translates to:
+  /// **'Simpan & Lanjutkan'**
+  String get completeProfileSubmitBtn;
+
+  /// Notifikasi sukses pelengkapan profil
+  ///
+  /// In id, this message translates to:
+  /// **'Profil berhasil dilengkapi! Selamat datang di Farlean LMS.'**
+  String get completeProfileSuccess;
+
+  /// Subjudul AppBar AI Tutor rincian sisa kuota dual-tier
+  ///
+  /// In id, this message translates to:
+  /// **'Sisa kuota: {quota} (Sesi: {burst}, Harian: {daily})'**
+  String aiTutorQuotaSubtitle(int quota, int burst, int daily);
+
+  /// Peringatan kuota AI tercapai dengan estimasi reset
+  ///
+  /// In id, this message translates to:
+  /// **'Batas kuota tercapai. Reset dalam {minutes} menit.'**
+  String aiTutorQuotaExceeded(int minutes);
 }
 
 class _AppLocalizationsDelegate

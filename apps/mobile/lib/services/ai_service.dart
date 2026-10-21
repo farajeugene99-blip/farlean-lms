@@ -10,12 +10,16 @@ class AiException implements Exception {
   final int? statusCode;
   final String? code;
   final bool isExamLocked;
+  final int? resetAt;
+  final int? retryAfterSeconds;
 
   const AiException(
     this.message, {
     this.statusCode,
     this.code,
     this.isExamLocked = false,
+    this.resetAt,
+    this.retryAfterSeconds,
   });
 
   @override
@@ -26,12 +30,16 @@ class AiResponse {
   final bool success;
   final String content;
   final int? remainingQuota;
+  final int? remainingBurst;
+  final int? remainingDaily;
   final bool isExamLocked;
 
   const AiResponse({
     required this.success,
     required this.content,
     this.remainingQuota,
+    this.remainingBurst,
+    this.remainingDaily,
     this.isExamLocked = false,
   });
 }
@@ -113,6 +121,8 @@ class AiService {
           success: true,
           content: data['reply'] as String? ?? '',
           remainingQuota: (data['remainingQuota'] as num?)?.toInt(),
+          remainingBurst: (data['remainingBurst'] as num?)?.toInt(),
+          remainingDaily: (data['remainingDaily'] as num?)?.toInt(),
         );
       }
 
@@ -135,10 +145,14 @@ class AiService {
 
       if (response.statusCode == 429) {
         final serverMsg = data != null ? (data['error'] ?? data['message']) : null;
+        final resetAt = (data?['resetAt'] as num?)?.toInt();
+        final retryAfterSeconds = (data?['retryAfterSeconds'] as num?)?.toInt();
         throw AiException(
           serverMsg?.toString() ?? 'Batas kuota AI tercapai. Harap tunggu beberapa saat sebelum mencoba kembali.',
           statusCode: 429,
           code: 'RATE_LIMIT_EXCEEDED',
+          resetAt: resetAt,
+          retryAfterSeconds: retryAfterSeconds,
         );
       }
 
@@ -200,10 +214,14 @@ class AiService {
 
       if (response.statusCode == 429) {
         final serverMsg = data != null ? (data['error'] ?? data['message']) : null;
+        final resetAt = (data?['resetAt'] as num?)?.toInt();
+        final retryAfterSeconds = (data?['retryAfterSeconds'] as num?)?.toInt();
         throw AiException(
           serverMsg?.toString() ?? 'Batas penggunaan AI Video Generator tercapai. Silakan coba lagi nanti.',
           statusCode: 429,
           code: 'RATE_LIMIT_EXCEEDED',
+          resetAt: resetAt,
+          retryAfterSeconds: retryAfterSeconds,
         );
       }
 

@@ -82,7 +82,13 @@ class MockAuthService extends AuthService {
   }
 
   @override
-  Future<void> callBootstrap({required String token, String? name, String? photoUrl}) async {
+  Future<void> callBootstrap({
+    required String token,
+    String? name,
+    String? photoUrl,
+    bool? completeProfile,
+    String? nimNip,
+  }) async {
     callBootstrapCallCount++;
   }
 

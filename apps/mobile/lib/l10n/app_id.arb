@@ -189,11 +189,14 @@
   "authErrUserNotFound": "Akun dengan alamat email ini tidak ditemukan.",
   "@authErrUserNotFound": { "description": "Pesan error Firebase user-not-found" },
 
-  "authErrWrongPassword": "Kata sandi yang Anda masukkan salah.",
+  "authErrWrongPassword": "Kata sandi yang Anda masukkan salah. Jika sebelumnya Anda mendaftar dengan Google, silakan gunakan tombol Masuk dengan Google.",
   "@authErrWrongPassword": { "description": "Pesan error Firebase wrong-password" },
 
-  "authErrInvalidCredential": "Email atau kata sandi yang dimasukkan tidak sesuai.",
+  "authErrInvalidCredential": "Email atau kata sandi yang dimasukkan tidak sesuai. Jika sebelumnya Anda mendaftar dengan Google, silakan gunakan tombol Masuk dengan Google.",
   "@authErrInvalidCredential": { "description": "Pesan error Firebase invalid-credential (enum protection)" },
+
+  "authErrAccountExistsDifferentCredential": "Alamat email ini sudah terdaftar menggunakan metode masuk lain. Silakan masuk menggunakan metode tersebut.",
+  "@authErrAccountExistsDifferentCredential": { "description": "Pesan error Firebase account-exists-with-different-credential" },
 
   "authErrEmailInUse": "Alamat email ini sudah terdaftar. Silakan gunakan menu Masuk.",
   "@authErrEmailInUse": { "description": "Pesan error Firebase email-already-in-use" },
@@ -2544,5 +2547,69 @@
   "@classPendingBody": { "description": "Deskripsi status pendaftaran kelas pending" },
 
   "classPendingBackBtn": "Kembali ke Beranda",
-  "@classPendingBackBtn": { "description": "Tombol kembali pada status pendaftaran pending" }
+  "@classPendingBackBtn": { "description": "Tombol kembali pada status pendaftaran pending" },
+
+  "completeProfileTitle": "Lengkapi Profil Anda",
+  "@completeProfileTitle": { "description": "Judul halaman pelengkapan profil onboarding" },
+
+  "completeProfileSubtitle": "Sebelum melanjutkan, silakan periksa dan lengkapi data profil Anda.",
+  "@completeProfileSubtitle": { "description": "Subjudul halaman pelengkapan profil onboarding" },
+
+  "completeProfileEmailLabel": "Alamat Email Terverifikasi",
+  "@completeProfileEmailLabel": { "description": "Label field email terverifikasi onboarding" },
+
+  "completeProfileAccountType": "Tipe Akun Terdeteksi",
+  "@completeProfileAccountType": { "description": "Label badge tipe akun terdeteksi onboarding" },
+
+  "completeProfileNameLabel": "Nama Lengkap",
+  "@completeProfileNameLabel": { "description": "Label input nama lengkap onboarding" },
+
+  "completeProfileNameRequired": "Nama lengkap wajib diisi",
+  "@completeProfileNameRequired": { "description": "Peringatan validasi nama lengkap kosong" },
+
+  "completeProfileIdentityRequired": "{label} wajib diisi",
+  "@completeProfileIdentityRequired": {
+    "description": "Peringatan validasi identitas NIM/NIP kosong",
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+
+  "completeProfileIdentityHint": "Masukkan {label} Anda",
+  "@completeProfileIdentityHint": {
+    "description": "Placeholder input identitas NIM/NIP",
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+
+  "completeProfileTermsCheckbox": "Saya menyetujui Syarat & Ketentuan Penggunaan dan Kebijakan Privasi Farlean LMS.",
+  "@completeProfileTermsCheckbox": { "description": "Teks checkbox persetujuan syarat dan ketentuan" },
+
+  "completeProfileTermsRequired": "Anda wajib menyetujui syarat & ketentuan untuk melanjutkan.",
+  "@completeProfileTermsRequired": { "description": "Peringatan belum mencentang syarat dan ketentuan" },
+
+  "completeProfileSubmitBtn": "Simpan & Lanjutkan",
+  "@completeProfileSubmitBtn": { "description": "Tombol submit onboarding profil" },
+
+  "completeProfileSuccess": "Profil berhasil dilengkapi! Selamat datang di Farlean LMS.",
+  "@completeProfileSuccess": { "description": "Notifikasi sukses pelengkapan profil" },
+
+  "aiTutorQuotaSubtitle": "Sisa kuota: {quota} (Sesi: {burst}, Harian: {daily})",
+  "@aiTutorQuotaSubtitle": {
+    "description": "Subjudul AppBar AI Tutor rincian sisa kuota dual-tier",
+    "placeholders": {
+      "quota": { "type": "int" },
+      "burst": { "type": "int" },
+      "daily": { "type": "int" }
+    }
+  },
+
+  "aiTutorQuotaExceeded": "Batas kuota tercapai. Reset dalam {minutes} menit.",
+  "@aiTutorQuotaExceeded": {
+    "description": "Peringatan kuota AI tercapai dengan estimasi reset",
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  }
 }

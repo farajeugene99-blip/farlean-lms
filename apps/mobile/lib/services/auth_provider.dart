@@ -57,6 +57,7 @@ class AuthProvider extends ChangeNotifier {
 
   bool get isAuthenticated => _firebaseUser != null;
   bool get isEmailVerified => _firebaseUser?.emailVerified ?? false;
+  bool get isProfileComplete => _appUser?.profileCompleted ?? true;
 
   void _init() {
     _firebaseUser = _authService.currentFirebaseUser;
@@ -350,6 +351,66 @@ class AuthProvider extends ChangeNotifier {
       currentPassword: currentPassword,
       newPassword: newPassword,
     );
+  }
+
+  /// Menyelesaikan proses onboarding profil pengguna baru (misal via Google Sign-In)
+  Future<bool> completeProfile({
+    required String name,
+    String? nimNip,
+  }) async {
+    if (_isLoading) return false;
+    final user = _firebaseUser;
+    if (user == null) {
+      _setError('Pengguna belum terautentikasi.');
+      return false;
+    }
+
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final token = await user.getIdToken(true);
+      if (token == null) {
+        _setLoading(false);
+        _setError('Gagal memperbarui token otentikasi.');
+        return false;
+      }
+
+      // Panggil bootstrap secara atomik di backend
+      await _authService.callBootstrap(
+        token: token,
+        name: name.trim(),
+        completeProfile: true,
+        nimNip: nimNip?.trim(),
+      );
+
+      // Sinkronisasi profil terbaru dari Firestore
+      AppUser? updatedProfile;
+      try {
+        updatedProfile = await _authService.getUserProfile(user.uid);
+      } catch (_) {}
+
+      if (updatedProfile != null) {
+        _appUser = updatedProfile.copyWith(
+          name: name.trim(),
+          profileCompleted: true,
+          claimsRole: _appUser?.claimsRole,
+        );
+      } else if (_appUser != null) {
+        _appUser = _appUser!.copyWith(
+          name: name.trim(),
+          profileCompleted: true,
+        );
+      }
+
+      _setLoading(false);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError(AuthService.translateError(e), code: _extractCode(e));
+      _setLoading(false);
+      return false;
+    }
   }
 
   /// Keluar dari akun dengan pembatalan generasi sesi

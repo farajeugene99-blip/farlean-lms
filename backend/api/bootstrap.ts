@@ -14,7 +14,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const token = await verifyAuth(req, res, { requireEmailVerified: false });
   if (!token) return;
 
-  const { name, photoUrl } = req.body || {};
+  const { name, photoUrl, completeProfile, nimNip } = req.body || {};
+  const signInProvider = token.firebase?.sign_in_provider || (req.body?.signInProvider as string) || '';
 
   try {
     const result = await bootstrapUser({
@@ -23,6 +24,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       emailVerified: token.email_verified === true,
       name,
       photoUrl,
+      completeProfile: typeof completeProfile === 'boolean' ? completeProfile : undefined,
+      nimNip: typeof nimNip === 'string' ? nimNip : undefined,
+      signInProvider,
     });
 
     return res.status(200).json({

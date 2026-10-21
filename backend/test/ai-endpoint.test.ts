@@ -1,4 +1,8 @@
-import aiHandler, { extractDeltaPlainText } from '../api/ai';
+import aiHandler, {
+  extractDeltaPlainText,
+  getAiQuotaConfig,
+  AI_QUOTA_CONFIG,
+} from '../api/ai';
 
 interface MockResponse {
   statusCode: number;
@@ -107,6 +111,39 @@ async function runAiTests() {
     }
     if (extractDeltaPlainText(null) !== '') {
       throw new Error('Null tidak menghasilkan string kosong');
+    }
+  });
+
+  // 6. Quota Config Dual-Tier
+  await test('6. AI_QUOTA_CONFIG mengonfigurasi batas burst (15 menit) dan daily (24 jam) per role', async () => {
+    // USER
+    const userTutor = getAiQuotaConfig('USER', 'tutor');
+    if (userTutor.burstMax !== 10 || userTutor.dailyMax !== 30) {
+      throw new Error(`USER tutor invalid: ${JSON.stringify(userTutor)}`);
+    }
+
+    // GURU
+    const guruTutor = getAiQuotaConfig('GURU', 'tutor');
+    if (guruTutor.burstMax !== 20 || guruTutor.dailyMax !== 100) {
+      throw new Error(`GURU tutor invalid: ${JSON.stringify(guruTutor)}`);
+    }
+    const guruVideo = getAiQuotaConfig('GURU', 'video-description');
+    if (guruVideo.burstMax !== 5 || guruVideo.dailyMax !== 25) {
+      throw new Error(`GURU video invalid: ${JSON.stringify(guruVideo)}`);
+    }
+
+    // ADMIN
+    const adminTutor = getAiQuotaConfig('ADMIN', 'tutor');
+    if (adminTutor.burstMax !== 30 || adminTutor.dailyMax !== 200) {
+      throw new Error(`ADMIN tutor invalid: ${JSON.stringify(adminTutor)}`);
+    }
+  });
+
+  // 7. Fallback Quota Config untuk role tak dikenal
+  await test('7. getAiQuotaConfig fallback ke USER config untuk role tak dikenal', async () => {
+    const unknownConfig = getAiQuotaConfig('STRANGER', 'tutor');
+    if (unknownConfig.burstMax !== 10 || unknownConfig.dailyMax !== 30) {
+      throw new Error(`Fallback unknown role failed: ${JSON.stringify(unknownConfig)}`);
     }
   });
 

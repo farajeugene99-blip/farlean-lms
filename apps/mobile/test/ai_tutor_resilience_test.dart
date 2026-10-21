@@ -90,6 +90,54 @@ void main() {
         ),
       );
     });
+
+    test('5. Response 429 dengan retryAfterSeconds dan resetAt diekstrak ke dalam AiException', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          '{"success": false, "error": "Batas kuota harian tercapai.", "resetAt": 1761091200000, "retryAfterSeconds": 3600, "reason": "daily"}',
+          429,
+          headers: {'content-type': 'application/json', 'Retry-After': '3600'},
+        );
+      });
+
+      final service = AiService(
+        httpClient: mockClient,
+        tokenProvider: () async => 'mock_token',
+      );
+
+      expect(
+        () => service.askTutor('Tanya lagi'),
+        throwsA(
+          isA<AiException>()
+              .having((e) => e.statusCode, 'statusCode', 429)
+              .having((e) => e.retryAfterSeconds, 'retryAfterSeconds', 3600)
+              .having((e) => e.resetAt, 'resetAt', 1761091200000)
+              .having((e) => e.message, 'message', contains('Batas kuota harian tercapai.')),
+        ),
+      );
+    });
+
+    test('6. Response 200 dengan dual-tier quota diekstrak ke dalam AiResponse', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          '{"success": true, "reply": "Halo!", "remainingQuota": 9, "remainingBurst": 9, "remainingDaily": 29}',
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      });
+
+      final service = AiService(
+        httpClient: mockClient,
+        tokenProvider: () async => 'mock_token',
+      );
+
+      final res = await service.askTutor('Halo');
+      expect(res.success, isTrue);
+      expect(res.content, equals('Halo!'));
+      expect(res.remainingQuota, equals(9));
+      expect(res.remainingBurst, equals(9));
+      expect(res.remainingDaily, equals(29));
+    });
   });
 
   group('AiTutorScreen 503 UI Error Rendering Tests (Masalah C)', () {

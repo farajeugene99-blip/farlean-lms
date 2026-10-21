@@ -191,10 +191,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrUserNotFound => 'Account with this email was not found.';
 
   @override
-  String get authErrWrongPassword => 'The password you entered is incorrect.';
+  String get authErrWrongPassword =>
+      'The password you entered is incorrect. If you previously signed up with Google, please use Sign in with Google.';
 
   @override
-  String get authErrInvalidCredential => 'Incorrect email or password.';
+  String get authErrInvalidCredential =>
+      'Incorrect email or password. If you previously signed up with Google, please use Sign in with Google.';
+
+  @override
+  String get authErrAccountExistsDifferentCredential =>
+      'This email is already registered using a different sign-in method. Please sign in using that method.';
 
   @override
   String get authErrEmailInUse =>
@@ -2416,4 +2422,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get classPendingBackBtn => 'Back to Home';
+
+  @override
+  String get completeProfileTitle => 'Complete Your Profile';
+
+  @override
+  String get completeProfileSubtitle =>
+      'Before continuing, please review and complete your profile information.';
+
+  @override
+  String get completeProfileEmailLabel => 'Verified Email Address';
+
+  @override
+  String get completeProfileAccountType => 'Detected Account Type';
+
+  @override
+  String get completeProfileNameLabel => 'Full Name';
+
+  @override
+  String get completeProfileNameRequired => 'Full name is required';
+
+  @override
+  String completeProfileIdentityRequired(String label) {
+    return '$label is required';
+  }
+
+  @override
+  String completeProfileIdentityHint(String label) {
+    return 'Enter your $label';
+  }
+
+  @override
+  String get completeProfileTermsCheckbox =>
+      'I agree to the Terms & Conditions and Privacy Policy of Farlean LMS.';
+
+  @override
+  String get completeProfileTermsRequired =>
+      'You must agree to the terms & conditions to continue.';
+
+  @override
+  String get completeProfileSubmitBtn => 'Save & Continue';
+
+  @override
+  String get completeProfileSuccess =>
+      'Profile completed successfully! Welcome to Farlean LMS.';
+
+  @override
+  String aiTutorQuotaSubtitle(int quota, int burst, int daily) {
+    return 'Remaining quota: $quota (Session: $burst, Daily: $daily)';
+  }
+
+  @override
+  String aiTutorQuotaExceeded(int minutes) {
+    return 'Quota limit reached. Resets in $minutes minutes.';
+  }
 }

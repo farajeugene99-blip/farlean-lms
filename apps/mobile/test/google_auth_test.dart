@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/core/theme/app_theme.dart';
 import 'package:mobile/l10n/generated/app_localizations.dart';
 import 'package:mobile/models/app_user.dart';
+import 'package:mobile/presentation/auth/complete_profile_screen.dart';
 import 'package:mobile/presentation/auth/login_screen.dart';
 import 'package:mobile/presentation/auth/register_screen.dart';
 import 'package:mobile/presentation/common/google_logo.dart';
@@ -84,6 +85,25 @@ class _MockAuthServiceForGoogle extends AuthService {
       );
     }
     return mockUserToReturn;
+  }
+
+  bool callBootstrapCalled = false;
+  String? lastBootstrapName;
+  bool? lastBootstrapCompleteProfile;
+  String? lastBootstrapNimNip;
+
+  @override
+  Future<void> callBootstrap({
+    required String token,
+    String? name,
+    String? photoUrl,
+    bool? completeProfile,
+    String? nimNip,
+  }) async {
+    callBootstrapCalled = true;
+    lastBootstrapName = name;
+    lastBootstrapCompleteProfile = completeProfile;
+    lastBootstrapNimNip = nimNip;
   }
 
   @override
@@ -196,6 +216,78 @@ void main() {
       await tester.pump();
 
       expect(mockService.signInWithGoogleCalled, isTrue);
+    });
+
+    test('7. Pengguna baru Google dengan profileCompleted: false terdeteksi isProfileComplete == false', () async {
+      final mockService = _MockAuthServiceForGoogle(
+        mockUserToReturn: const AppUser(
+          uid: 'google_uid_new',
+          name: 'New Google User',
+          email: 'newuser@google.com',
+          accountType: AccountType.umum,
+          role: UserRole.user,
+          profileCompleted: false,
+        ),
+      );
+      final provider = AuthProvider(authService: mockService);
+
+      final result = await provider.signInWithGoogle();
+
+      expect(result, isTrue);
+      expect(provider.isProfileComplete, isFalse);
+    });
+
+    test('8. completeProfile atomik memanggil bootstrap dan memperbarui profileCompleted menjadi true', () async {
+      final mockService = _MockAuthServiceForGoogle(
+        mockUserToReturn: const AppUser(
+          uid: 'google_uid_new',
+          name: 'Initial Name',
+          email: 'newuser@google.com',
+          accountType: AccountType.mahasiswa,
+          role: UserRole.user,
+          profileCompleted: false,
+        ),
+      );
+      final provider = AuthProvider(authService: mockService);
+      await provider.signInWithGoogle();
+
+      expect(provider.isProfileComplete, isFalse);
+
+      final success = await provider.completeProfile(
+        name: 'Updated Name',
+        nimNip: '25050974183',
+      );
+
+      expect(success, isTrue);
+      expect(mockService.callBootstrapCalled, isTrue);
+      expect(mockService.lastBootstrapName, equals('Updated Name'));
+      expect(mockService.lastBootstrapCompleteProfile, isTrue);
+      expect(mockService.lastBootstrapNimNip, equals('25050974183'));
+      expect(provider.isProfileComplete, isTrue);
+      expect(provider.appUser?.name, equals('Updated Name'));
+    });
+
+    testWidgets('9. CompleteProfileScreen menampilkan form onboarding lengkap dan tombol keluar', (tester) async {
+      final mockService = _MockAuthServiceForGoogle(
+        mockUserToReturn: const AppUser(
+          uid: 'google_uid_new',
+          name: 'New Student',
+          email: 'student@mhs.unesa.ac.id',
+          accountType: AccountType.mahasiswa,
+          role: UserRole.user,
+          profileCompleted: false,
+        ),
+      );
+      final provider = AuthProvider(authService: mockService);
+      await provider.signInWithGoogle();
+
+      await tester.pumpWidget(_buildTestWidget(const CompleteProfileScreen(), provider));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Lengkapi Profil Anda'), findsWidgets);
+      expect(find.text('student@mhs.unesa.ac.id'), findsOneWidget);
+      expect(find.text('Simpan & Lanjutkan'), findsOneWidget);
+      expect(find.byIcon(Icons.logout_rounded), findsWidgets);
     });
   });
 }

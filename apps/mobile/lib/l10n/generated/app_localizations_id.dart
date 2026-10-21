@@ -192,11 +192,16 @@ class AppLocalizationsId extends AppLocalizations {
       'Akun dengan alamat email ini tidak ditemukan.';
 
   @override
-  String get authErrWrongPassword => 'Kata sandi yang Anda masukkan salah.';
+  String get authErrWrongPassword =>
+      'Kata sandi yang Anda masukkan salah. Jika sebelumnya Anda mendaftar dengan Google, silakan gunakan tombol Masuk dengan Google.';
 
   @override
   String get authErrInvalidCredential =>
-      'Email atau kata sandi yang dimasukkan tidak sesuai.';
+      'Email atau kata sandi yang dimasukkan tidak sesuai. Jika sebelumnya Anda mendaftar dengan Google, silakan gunakan tombol Masuk dengan Google.';
+
+  @override
+  String get authErrAccountExistsDifferentCredential =>
+      'Alamat email ini sudah terdaftar menggunakan metode masuk lain. Silakan masuk menggunakan metode tersebut.';
 
   @override
   String get authErrEmailInUse =>
@@ -2413,4 +2418,58 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get classPendingBackBtn => 'Kembali ke Beranda';
+
+  @override
+  String get completeProfileTitle => 'Lengkapi Profil Anda';
+
+  @override
+  String get completeProfileSubtitle =>
+      'Sebelum melanjutkan, silakan periksa dan lengkapi data profil Anda.';
+
+  @override
+  String get completeProfileEmailLabel => 'Alamat Email Terverifikasi';
+
+  @override
+  String get completeProfileAccountType => 'Tipe Akun Terdeteksi';
+
+  @override
+  String get completeProfileNameLabel => 'Nama Lengkap';
+
+  @override
+  String get completeProfileNameRequired => 'Nama lengkap wajib diisi';
+
+  @override
+  String completeProfileIdentityRequired(String label) {
+    return '$label wajib diisi';
+  }
+
+  @override
+  String completeProfileIdentityHint(String label) {
+    return 'Masukkan $label Anda';
+  }
+
+  @override
+  String get completeProfileTermsCheckbox =>
+      'Saya menyetujui Syarat & Ketentuan Penggunaan dan Kebijakan Privasi Farlean LMS.';
+
+  @override
+  String get completeProfileTermsRequired =>
+      'Anda wajib menyetujui syarat & ketentuan untuk melanjutkan.';
+
+  @override
+  String get completeProfileSubmitBtn => 'Simpan & Lanjutkan';
+
+  @override
+  String get completeProfileSuccess =>
+      'Profil berhasil dilengkapi! Selamat datang di Farlean LMS.';
+
+  @override
+  String aiTutorQuotaSubtitle(int quota, int burst, int daily) {
+    return 'Sisa kuota: $quota (Sesi: $burst, Harian: $daily)';
+  }
+
+  @override
+  String aiTutorQuotaExceeded(int minutes) {
+    return 'Batas kuota tercapai. Reset dalam $minutes menit.';
+  }
 }

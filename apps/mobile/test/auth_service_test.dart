@@ -16,7 +16,11 @@ void main() {
       final error = FirebaseAuthException(code: 'wrong-password');
       expect(
         AuthService.translateError(error),
-        equals('Kata sandi yang Anda masukkan salah.'),
+        contains('Kata sandi yang Anda masukkan salah.'),
+      );
+      expect(
+        AuthService.translateError(error),
+        contains('Masuk dengan Google'),
       );
     });
 
@@ -24,7 +28,19 @@ void main() {
       final error = FirebaseAuthException(code: 'invalid-credential');
       expect(
         AuthService.translateError(error),
-        equals('Email atau kata sandi yang dimasukkan tidak sesuai.'),
+        contains('Email atau kata sandi yang dimasukkan tidak sesuai.'),
+      );
+      expect(
+        AuthService.translateError(error),
+        contains('Masuk dengan Google'),
+      );
+    });
+
+    test('account-exists-with-different-credential diterjemahkan dengan ramah', () {
+      final error = FirebaseAuthException(code: 'account-exists-with-different-credential');
+      expect(
+        AuthService.translateError(error),
+        equals('Alamat email ini sudah terdaftar menggunakan metode masuk lain. Silakan masuk menggunakan metode tersebut.'),
       );
     });
 

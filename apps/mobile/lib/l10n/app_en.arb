@@ -63,8 +63,9 @@
   "validPasswordMismatch": "Passwords do not match",
 
   "authErrUserNotFound": "Account with this email was not found.",
-  "authErrWrongPassword": "The password you entered is incorrect.",
-  "authErrInvalidCredential": "Incorrect email or password.",
+  "authErrWrongPassword": "The password you entered is incorrect. If you previously signed up with Google, please use Sign in with Google.",
+  "authErrInvalidCredential": "Incorrect email or password. If you previously signed up with Google, please use Sign in with Google.",
+  "authErrAccountExistsDifferentCredential": "This email is already registered using a different sign-in method. Please sign in using that method.",
   "authErrEmailInUse": "This email is already registered. Please use Sign In.",
   "authErrInvalidEmail": "Invalid email address format.",
   "authErrWeakPassword": "Password is too weak. Use at least 6 characters.",
@@ -722,5 +723,19 @@
   "videoEditSuccess": "Video information updated successfully",
   "classPendingTitle": "Enrollment Pending Approval",
   "classPendingBody": "Your request to join this class has been sent and is awaiting confirmation from the instructor.",
-  "classPendingBackBtn": "Back to Home"
+  "classPendingBackBtn": "Back to Home",
+  "completeProfileTitle": "Complete Your Profile",
+  "completeProfileSubtitle": "Before continuing, please review and complete your profile information.",
+  "completeProfileEmailLabel": "Verified Email Address",
+  "completeProfileAccountType": "Detected Account Type",
+  "completeProfileNameLabel": "Full Name",
+  "completeProfileNameRequired": "Full name is required",
+  "completeProfileIdentityRequired": "{label} is required",
+  "completeProfileIdentityHint": "Enter your {label}",
+  "completeProfileTermsCheckbox": "I agree to the Terms & Conditions and Privacy Policy of Farlean LMS.",
+  "completeProfileTermsRequired": "You must agree to the terms & conditions to continue.",
+  "completeProfileSubmitBtn": "Save & Continue",
+  "completeProfileSuccess": "Profile completed successfully! Welcome to Farlean LMS.",
+  "aiTutorQuotaSubtitle": "Remaining quota: {quota} (Session: {burst}, Daily: {daily})",
+  "aiTutorQuotaExceeded": "Quota limit reached. Resets in {minutes} minutes."
 }

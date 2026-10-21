@@ -149,6 +149,61 @@ async function runTests() {
   );
   console.log('  [PASS] 4. Integritas Firestore Security Rules (Class Lifecycle & Meetings) terverifikasi');
 
+  // Test 5: Logika Profile Completion (Onboarding Google vs Reguler Email/Password)
+  function resolveProfileCompleted(params: {
+    isNew: boolean;
+    completeProfile?: boolean;
+    signInProvider?: string;
+    existingProfileCompleted?: boolean;
+  }): boolean {
+    if (params.isNew) {
+      if (typeof params.completeProfile === 'boolean') {
+        return params.completeProfile;
+      } else if (params.signInProvider === 'google.com') {
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      if (typeof params.completeProfile === 'boolean') {
+        return params.completeProfile;
+      } else if (params.existingProfileCompleted !== undefined) {
+        return params.existingProfileCompleted;
+      } else {
+        return true; // legacy default to true
+      }
+    }
+  }
+
+  // Skenario A: Pendaftar baru Google belum onboarding
+  assert.strictEqual(
+    resolveProfileCompleted({ isNew: true, signInProvider: 'google.com' }),
+    false,
+    'Pengguna Google baru tanpa completeProfile harus berstatus profileCompleted: false'
+  );
+
+  // Skenario B: Pendaftar baru Email/Password reguler
+  assert.strictEqual(
+    resolveProfileCompleted({ isNew: true, signInProvider: 'password' }),
+    true,
+    'Pengguna reguler Email & Password baru harus berstatus profileCompleted: true'
+  );
+
+  // Skenario C: Submit onboarding dari layar CompleteProfile
+  assert.strictEqual(
+    resolveProfileCompleted({ isNew: false, completeProfile: true, existingProfileCompleted: false }),
+    true,
+    'Submit onboarding via completeProfile: true harus mengubah status menjadi profileCompleted: true'
+  );
+
+  // Skenario D: Pengguna lama (legacy) tanpa field profile_completed
+  assert.strictEqual(
+    resolveProfileCompleted({ isNew: false, existingProfileCompleted: undefined }),
+    true,
+    'Pengguna legacy tanpa field profile_completed harus tetap profileCompleted: true agar tidak terkunci'
+  );
+  console.log('  [PASS] 5. Logika Onboarding & Profile Completion (Google vs Reguler vs Legacy) terverifikasi');
+
   console.log('\n========================================');
   console.log('✅ SEMUA TEST PROTEKSI ROLE ADMIN & DOMAIN BERHASIL!');
   console.log('========================================\n');

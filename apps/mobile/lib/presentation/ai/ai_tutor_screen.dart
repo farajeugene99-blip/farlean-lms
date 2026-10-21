@@ -46,6 +46,8 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
   final List<_ChatMessage> _messages = [];
   bool _isLoading = false;
   int? _remainingQuota;
+  int? _remainingBurst;
+  int? _remainingDaily;
   bool _contextDismissed = false;
 
   @override
@@ -115,6 +117,8 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
       setState(() {
         _isLoading = false;
         _remainingQuota = response.remainingQuota;
+        _remainingBurst = response.remainingBurst;
+        _remainingDaily = response.remainingDaily;
         _messages.add(
           _ChatMessage(
             text: response.content,
@@ -127,6 +131,9 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
       _scrollToBottom();
     } catch (e) {
       if (!mounted) return;
+      if (e is AiException && e.statusCode == 429) {
+        _remainingQuota = 0;
+      }
       final displayMsg = e.toString()
           .replaceFirst('Exception: ', '')
           .replaceFirst('StateError: ', '')
@@ -170,7 +177,9 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                 children: [
                   Text(l10n.aiTutorTitle, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   Text(
-                    _remainingQuota != null ? 'Sisa kuota: $_remainingQuota sesi' : l10n.aiTutorSubtitle,
+                    _remainingQuota != null && _remainingBurst != null && _remainingDaily != null
+                        ? l10n.aiTutorQuotaSubtitle(_remainingQuota!, _remainingBurst!, _remainingDaily!)
+                        : (_remainingQuota != null ? 'Sisa kuota: $_remainingQuota' : l10n.aiTutorSubtitle),
                     style: TextStyle(fontSize: 10, color: context.textSecondaryColor),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

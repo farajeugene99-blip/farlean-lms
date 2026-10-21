@@ -35,6 +35,8 @@ class AuthErrorLocalization {
         return l10n.authErrWrongPassword;
       case 'invalid-credential':
         return l10n.authErrInvalidCredential;
+      case 'account-exists-with-different-credential':
+        return l10n.authErrAccountExistsDifferentCredential;
       case 'email-already-in-use':
         return l10n.authErrEmailInUse;
       case 'invalid-email':

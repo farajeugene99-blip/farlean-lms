@@ -7,6 +7,7 @@ import '../models/meeting.dart';
 import '../models/video_item.dart';
 import '../presentation/ai/ai_tutor_screen.dart';
 import '../presentation/assignment/assignment_detail_screen.dart';
+import '../presentation/auth/complete_profile_screen.dart';
 import '../presentation/auth/forgot_password_screen.dart';
 import '../presentation/auth/login_screen.dart';
 import '../presentation/auth/register_screen.dart';
@@ -42,6 +43,7 @@ class AppRouter {
       redirect: (context, state) {
         final isAuthenticated = authProvider.isAuthenticated;
         final isEmailVerified = authProvider.isEmailVerified;
+        final isProfileComplete = authProvider.isProfileComplete;
         final currentPath = state.uri.path;
 
         final isAuthRoute = currentPath == AppConstants.loginRoute ||
@@ -60,8 +62,16 @@ class AppRouter {
           return AppConstants.verifyEmailRoute;
         }
 
-        // 3. Jika sudah login dan terverifikasi, cegah akses ulang halaman auth
-        if (isAuthRoute || currentPath == AppConstants.verifyEmailRoute) {
+        // 3. Jika sudah login dan terverifikasi tetapi profil belum lengkap (Onboarding Google)
+        if (!isProfileComplete) {
+          if (currentPath == AppConstants.completeProfileRoute) return null;
+          return AppConstants.completeProfileRoute;
+        }
+
+        // 4. Jika sudah login, terverifikasi, dan profil lengkap, cegah akses ulang halaman auth & onboarding
+        if (isAuthRoute ||
+            currentPath == AppConstants.verifyEmailRoute ||
+            currentPath == AppConstants.completeProfileRoute) {
           return AppConstants.dashboardRoute;
         }
 
@@ -84,6 +94,10 @@ class AppRouter {
         GoRoute(
           path: AppConstants.forgotPasswordRoute,
           builder: (context, state) => const ForgotPasswordScreen(),
+        ),
+        GoRoute(
+          path: AppConstants.completeProfileRoute,
+          builder: (context, state) => const CompleteProfileScreen(),
         ),
 
         // Standalone modal / stack route

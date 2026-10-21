@@ -61,7 +61,7 @@ class AuthService {
       // Panggil backend bootstrap untuk membuat users/{uid} dengan Admin SDK
       final token = await user.getIdToken();
       if (token != null) {
-        await _callBootstrap(token: token, name: name.trim());
+        await _callBootstrap(token: token, name: name.trim(), completeProfile: true);
       }
 
       return AppUser(
@@ -302,16 +302,36 @@ class AuthService {
   }
 
   /// Memanggil endpoint serverless bootstrap Admin SDK secara aman
-  Future<void> callBootstrap({required String token, String? name, String? photoUrl}) async {
-    await _callBootstrap(token: token, name: name, photoUrl: photoUrl);
+  Future<void> callBootstrap({
+    required String token,
+    String? name,
+    String? photoUrl,
+    bool? completeProfile,
+    String? nimNip,
+  }) async {
+    await _callBootstrap(
+      token: token,
+      name: name,
+      photoUrl: photoUrl,
+      completeProfile: completeProfile,
+      nimNip: nimNip,
+    );
   }
 
-  Future<void> _callBootstrap({required String token, String? name, String? photoUrl}) async {
+  Future<void> _callBootstrap({
+    required String token,
+    String? name,
+    String? photoUrl,
+    bool? completeProfile,
+    String? nimNip,
+  }) async {
     try {
       final uri = Uri.parse(ApiConfig.bootstrapUrl);
       final body = <String, dynamic>{};
       if (name != null && name.trim().isNotEmpty) body['name'] = name.trim();
       if (photoUrl != null && photoUrl.trim().isNotEmpty) body['photoUrl'] = photoUrl.trim();
+      if (completeProfile != null) body['completeProfile'] = completeProfile;
+      if (nimNip != null && nimNip.trim().isNotEmpty) body['nimNip'] = nimNip.trim();
 
       final response = await _httpClient.post(
         uri,
@@ -337,9 +357,11 @@ class AuthService {
         case 'user-not-found':
           return 'Akun dengan alamat email ini tidak ditemukan.';
         case 'wrong-password':
-          return 'Kata sandi yang Anda masukkan salah.';
+          return 'Kata sandi yang Anda masukkan salah. Jika sebelumnya Anda mendaftar dengan Google, silakan gunakan tombol Masuk dengan Google.';
         case 'invalid-credential':
-          return 'Email atau kata sandi yang dimasukkan tidak sesuai.';
+          return 'Email atau kata sandi yang dimasukkan tidak sesuai. Jika sebelumnya Anda mendaftar dengan Google, silakan gunakan tombol Masuk dengan Google.';
+        case 'account-exists-with-different-credential':
+          return 'Alamat email ini sudah terdaftar menggunakan metode masuk lain. Silakan masuk menggunakan metode tersebut.';
         case 'email-already-in-use':
           return 'Alamat email ini sudah terdaftar. Silakan gunakan menu Masuk.';
         case 'invalid-email':
