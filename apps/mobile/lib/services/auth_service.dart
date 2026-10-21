@@ -58,10 +58,15 @@ class AuthService {
       await user.updateDisplayName(name.trim());
       await user.sendEmailVerification();
 
-      // Panggil backend bootstrap untuk membuat users/{uid} dengan Admin SDK
+      // Panggil backend bootstrap untuk inisialisasi dokumen users/{uid} (profile_completed: false)
       final token = await user.getIdToken();
       if (token != null) {
-        await _callBootstrap(token: token, name: name.trim(), completeProfile: true);
+        await _callBootstrap(
+          token: token,
+          name: name.trim(),
+          completeProfile: false,
+          signInProvider: 'password',
+        );
       }
 
       return AppUser(
@@ -71,6 +76,7 @@ class AuthService {
         accountType: AccountType.umum, // Default sebelum email diverifikasi
         role: UserRole.user,
         mfaEnabled: false,
+        profileCompleted: false,
       );
     } on FirebaseAuthException {
       rethrow;
@@ -256,6 +262,7 @@ class AuthService {
           token: token,
           name: user.displayName ?? googleUser.displayName,
           photoUrl: user.photoURL ?? googleUser.photoUrl,
+          signInProvider: 'google.com',
         );
       }
 
@@ -308,6 +315,7 @@ class AuthService {
     String? photoUrl,
     bool? completeProfile,
     String? nimNip,
+    String? signInProvider,
   }) async {
     await _callBootstrap(
       token: token,
@@ -315,6 +323,7 @@ class AuthService {
       photoUrl: photoUrl,
       completeProfile: completeProfile,
       nimNip: nimNip,
+      signInProvider: signInProvider,
     );
   }
 
@@ -324,6 +333,7 @@ class AuthService {
     String? photoUrl,
     bool? completeProfile,
     String? nimNip,
+    String? signInProvider,
   }) async {
     try {
       final uri = Uri.parse(ApiConfig.bootstrapUrl);
@@ -332,6 +342,7 @@ class AuthService {
       if (photoUrl != null && photoUrl.trim().isNotEmpty) body['photoUrl'] = photoUrl.trim();
       if (completeProfile != null) body['completeProfile'] = completeProfile;
       if (nimNip != null && nimNip.trim().isNotEmpty) body['nimNip'] = nimNip.trim();
+      if (signInProvider != null && signInProvider.trim().isNotEmpty) body['signInProvider'] = signInProvider.trim();
 
       final response = await _httpClient.post(
         uri,

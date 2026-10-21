@@ -88,6 +88,7 @@ class MockAuthService extends AuthService {
     String? photoUrl,
     bool? completeProfile,
     String? nimNip,
+    String? signInProvider,
   }) async {
     callBootstrapCallCount++;
   }

@@ -36,7 +36,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     final user = authProvider.firebaseUser;
     final appUser = authProvider.appUser;
 
-    _nameController.text = appUser?.name ?? user?.displayName ?? '';
+    final displayName = user?.displayName;
+    if (displayName != null && displayName.trim().isNotEmpty) {
+      _nameController.text = displayName.trim();
+    } else if (appUser != null && appUser.name.trim().isNotEmpty && appUser.name != 'Pengguna') {
+      _nameController.text = appUser.name.trim();
+    } else {
+      _nameController.text = appUser?.name ?? '';
+    }
 
     if (user != null) {
       try {

@@ -101,6 +101,19 @@ class AuthProvider extends ChangeNotifier {
     }
 
     _firebaseUser = user;
+
+    // JEBAKAN KRITIS: Jika email belum diverifikasi, jangan coba baca profil ke Firestore!
+    // Firestore Security Rules (isVerified()) akan menolak dengan permission-denied.
+    // Set status bersih ke initial agar AppRouter dapat mengarahkan ke /verify-email tanpa error database palsu.
+    if (!user.emailVerified) {
+      _appUser = null;
+      _profileStatus = ProfileStatus.initial;
+      _profileErrorReason = ProfileErrorReason.none;
+      _profileErrorMessage = null;
+      notifyListeners();
+      return;
+    }
+
     _profileStatus = ProfileStatus.loading;
     _profileErrorReason = ProfileErrorReason.none;
     _profileErrorMessage = null;
@@ -225,7 +238,8 @@ class AuthProvider extends ChangeNotifier {
       _firebaseUser = user;
       await _loadSession(forceRefresh: true);
       _setLoading(false);
-      return _profileStatus == ProfileStatus.loaded;
+      // Jika email belum diverifikasi, return true agar router mengarahkan ke /verify-email
+      return _profileStatus == ProfileStatus.loaded || !user.emailVerified;
     } catch (e) {
       _setError(AuthService.translateError(e), code: _extractCode(e));
       _setLoading(false);
@@ -249,7 +263,7 @@ class AuthProvider extends ChangeNotifier {
       _firebaseUser = _authService.currentFirebaseUser;
       await _loadSession(forceRefresh: true);
       _setLoading(false);
-      return _profileStatus == ProfileStatus.loaded;
+      return _profileStatus == ProfileStatus.loaded || (_firebaseUser != null && !_firebaseUser!.emailVerified);
     } catch (e) {
       _setError(AuthService.translateError(e), code: _extractCode(e));
       _setLoading(false);
@@ -293,6 +307,12 @@ class AuthProvider extends ChangeNotifier {
     try {
       final isVerified = await _authService.reloadAndCheckVerification();
       if (isVerified) {
+        final user = _authService.currentFirebaseUser;
+        if (user != null) {
+          await user.reload();
+          await user.getIdToken(true);
+          _firebaseUser = user;
+        }
         await _loadSession(forceRefresh: true);
       }
       _setLoading(false);

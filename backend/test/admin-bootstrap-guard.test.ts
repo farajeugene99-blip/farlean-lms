@@ -149,21 +149,17 @@ async function runTests() {
   );
   console.log('  [PASS] 4. Integritas Firestore Security Rules (Class Lifecycle & Meetings) terverifikasi');
 
-  // Test 5: Logika Profile Completion (Onboarding Google vs Reguler Email/Password)
+  // Test 5: Logika Profile Completion (Onboarding Pengguna Baru vs Legacy)
   function resolveProfileCompleted(params: {
     isNew: boolean;
     completeProfile?: boolean;
-    signInProvider?: string;
     existingProfileCompleted?: boolean;
   }): boolean {
     if (params.isNew) {
       if (typeof params.completeProfile === 'boolean') {
         return params.completeProfile;
-      } else if (params.signInProvider === 'google.com') {
-        return false;
-      } else {
-        return true;
       }
+      return false; // semua akun baru wajib onboarding jika belum completeProfile
     } else {
       if (typeof params.completeProfile === 'boolean') {
         return params.completeProfile;
@@ -175,18 +171,18 @@ async function runTests() {
     }
   }
 
-  // Skenario A: Pendaftar baru Google belum onboarding
+  // Skenario A: Pendaftar baru belum onboarding
   assert.strictEqual(
-    resolveProfileCompleted({ isNew: true, signInProvider: 'google.com' }),
+    resolveProfileCompleted({ isNew: true }),
     false,
-    'Pengguna Google baru tanpa completeProfile harus berstatus profileCompleted: false'
+    'Pengguna baru tanpa completeProfile harus berstatus profileCompleted: false'
   );
 
-  // Skenario B: Pendaftar baru Email/Password reguler
+  // Skenario B: Pendaftar baru yang langsung submit completeProfile
   assert.strictEqual(
-    resolveProfileCompleted({ isNew: true, signInProvider: 'password' }),
+    resolveProfileCompleted({ isNew: true, completeProfile: true }),
     true,
-    'Pengguna reguler Email & Password baru harus berstatus profileCompleted: true'
+    'Pengguna baru dengan completeProfile: true harus berstatus profileCompleted: true'
   );
 
   // Skenario C: Submit onboarding dari layar CompleteProfile

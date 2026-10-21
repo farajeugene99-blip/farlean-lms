@@ -99,6 +99,7 @@ class _MockAuthServiceForGoogle extends AuthService {
     String? photoUrl,
     bool? completeProfile,
     String? nimNip,
+    String? signInProvider,
   }) async {
     callBootstrapCalled = true;
     lastBootstrapName = name;

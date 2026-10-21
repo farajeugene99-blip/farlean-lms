@@ -103,15 +103,12 @@ export async function bootstrapUser(params: BootstrapUserParams): Promise<Bootst
   if (!existingDoc.exists) {
     // Penentuan status kelengkapan profil pengguna baru:
     // 1. Jika completeProfile bernilai boolean eksplisit: ikuti nilai tersebut.
-    // 2. Jika provider login adalah Google dan belum completeProfile: set false (wajib onboarding).
-    // 3. Jika registrasi biasa Email & Password (sudah mengisi nama/data lengkap): set true.
+    // 2. Default pengguna baru adalah false (wajib melengkapi onboarding profil).
     let isProfileCompleted: boolean;
     if (typeof completeProfile === 'boolean') {
       isProfileCompleted = completeProfile;
-    } else if (signInProvider === 'google.com') {
-      isProfileCompleted = false;
     } else {
-      isProfileCompleted = true;
+      isProfileCompleted = false;
     }
 
     const newUserData = {
