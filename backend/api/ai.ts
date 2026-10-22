@@ -22,6 +22,15 @@ export function getFallbackModels(): string[] {
 
 export const FALLBACK_MODELS = getFallbackModels();
 
+export function ensureClosedCodeBlocks(text: string): string {
+  if (!text || typeof text !== 'string') return '';
+  const fenceMatches = text.match(/```/g);
+  if (fenceMatches && fenceMatches.length % 2 !== 0) {
+    return `${text}\n\`\`\``;
+  }
+  return text;
+}
+
 export async function generateWithFallback(ai: any, promptConfig: any) {
   const models = getFallbackModels();
   let lastError: any;
@@ -37,24 +46,32 @@ export async function generateWithFallback(ai: any, promptConfig: any) {
       const errMsg = String(err?.message || err || '').toLowerCase();
       const status = Number(err?.status || err?.code || err?.error?.code || 0);
 
-      // Lanjut ke model fallback berikutnya jika 404, 429, 500, 502, 503, 504 atau koneksi terputus
-      const isRetryableOnNextModel =
-        status === 404 ||
-        status === 429 ||
-        status >= 500 ||
-        errMsg.includes('404') ||
-        errMsg.includes('429') ||
-        errMsg.includes('503') ||
-        errMsg.includes('not_found') ||
-        errMsg.includes('unavailable') ||
-        errMsg.includes('overloaded') ||
-        errMsg.includes('no longer available') ||
-        errMsg.includes('fetch failed') ||
-        errMsg.includes('econnreset') ||
-        errMsg.includes('socket');
+      // Jika model tertentu menolak thinkingConfig, coba sekali lagi tanpa thinkingConfig untuk model ini
+      if (promptConfig?.config?.thinkingConfig && (errMsg.includes('thinking') || errMsg.includes('thinkingconfig') || errMsg.includes('unsupported field'))) {
+        try {
+          const { thinkingConfig, ...restConfig } = promptConfig.config;
+          return await ai.models.generateContent({
+            ...promptConfig,
+            config: restConfig,
+            model: modelName,
+          });
+        } catch (retryErr: any) {
+          lastError = retryErr;
+        }
+      }
 
-      if (isRetryableOnNextModel) {
-        console.warn(`[AI] Model ${modelName} gagal (${status || errMsg}), mencoba fallback berikutnya...`);
+      // Lanjut ke model fallback berikutnya hanya jika model tidak ditemukan / deprecated / unsupported (404 / NOT_FOUND)
+      const isNotFound =
+        status === 404 ||
+        errMsg.includes('404') ||
+        errMsg.includes('not_found') ||
+        errMsg.includes('not found') ||
+        errMsg.includes('no longer available') ||
+        errMsg.includes('is not supported') ||
+        errMsg.includes('unsupported');
+
+      if (isNotFound) {
+        console.warn(`[AI] Model ${modelName} tidak tersedia (${status || errMsg}), mencoba fallback berikutnya...`);
         continue;
       }
       throw err;
@@ -343,11 +360,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
       const ai = new GoogleGenAI({ apiKey });
-      const systemInstruction = `Kamu adalah Asisten Kurikulum Farlean LMS. Tugasmu adalah menyusun draf deskripsi video pembelajaran yang terstruktur, edukatif, dan menarik bagi mahasiswa. Gunakan Bahasa Indonesia yang baik dan baku. Format output memuat:
-1. Ringkasan Singkat Isi Video
-2. Tujuan Pembelajaran
-3. Poin-Poin Penting
-4. Pertanyaan Refleksi / Diskusi`;
+      const systemInstruction = `Kamu adalah Asisten Kurikulum Farlean LMS. Tugasmu adalah menyusun draf deskripsi video pembelajaran yang terstruktur, edukatif, dan menarik bagi mahasiswa. Gunakan Bahasa Indonesia yang baik dan baku dengan format Markdown yang rapi.
+Format output memuat:
+## 1. Ringkasan Singkat Isi Video
+Jelaskan gambaran umum materi pembelajaran dan konteks penerapannya.
+## 2. Tujuan Pembelajaran
+Sajikan capaian pembelajaran yang diharapkan dalam bentuk bullet points.
+## 3. Poin-Poin Penting
+Uraikan konsep atau subtopik utama secara jelas dengan cetak tebal pada istilah kunci.
+## 4. Pertanyaan Refleksi / Diskusi
+Sajikan 2-3 pertanyaan pemantik diskusi untuk menguji pemahaman mahasiswa.
+
+PENTING: Jangan gunakan format LaTeX ($...$ atau \\frac{}{}). Gunakan simbol matematika Unicode yang mudah dibaca atau teks biasa.`;
 
       const prompt = `Buatkan draf deskripsi video pembelajaran berdasarkan metadata berikut:
 - Judul Video/Materi: ${title || meetingTitle}
@@ -360,12 +384,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         contents: prompt,
         config: {
           systemInstruction,
-          maxOutputTokens: 800,
+          maxOutputTokens: 2048,
           temperature: 0.4,
+          thinkingConfig: {
+            thinkingBudget: 512,
+          },
         },
       });
 
-      const draftDescription = response.text ?? '';
+      const draftDescription = ensureClosedCodeBlocks(response.text ?? '');
       return res.status(200).json({
         success: true,
         draftDescription,
@@ -533,11 +560,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const ai = new GoogleGenAI({ apiKey });
       let systemInstruction = `Kamu adalah Farlean AI Tutor, asisten belajar cerdas dan ramah untuk mahasiswa dan dosen pada Farlean LMS.
-Prinsipmu:
-1. Jelaskan konsep dengan metode Socratic (membimbing penalaran bertahap, bukan sekadar memberi jawaban instan).
-2. Dilarang memberikan kunci jawaban tes/ujian langsung jika pengguna tampak meminta jawaban kuis.
-3. Berikan contoh kode praktis atau analogi dunia nyata jika relevan.
-4. Gunakan Bahasa Indonesia yang ramah, sopan, dan jelas.`;
+Prinsip interaksimu:
+1. Jelaskan konsep secara terstruktur, jelas, komprehensif, dan mudah dipahami di layar mobile (hindari jawaban yang terlalu pendek/terpotong, namun tetap padat dan to-the-point).
+2. Gunakan format Markdown yang rapi: gunakan heading ringan (###), poin-poin bullet list (-), cetak tebal (**istilah penting**) untuk konsep kunci, serta code block (\`\`\`bahasa ... \`\`\`) jika menyajikan kode program atau algoritma.
+3. Berikan analogi dunia nyata atau contoh praktis singkat sebelum memberikan pertanyaan pemantik atau bimbingan penalaran bertahap (metode Socratic).
+4. Dilarang keras memberikan kunci jawaban langsung jika pengguna tampak meminta jawaban kuis/ujian. Bimbing langkah demi langkah agar siswa memahami konsepnya.
+5. PENTING - FORMAT MATEMATIKA / RUMUS: Dilarang menggunakan notasi LaTeX ($...$ atau $$...$$ atau \\frac{}{}) karena layar aplikasi tidak mendukung LaTeX. Gunakan format Markdown standar dan simbol matematika Unicode yang mudah dibaca (seperti ×, ÷, ², ³, √, ≥, ≤, ±, →, π) atau penjelasan teks biasa.
+6. Gunakan Bahasa Indonesia yang ramah, santun, akademis, dan memotivasi belajar.`;
 
       if (contextTitle || contextPlainText) {
         systemInstruction += `\n\nKonteks Pembelajaran yang Sedang Dipelajari Mahasiswa:
@@ -547,19 +576,22 @@ Isi Dokumen Materi:
 ${contextPlainText}
 """
 Instruksi Tambahan:
-Gunakan konteks materi di atas untuk menjawab dan membimbing mahasiswa secara kontekstual, tepat sasaran, dan relevan dengan kurikulum kelas tersebut, tanpa memberikan kunci jawaban tes/kuis langsung.`;
+Gunakan konteks materi di atas untuk menjawab dan membimbing mahasiswa secara kontekstual, tepat sasaran, dan relevan dengan kurikulum kelas tersebut, tanpa memberikan kunci jawaban tes/kuis langsung. Tetap patuhi aturan larangan LaTeX dan format Markdown yang rapi.`;
       }
 
       const response = await generateWithFallback(ai, {
         contents: userPrompt.trim(),
         config: {
           systemInstruction,
-          maxOutputTokens: 800,
+          maxOutputTokens: 2048,
           temperature: 0.5,
+          thinkingConfig: {
+            thinkingBudget: 512,
+          },
         },
       });
 
-      const reply = response.text ?? '';
+      const reply = ensureClosedCodeBlocks(response.text ?? '');
       return res.status(200).json({
         success: true,
         reply,

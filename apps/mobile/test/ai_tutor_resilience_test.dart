@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -179,6 +181,55 @@ void main() {
       expect(find.textContaining('Bad state:'), findsNothing);
       expect(find.textContaining('StateError'), findsNothing);
       expect(find.textContaining('Exception:'), findsNothing);
+    });
+
+    testWidgets('Layar AI Tutor me-render respons berformat Markdown (bold, list, code block) dengan SelectionArea', (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      const markdownReply = '### Konsep Binary Search\n'
+          'Binary search adalah algoritma pencarian pada data terurut:\n'
+          '- **Langkah 1**: Tentukan titik tengah\n'
+          '- **Langkah 2**: Bandingkan nilai target\n\n'
+          'Contoh kode:\n'
+          '```dart\n'
+          'int search(List<int> arr, int target) => 0;\n'
+          '```\n';
+
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          '{"success": true, "reply": ${jsonEncode(markdownReply)}, "remainingQuota": 10}',
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      });
+
+      final service = AiService(
+        httpClient: mockClient,
+        tokenProvider: () async => 'mock_token',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('id'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: AiTutorScreen(aiService: service),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextFormField), 'Jelaskan binary search');
+      await tester.tap(find.byIcon(Icons.arrow_upward_rounded));
+      await tester.pumpAndSettle();
+
+      // Memastikan SelectionArea dan MarkdownBody terpasang (pada sambutan & respons AI)
+      expect(find.byType(SelectionArea), findsWidgets);
+      expect(find.byType(MarkdownBody), findsNWidgets(2));
+      expect(find.textContaining('Konsep Binary Search'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 }

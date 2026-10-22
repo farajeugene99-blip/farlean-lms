@@ -6,6 +6,7 @@ import aiHandler, {
   FALLBACK_MODELS,
   getFallbackModels,
   generateWithFallback,
+  ensureClosedCodeBlocks,
 } from '../api/ai';
 
 interface MockResponse {
@@ -241,6 +242,62 @@ async function runAiTests() {
     }
     if (calls !== 1) {
       throw new Error(`Harusnya hanya 1 kali percobaan untuk error kuota 429, tapi terjadi ${calls} kali`);
+    }
+  });
+
+  // 12. ensureClosedCodeBlocks - Otomatis menutup markdown code block gantung
+  await test('12. ensureClosedCodeBlocks menutup codeblock gantung dan membiarkan teks yang sudah tertutup', async () => {
+    const unclosed = 'Contoh kode:\n```dart\nvoid main() {\n  print("Hello");\n}';
+    const fixed = ensureClosedCodeBlocks(unclosed);
+    if (!fixed.endsWith('\n```')) {
+      throw new Error(`Harusnya ditutup dengan backtick, hasil: ${fixed}`);
+    }
+
+    const closed = 'Contoh kode:\n```dart\nvoid main() {}\n```\nSelesai.';
+    if (ensureClosedCodeBlocks(closed) !== closed) {
+      throw new Error('Teks yang sudah berpasangan genap tidak boleh diubah');
+    }
+
+    if (ensureClosedCodeBlocks('') !== '') {
+      throw new Error('String kosong harus tetap kosong');
+    }
+  });
+
+  // 13. generateWithFallback - Retry tanpa thinkingConfig jika model menolak thinking
+  await test('13. generateWithFallback otomatis retry tanpa thinkingConfig jika model menolak thinking', async () => {
+    let callIndex = 0;
+    const receivedConfigs: any[] = [];
+    const mockAi = {
+      models: {
+        generateContent: async (cfg: any) => {
+          callIndex++;
+          receivedConfigs.push(cfg);
+          if (callIndex === 1) {
+            const err: any = new Error('Invalid parameter: ThinkingConfig is unsupported for this model');
+            err.status = 400;
+            throw err;
+          }
+          return { text: 'Success without thinking config' };
+        },
+      },
+    };
+
+    const res: any = await generateWithFallback(mockAi, {
+      contents: 'Hitung sesuatu',
+      config: {
+        maxOutputTokens: 2048,
+        thinkingConfig: { thinkingBudget: 512 },
+      },
+    });
+
+    if (callIndex !== 2) {
+      throw new Error(`Harusnya retry 2 kali, tapi dipanggil ${callIndex} kali`);
+    }
+    if (receivedConfigs[1]?.config?.thinkingConfig !== undefined) {
+      throw new Error('Percobaan kedua seharusnya tidak menyertakan thinkingConfig');
+    }
+    if (res?.text !== 'Success without thinking config') {
+      throw new Error(`Hasil tidak sesuai: ${res?.text}`);
     }
   });
 

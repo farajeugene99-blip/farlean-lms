@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../services/ai_service.dart';
@@ -248,6 +250,109 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     );
   }
 
+  MarkdownStyleSheet _buildMarkdownStyle(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = context.isDarkMode;
+    final textPrimary = context.textPrimaryColor;
+    final textSecondary = context.textSecondaryColor;
+    final borderColor = context.borderColor;
+
+    return MarkdownStyleSheet.fromTheme(theme).copyWith(
+      p: TextStyle(
+        fontSize: 13,
+        height: 1.45,
+        color: textPrimary,
+      ),
+      strong: TextStyle(
+        fontWeight: FontWeight.bold,
+        color: textPrimary,
+      ),
+      em: TextStyle(
+        fontStyle: FontStyle.italic,
+        color: textPrimary,
+      ),
+      h1: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        height: 1.4,
+        color: textPrimary,
+      ),
+      h2: TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.bold,
+        height: 1.35,
+        color: textPrimary,
+      ),
+      h3: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        height: 1.3,
+        color: textPrimary,
+      ),
+      h4: TextStyle(
+        fontSize: 13.5,
+        fontWeight: FontWeight.bold,
+        height: 1.3,
+        color: textPrimary,
+      ),
+      listBullet: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.bold,
+        color: AppTheme.primary,
+      ),
+      listBulletPadding: const EdgeInsets.only(right: 6),
+      // Inline code (TextStyle murni tanpa borderRadius/padding)
+      code: TextStyle(
+        fontFamily: 'monospace',
+        fontSize: 12,
+        backgroundColor: isDark ? Colors.black26 : const Color(0xFFE2E8F0),
+        color: isDark ? const Color(0xFF4FD1C5) : const Color(0xFF0F766E),
+      ),
+      // Multiline codeblock (BoxDecoration dengan borderRadius 8 dan padding 10)
+      codeblockDecoration: BoxDecoration(
+        color: isDark ? AppTheme.surfaceDark : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: borderColor),
+      ),
+      codeblockPadding: const EdgeInsets.all(10),
+      codeblockAlign: WrapAlignment.start,
+      // Blockquote
+      blockquote: TextStyle(
+        fontSize: 13,
+        height: 1.45,
+        fontStyle: FontStyle.italic,
+        color: textSecondary,
+      ),
+      blockquoteDecoration: BoxDecoration(
+        color: isDark ? AppTheme.surfaceDark : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(4),
+        border: const Border(
+          left: BorderSide(color: AppTheme.primary, width: 3),
+        ),
+      ),
+      blockquotePadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      // Table
+      tableHead: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 12,
+        color: textPrimary,
+      ),
+      tableBody: TextStyle(
+        fontSize: 12,
+        color: textPrimary,
+      ),
+      tableBorder: TableBorder.all(color: borderColor, width: 1),
+      horizontalRuleDecoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            width: 1,
+            color: borderColor,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMessageBubble(_ChatMessage message) {
     final isUser = message.isUser;
     final isWarning = message.isWarning;
@@ -287,16 +392,40 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                 ),
                 border: isUser ? null : Border.all(color: isWarning ? AppTheme.warning.withAlpha(80) : context.borderColor),
               ),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  fontSize: 13,
-                  height: 1.4,
-                  color: isUser
-                      ? Colors.white
-                      : (isWarning ? (context.isDarkMode ? Colors.amber[200] : Colors.amber[900]) : context.textPrimaryColor),
-                ),
-              ),
+              child: isUser
+                  ? Text(
+                      message.text,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        height: 1.4,
+                        color: Colors.white,
+                      ),
+                    )
+                  : (isWarning
+                      ? Text(
+                          message.text,
+                          style: TextStyle(
+                            fontSize: 13,
+                            height: 1.4,
+                            color: context.isDarkMode ? Colors.amber[200] : Colors.amber[900],
+                          ),
+                        )
+                      : SelectionArea(
+                          child: MarkdownBody(
+                            data: message.text,
+                            selectable: false,
+                            shrinkWrap: true,
+                            onTapLink: (text, href, title) async {
+                              if (href != null) {
+                                final uri = Uri.tryParse(href);
+                                if (uri != null && await canLaunchUrl(uri)) {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                }
+                              }
+                            },
+                            styleSheet: _buildMarkdownStyle(context),
+                          ),
+                        )),
             ),
           ),
           if (isUser) const SizedBox(width: 4),
