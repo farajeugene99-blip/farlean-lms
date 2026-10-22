@@ -3,6 +3,57 @@ import { GoogleGenAI } from '@google/genai';
 import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
 import { applyCors } from '../lib/cors';
 
+export const PRIMARY_MODEL = (process.env.GEMINI_MODEL || 'gemini-2.0-flash').replace(/^models\//, '').trim();
+
+export function getFallbackModels(): string[] {
+  const custom = process.env.GEMINI_MODEL
+    ? [process.env.GEMINI_MODEL.replace(/^models\//, '').trim()]
+    : [];
+  const candidates = [
+    ...custom,
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-1.5-flash',
+    'gemini-3.0-flash',
+  ];
+  return Array.from(new Set(candidates.filter(Boolean)));
+}
+
+export const FALLBACK_MODELS = getFallbackModels();
+
+export async function generateWithFallback(ai: any, promptConfig: any) {
+  const models = getFallbackModels();
+  let lastError: any;
+
+  for (const modelName of models) {
+    try {
+      return await ai.models.generateContent({
+        ...promptConfig,
+        model: modelName,
+      });
+    } catch (err: any) {
+      lastError = err;
+      const errMsg = String(err?.message || err || '');
+      const isNotFound =
+        err?.status === 404 ||
+        err?.code === 404 ||
+        errMsg.includes('404') ||
+        errMsg.includes('NOT_FOUND') ||
+        errMsg.includes('not found') ||
+        errMsg.includes('no longer available') ||
+        errMsg.includes('is not supported') ||
+        errMsg.includes('unsupported');
+
+      if (isNotFound) {
+        console.warn(`[AI] Model ${modelName} tidak tersedia (${errMsg}), mencoba fallback berikutnya...`);
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastError;
+}
+
 export interface QuotaConfig {
   burstMax: number;
   burstWindowMs: number;
@@ -296,8 +347,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 - Kata Kunci: ${keywords || '-'}
 - Draf Awal (jika ada): ${existingDescription || '-'}`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+      const response = await generateWithFallback(ai, {
         contents: prompt,
         config: {
           systemInstruction,
@@ -315,9 +365,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         remainingDaily: rateLimit.remainingDaily,
       });
     } catch (e: any) {
-      console.error('Gemini video description error:', e);
-      return res.status(500).json({
-        error: `Gagal memproses draf deskripsi AI: ${e.message || e}`,
+      console.error('[AI Video Description Error]:', e);
+      return res.status(502).json({
+        success: false,
+        error: 'Gagal memproses draf deskripsi AI saat ini. Silakan coba lagi beberapa saat lagi.',
+        message: 'Gagal memproses draf deskripsi AI saat ini. Silakan coba lagi beberapa saat lagi.',
       });
     }
   }
@@ -489,8 +541,7 @@ Instruksi Tambahan:
 Gunakan konteks materi di atas untuk menjawab dan membimbing mahasiswa secara kontekstual, tepat sasaran, dan relevan dengan kurikulum kelas tersebut, tanpa memberikan kunci jawaban tes/kuis langsung.`;
       }
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+      const response = await generateWithFallback(ai, {
         contents: userPrompt.trim(),
         config: {
           systemInstruction,
@@ -508,9 +559,11 @@ Gunakan konteks materi di atas untuk menjawab dan membimbing mahasiswa secara ko
         remainingDaily: rateLimit.remainingDaily,
       });
     } catch (e: any) {
-      console.error('Gemini tutor error:', e);
-      return res.status(500).json({
-        error: `Gagal memproses jawaban AI Tutor: ${e.message || e}`,
+      console.error('[AI Tutor Error]:', e);
+      return res.status(502).json({
+        success: false,
+        error: 'Gagal memproses jawaban AI Tutor saat ini. Silakan coba lagi beberapa saat lagi.',
+        message: 'Gagal memproses jawaban AI Tutor saat ini. Silakan coba lagi beberapa saat lagi.',
       });
     }
   }

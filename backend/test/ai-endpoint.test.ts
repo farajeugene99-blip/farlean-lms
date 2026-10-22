@@ -2,6 +2,10 @@ import aiHandler, {
   extractDeltaPlainText,
   getAiQuotaConfig,
   AI_QUOTA_CONFIG,
+  PRIMARY_MODEL,
+  FALLBACK_MODELS,
+  getFallbackModels,
+  generateWithFallback,
 } from '../api/ai';
 
 interface MockResponse {
@@ -144,6 +148,99 @@ async function runAiTests() {
     const unknownConfig = getAiQuotaConfig('STRANGER', 'tutor');
     if (unknownConfig.burstMax !== 10 || unknownConfig.dailyMax !== 30) {
       throw new Error(`Fallback unknown role failed: ${JSON.stringify(unknownConfig)}`);
+    }
+  });
+
+  // 8. Fallback Models Configuration
+  await test('8. getFallbackModels menyediakan daftar model dengan PRIMARY_MODEL di awal tanpa duplikasi', async () => {
+    const models = getFallbackModels();
+    if (!models || models.length === 0) {
+      throw new Error('Daftar fallback model kosong');
+    }
+    if (models[0] !== PRIMARY_MODEL) {
+      throw new Error(`Model pertama bukan PRIMARY_MODEL: ${models[0]} vs ${PRIMARY_MODEL}`);
+    }
+    const unique = new Set(models);
+    if (unique.size !== models.length) {
+      throw new Error(`Daftar model memiliki duplikat: ${JSON.stringify(models)}`);
+    }
+  });
+
+  // 9. generateWithFallback - Success on first try
+  await test('9. generateWithFallback berhasil mengembalikan output jika model pertama sukses', async () => {
+    let attemptedModel = '';
+    const mockAi = {
+      models: {
+        generateContent: async (cfg: any) => {
+          attemptedModel = cfg.model;
+          return { text: `Success from ${cfg.model}` };
+        },
+      },
+    };
+
+    const res: any = await generateWithFallback(mockAi, { contents: 'Halo' });
+    if (!res || !res.text || !res.text.includes('Success from')) {
+      throw new Error(`Hasil tidak sesuai: ${JSON.stringify(res)}`);
+    }
+    if (attemptedModel !== PRIMARY_MODEL) {
+      throw new Error(`Model yang dipanggil bukan PRIMARY_MODEL: ${attemptedModel}`);
+    }
+  });
+
+  // 10. generateWithFallback - Fallback on 404 / NOT_FOUND / no longer available
+  await test('10. generateWithFallback otomatis mencoba model berikutnya saat model pertama 404 / no longer available', async () => {
+    const attemptedModels: string[] = [];
+    const mockAi = {
+      models: {
+        generateContent: async (cfg: any) => {
+          attemptedModels.push(cfg.model);
+          if (attemptedModels.length === 1) {
+            const err: any = new Error(
+              'This model models/gemini-2.5-flash is no longer available to new users. Please update your code...'
+            );
+            err.status = 404;
+            throw err;
+          }
+          return { text: `Success from fallback ${cfg.model}` };
+        },
+      },
+    };
+
+    const res: any = await generateWithFallback(mockAi, { contents: 'Halo' });
+    if (attemptedModels.length < 2) {
+      throw new Error(`Harusnya mencoba minimal 2 model, hanya mencoba: ${attemptedModels.length}`);
+    }
+    if (!res.text.includes('Success from fallback')) {
+      throw new Error(`Output tidak valid: ${res.text}`);
+    }
+  });
+
+  // 11. generateWithFallback - Throw non-404 errors immediately (e.g. 429 Quota Exceeded)
+  await test('11. generateWithFallback langsung melempar error non-404 (misal 429 kuota) tanpa retry ke model lain', async () => {
+    let calls = 0;
+    const mockAi = {
+      models: {
+        generateContent: async () => {
+          calls++;
+          const err: any = new Error('Resource has been exhausted (quota exceeded)');
+          err.status = 429;
+          throw err;
+        },
+      },
+    };
+
+    let caughtError: any = null;
+    try {
+      await generateWithFallback(mockAi, { contents: 'Halo' });
+    } catch (e: any) {
+      caughtError = e;
+    }
+
+    if (!caughtError || caughtError.status !== 429) {
+      throw new Error(`Harusnya error 429 dilempar, tapi dapat: ${caughtError}`);
+    }
+    if (calls !== 1) {
+      throw new Error(`Harusnya hanya 1 kali percobaan untuk error kuota 429, tapi terjadi ${calls} kali`);
     }
   });
 
