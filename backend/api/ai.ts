@@ -3,7 +3,7 @@ import { GoogleGenAI } from '@google/genai';
 import { db, verifyAuth, FieldValue } from '../lib/firebaseAdmin';
 import { applyCors } from '../lib/cors';
 
-export const PRIMARY_MODEL = (process.env.GEMINI_MODEL || 'gemini-2.0-flash').replace(/^models\//, '').trim();
+export const PRIMARY_MODEL = (process.env.GEMINI_MODEL || 'gemini-3.6-flash').replace(/^models\//, '').trim();
 
 export function getFallbackModels(): string[] {
   const custom = process.env.GEMINI_MODEL
@@ -11,10 +11,11 @@ export function getFallbackModels(): string[] {
     : [];
   const candidates = [
     ...custom,
-    'gemini-2.0-flash',
-    'gemini-2.0-flash-lite',
-    'gemini-1.5-flash',
-    'gemini-3.0-flash',
+    'gemini-3.6-flash',
+    'gemini-3.5-flash',
+    'gemini-3.8-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-flash-lite-latest',
   ];
   return Array.from(new Set(candidates.filter(Boolean)));
 }
@@ -33,19 +34,27 @@ export async function generateWithFallback(ai: any, promptConfig: any) {
       });
     } catch (err: any) {
       lastError = err;
-      const errMsg = String(err?.message || err || '');
-      const isNotFound =
-        err?.status === 404 ||
-        err?.code === 404 ||
-        errMsg.includes('404') ||
-        errMsg.includes('NOT_FOUND') ||
-        errMsg.includes('not found') ||
-        errMsg.includes('no longer available') ||
-        errMsg.includes('is not supported') ||
-        errMsg.includes('unsupported');
+      const errMsg = String(err?.message || err || '').toLowerCase();
+      const status = Number(err?.status || err?.code || err?.error?.code || 0);
 
-      if (isNotFound) {
-        console.warn(`[AI] Model ${modelName} tidak tersedia (${errMsg}), mencoba fallback berikutnya...`);
+      // Lanjut ke model fallback berikutnya jika 404, 429, 500, 502, 503, 504 atau koneksi terputus
+      const isRetryableOnNextModel =
+        status === 404 ||
+        status === 429 ||
+        status >= 500 ||
+        errMsg.includes('404') ||
+        errMsg.includes('429') ||
+        errMsg.includes('503') ||
+        errMsg.includes('not_found') ||
+        errMsg.includes('unavailable') ||
+        errMsg.includes('overloaded') ||
+        errMsg.includes('no longer available') ||
+        errMsg.includes('fetch failed') ||
+        errMsg.includes('econnreset') ||
+        errMsg.includes('socket');
+
+      if (isRetryableOnNextModel) {
+        console.warn(`[AI] Model ${modelName} gagal (${status || errMsg}), mencoba fallback berikutnya...`);
         continue;
       }
       throw err;
