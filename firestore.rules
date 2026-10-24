@@ -49,6 +49,22 @@ service cloud.firestore {
         get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.status == 'active';
     }
 
+    // Memeriksa apakah user adalah anggota kelompok tertentu di kelas
+    function isMemberOfGroup(classId, uid, groupId) {
+      return isVerified()
+        && exists(/databases/$(database)/documents/classes/$(classId)/members/$(uid))
+        && ('group_id' in get(/databases/$(database)/documents/classes/$(classId)/members/$(uid)).data)
+        && get(/databases/$(database)/documents/classes/$(classId)/members/$(uid)).data.group_id == groupId;
+    }
+
+    // Memeriksa apakah submissionId sesuai dengan group_id anggota kelas aktif
+    function isClassMemberInSubmissionGroup(classId, uid, subId) {
+      return isVerified()
+        && exists(/databases/$(database)/documents/classes/$(classId)/members/$(uid))
+        && ('group_id' in get(/databases/$(database)/documents/classes/$(classId)/members/$(uid)).data)
+        && subId == ('group_' + get(/databases/$(database)/documents/classes/$(classId)/members/$(uid)).data.group_id);
+    }
+
     // Memeriksa apakah staf adalah PEMILIK kelas aktif atau ADMIN
     function isClassOwner(classId) {
       return isAdmin() || (
@@ -202,9 +218,13 @@ service cloud.firestore {
           // BACA: Dosen/admin, atau mahasiswa pemilik tugas (individu), atau anggota kelompok
           allow read: if isClassTeacher(classId)
                       || (isClassMemberActive(classId) && (
-                          resource.data.student_uid == request.auth.uid
-                          || ('contributor_ids' in resource.data && request.auth.uid in resource.data.contributor_ids)
-                          || ('group_id' in resource.data && get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.group_id == resource.data.group_id)
+                          submissionId == request.auth.uid
+                          || isClassMemberInSubmissionGroup(classId, request.auth.uid, submissionId)
+                          || (resource != null && (
+                              resource.data.get('student_uid', '') == request.auth.uid
+                              || ('contributor_ids' in resource.data && request.auth.uid in resource.data.contributor_ids)
+                              || ('group_id' in resource.data && isMemberOfGroup(classId, request.auth.uid, resource.data.group_id))
+                          ))
                       ));
 
           // CREATE OLEH MAHASISWA AKTIF:
@@ -212,28 +232,29 @@ service cloud.firestore {
             && request.resource.data.file_url is string
             && request.resource.data.file_url.size() > 0
             && request.resource.data.submitted_by_uid == request.auth.uid
-            && (!('score' in request.resource.data) || request.resource.data.score == null)
+            && request.resource.data.get('score', null) == null
             // Validasi batas waktu server (request.time)
             && (
               (request.time <= get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.deadline
                 && request.resource.data.status == 'SUBMITTED')
               ||
               (request.time > get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.deadline
-                && get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.allow_late_submission == true
+                && get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.get('allow_late_submission', true) == true
                 && request.resource.data.status == 'LATE')
             )
             // Validasi tipe tugas (Individu vs Kelompok)
             && (
               // Tugas Individu
-              (!get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.is_group_assignment
+              (!get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.get('is_group_assignment', false)
                 && submissionId == request.auth.uid
                 && request.resource.data.student_uid == request.auth.uid)
               ||
               // Tugas Kelompok
-              (get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.is_group_assignment
-                && 'group_id' in request.resource.data
+              (get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.get('is_group_assignment', false)
+                && ('group_id' in request.resource.data)
+                && request.resource.data.group_id is string
                 && submissionId == ('group_' + request.resource.data.group_id)
-                && get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.group_id == request.resource.data.group_id)
+                && isMemberOfGroup(classId, request.auth.uid, request.resource.data.group_id))
             );
 
           // UPDATE: Dosen grading ATAU Mahasiswa revisi sebelum dinilai
@@ -248,24 +269,26 @@ service cloud.firestore {
             // Mahasiswa revisi sebelum dinilai
             isClassMemberActive(classId)
             && resource.data.status != 'GRADED'
+            && resource.data.get('score', null) == null
+            && request.resource.data.get('score', null) == null
             && request.resource.data.file_url is string
             && request.resource.data.file_url.size() > 0
             && request.resource.data.submitted_by_uid == request.auth.uid
-            && (!('score' in request.resource.data) || request.resource.data.score == resource.data.score)
             && (
               (request.time <= get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.deadline
                 && request.resource.data.status == 'SUBMITTED')
               ||
               (request.time > get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.deadline
-                && get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.allow_late_submission == true
+                && get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.get('allow_late_submission', true) == true
                 && request.resource.data.status == 'LATE')
             )
             && (
-              (!get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.is_group_assignment
+              (!get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.get('is_group_assignment', false)
                 && resource.data.student_uid == request.auth.uid)
               ||
-              (get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.is_group_assignment
-                && get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.group_id == resource.data.group_id)
+              (get(/databases/$(database)/documents/classes/$(classId)/assignments/$(assignmentId)).data.get('is_group_assignment', false)
+                && ('group_id' in resource.data)
+                && isMemberOfGroup(classId, request.auth.uid, resource.data.group_id))
             )
           );
 

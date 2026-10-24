@@ -13,6 +13,7 @@ import '../../repositories/assignment_repository.dart';
 import '../../repositories/class_repository.dart';
 import '../../repositories/group_repository.dart';
 import '../../services/auth_provider.dart';
+import '../../services/cloudinary_upload_service.dart';
 import '../class/create_assignment_dialog.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
@@ -149,7 +150,8 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
   Future<void> _openFile(String url) async {
     final l10n = AppLocalizations.of(context);
     try {
-      final uri = Uri.parse(url);
+      final cleanUrl = CloudinaryUploadService.getCleanUrl(url);
+      final uri = Uri.parse(cleanUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
@@ -179,7 +181,12 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
         isResubmit: isResubmit,
         initialFileUrl: isResubmit ? _mySubmission?.fileUrl : null,
         initialFileName: isResubmit ? _mySubmission?.fileName : null,
+        initialFileSize: isResubmit ? _mySubmission?.fileSize : null,
         initialNote: isResubmit ? _mySubmission?.note : null,
+        classId: widget.classId,
+        assignmentId: widget.assignmentId,
+        allowedFileTypes: assignment.allowedFileTypes,
+        maxFileSizeMb: assignment.maxFileSizeMb,
       ),
     );
 
@@ -212,7 +219,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
           submittedByName: name,
           fileUrl: formData.fileUrl,
           fileName: formData.fileName,
-          fileSize: 1048576,
+          fileSize: formData.fileSize > 0 ? formData.fileSize : 1048576,
           note: formData.note,
           status: status,
         );
@@ -426,30 +433,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                     ),
                     icon: const Icon(Icons.open_in_new_rounded, size: 16),
                     label: Text(l10n.assignmentViewInstruction),
-                    onPressed: () async {
-                      try {
-                        final uri = Uri.tryParse(assignment.attachmentUrl!);
-                        if (uri != null && await canLaunchUrl(uri)) {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
-                        } else if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Tidak dapat membuka tautan berkas lampiran.'),
-                              backgroundColor: AppTheme.error,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Gagal membuka berkas: $e'),
-                              backgroundColor: AppTheme.error,
-                            ),
-                          );
-                        }
-                      }
-                    },
+                    onPressed: () => _openFile(assignment.attachmentUrl!),
                   ),
                 ),
               ),
@@ -654,7 +638,14 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                 child: const Icon(Icons.picture_as_pdf_rounded, color: Colors.red, size: 24),
               ),
               title: Text(submission.fileName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              subtitle: Text(submission.fileUrl, style: TextStyle(fontSize: 11, color: context.textSecondaryColor), maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: Text(
+                submission.fileSize > 0
+                    ? '${(submission.fileSize / (1024 * 1024)).toStringAsFixed(1)} MB'
+                    : CloudinaryUploadService.getCleanUrl(submission.fileUrl),
+                style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
               trailing: IconButton(
                 icon: const Icon(Icons.open_in_new_rounded, size: 20),
                 onPressed: () => _openFile(submission.fileUrl),

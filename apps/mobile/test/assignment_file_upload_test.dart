@@ -10,6 +10,7 @@ import 'package:mobile/l10n/generated/app_localizations.dart';
 import 'package:mobile/models/app_user.dart';
 import 'package:mobile/models/assignment.dart';
 import 'package:mobile/models/material_content.dart';
+import 'package:mobile/presentation/assignment/submit_assignment_dialog.dart';
 import 'package:mobile/presentation/class/create_assignment_dialog.dart';
 import 'package:mobile/presentation/material/material_editor_screen.dart';
 import 'package:mobile/presentation/material/material_reader_screen.dart';
@@ -475,6 +476,164 @@ void main() {
       expect(find.text('Buku_Panduan.pdf'), findsOneWidget);
       expect(find.text('1.0 MB'), findsOneWidget);
       expect(find.text('Buka Berkas'), findsOneWidget);
+    });
+
+    test('6. CloudinaryUploadService.getCleanUrl strips fragments and preserves base URL', () {
+      expect(
+        CloudinaryUploadService.getCleanUrl('https://res.cloudinary.com/demo/image/upload/sample.pdf#name=Tugas1.pdf&size=1024'),
+        equals('https://res.cloudinary.com/demo/image/upload/sample.pdf'),
+      );
+      expect(
+        CloudinaryUploadService.getCleanUrl('https://res.cloudinary.com/demo/image/upload/sample.pdf'),
+        equals('https://res.cloudinary.com/demo/image/upload/sample.pdf'),
+      );
+      expect(CloudinaryUploadService.getCleanUrl(''), equals(''));
+    });
+
+    testWidgets('7. SubmitAssignmentDialog selects file locally without upload, then uploads on submit', (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final mockUpload = MockCloudinaryServiceForTest(
+        docToReturn: FakePlatformFile(
+          name: 'Jawaban_Tugas_Farlean.pdf',
+          fakeBytes: Uint8List(2 * 1024 * 1024),
+          fakeSize: 2 * 1024 * 1024,
+        ),
+        resultToReturn: const CloudinaryUploadResult(
+          secureUrl: 'https://res.cloudinary.com/farlean/assignments/Jawaban_Tugas_Farlean.pdf',
+          fileName: 'Jawaban_Tugas_Farlean.pdf',
+          sizeBytes: 2 * 1024 * 1024,
+        ),
+      );
+
+      SubmissionFormData? poppedResult;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('id'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () async {
+                  poppedResult = await showDialog<SubmissionFormData>(
+                    context: ctx,
+                    builder: (_) => SubmitAssignmentDialog(
+                      classId: 'class_123',
+                      assignmentId: 'assign_456',
+                      cloudinaryUploadService: mockUpload,
+                    ),
+                  );
+                },
+                child: const Text('Buka Dialog'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Buka dialog
+      await tester.tap(find.text('Buka Dialog'));
+      await tester.pumpAndSettle();
+
+      // Awalnya: Tombol Pilih Berkas tampil
+      expect(find.text('Pilih Berkas dari Perangkat'), findsOneWidget);
+      expect(mockUpload.uploadCallCount, equals(0));
+
+      // Klik tombol Pilih Berkas
+      await tester.tap(find.text('Pilih Berkas dari Perangkat'));
+      await tester.pumpAndSettle();
+
+      // PENTING: Upload TIDAK BOLEH dipanggil saat berkas baru dipilih!
+      expect(mockUpload.uploadCallCount, equals(0), reason: 'File picker must NOT trigger upload immediately');
+
+      // Verifikasi kartu berkas terpilih tampil di UI
+      expect(find.text('Jawaban_Tugas_Farlean.pdf'), findsOneWidget);
+      expect(find.text('2.0 MB'), findsOneWidget);
+
+      // Masukkan catatan
+      await tester.enterText(find.byType(TextFormField).first, 'Berikut jawaban tugas saya.');
+      await tester.pumpAndSettle();
+
+      // Klik tombol Kumpulkan/Simpan
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Kumpulkan Tugas'));
+      await tester.pumpAndSettle();
+
+      // Sekarang upload harus terpanggil tepat 1 kali dengan folderType 'assignments'
+      expect(mockUpload.uploadCallCount, equals(1));
+      expect(mockUpload.lastFolderType, equals('assignments'));
+      expect(mockUpload.lastClassId, equals('class_123'));
+
+      // Verifikasi data yang dipop ke pemanggil
+      expect(poppedResult, isNotNull);
+      expect(poppedResult!.fileUrl, equals('https://res.cloudinary.com/farlean/assignments/Jawaban_Tugas_Farlean.pdf'));
+      expect(poppedResult!.fileName, equals('Jawaban_Tugas_Farlean.pdf'));
+      expect(poppedResult!.fileSize, equals(2 * 1024 * 1024));
+      expect(poppedResult!.note, equals('Berikut jawaban tugas saya.'));
+    });
+
+    testWidgets('8. SubmitAssignmentDialog resubmit pre-populates initial file and submits cleanly', (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final mockUpload = MockCloudinaryServiceForTest();
+      SubmissionFormData? poppedResult;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('id'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () async {
+                  poppedResult = await showDialog<SubmissionFormData>(
+                    context: ctx,
+                    builder: (_) => SubmitAssignmentDialog(
+                      isResubmit: true,
+                      initialFileUrl: 'https://res.cloudinary.com/farlean/existing_file.pdf',
+                      initialFileName: 'tugas_lama.pdf',
+                      initialFileSize: 1536000,
+                      initialNote: 'Catatan awal',
+                      classId: 'class_123',
+                      assignmentId: 'assign_456',
+                      cloudinaryUploadService: mockUpload,
+                    ),
+                  );
+                },
+                child: const Text('Buka Dialog Resubmit'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Buka Dialog Resubmit'));
+      await tester.pumpAndSettle();
+
+      // Verifikasi nama berkas lama dan ukuran ter-render
+      expect(find.text('tugas_lama.pdf'), findsOneWidget);
+      expect(find.text('1.5 MB'), findsOneWidget);
+
+      // Submit tanpa mengganti berkas
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Kumpulkan Ulang'));
+      await tester.pumpAndSettle();
+
+      // Tidak ada network upload karena berkas tidak diganti
+      expect(mockUpload.uploadCallCount, equals(0));
+      expect(poppedResult, isNotNull);
+      expect(poppedResult!.fileUrl, equals('https://res.cloudinary.com/farlean/existing_file.pdf'));
+      expect(poppedResult!.fileName, equals('tugas_lama.pdf'));
+      expect(poppedResult!.fileSize, equals(1536000));
     });
   });
 }

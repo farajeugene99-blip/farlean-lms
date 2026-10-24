@@ -1,4 +1,5 @@
 import uploadSignHandler from '../api/upload-sign';
+import { setTokenVerifier, resetTokenVerifier } from '../lib/firebaseAdmin';
 
 interface MockResponse {
   statusCode: number;
@@ -76,6 +77,73 @@ async function runUploadSignTests() {
     if (res.statusCode !== 401) {
       throw new Error(`Expected status 401, got ${res.statusCode}`);
     }
+  });
+
+  // 3. Mahasiswa (USER) mencoba upload ke 'materials' (hanya GURU/ADMIN) ditolak 403
+  await test('3. POST /api/upload-sign folderType materials oleh mahasiswa (USER) ditolak 403 Forbidden', async () => {
+    setTokenVerifier(async () => ({
+      uid: 'student_test_1',
+      email: 'student@kampus.ac.id',
+      email_verified: true,
+      role: 'USER',
+    }));
+
+    const req: any = {
+      method: 'POST',
+      query: {},
+      headers: { authorization: 'Bearer dummy_token' },
+      body: { folderType: 'materials', classId: 'class_test' },
+    };
+    const res = createMockRes();
+    await uploadSignHandler(req, res as any);
+    if (res.statusCode !== 403) {
+      throw new Error(`Expected status 403, got ${res.statusCode}: ${JSON.stringify(res.jsonData)}`);
+    }
+  });
+
+  // 4. Mahasiswa upload assignments tanpa classId ditolak 400
+  await test('4. POST /api/upload-sign folderType assignments tanpa classId ditolak 400 Bad Request', async () => {
+    setTokenVerifier(async () => ({
+      uid: 'student_test_1',
+      email: 'student@kampus.ac.id',
+      email_verified: true,
+      role: 'USER',
+    }));
+
+    const req: any = {
+      method: 'POST',
+      query: {},
+      headers: { authorization: 'Bearer dummy_token' },
+      body: { folderType: 'assignments' },
+    };
+    const res = createMockRes();
+    await uploadSignHandler(req, res as any);
+    if (res.statusCode !== 400) {
+      throw new Error(`Expected status 400, got ${res.statusCode}: ${JSON.stringify(res.jsonData)}`);
+    }
+  });
+
+  // 5. Mahasiswa upload assignments tanpa assignmentId ditolak 400
+  await test('5. POST /api/upload-sign folderType assignments tanpa assignmentId ditolak 400 Bad Request', async () => {
+    setTokenVerifier(async () => ({
+      uid: 'student_test_1',
+      email: 'student@kampus.ac.id',
+      email_verified: true,
+      role: 'USER',
+    }));
+
+    const req: any = {
+      method: 'POST',
+      query: {},
+      headers: { authorization: 'Bearer dummy_token' },
+      body: { folderType: 'assignments', classId: 'class_test_1' },
+    };
+    const res = createMockRes();
+    await uploadSignHandler(req, res as any);
+    if (res.statusCode !== 400) {
+      throw new Error(`Expected status 400, got ${res.statusCode}: ${JSON.stringify(res.jsonData)}`);
+    }
+    resetTokenVerifier();
   });
 
   console.log('\n========================================');

@@ -87,6 +87,12 @@ class CloudinaryUploadService {
 
   static const int maxFileSizeBytes = 10 * 1024 * 1024; // 10 MB limit
 
+  /// Mengembalikan URL bersih tanpa fragment metadata #name=...&size=...
+  static String getCleanUrl(String url) {
+    if (url.isEmpty) return url;
+    return url.contains('#') ? url.split('#').first : url;
+  }
+
   CloudinaryUploadService({
     FirebaseAuth? auth,
     http.Client? httpClient,

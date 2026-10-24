@@ -396,7 +396,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
                           label: Text(l10n.materialAttachmentOpen, style: const TextStyle(fontSize: 11)),
                           onPressed: () async {
                             try {
-                              final uri = Uri.tryParse(rawUrl);
+                              final cleanUrl = CloudinaryUploadService.getCleanUrl(rawUrl);
+                              final uri = Uri.tryParse(cleanUrl);
                               if (uri != null && await canLaunchUrl(uri)) {
                                 await launchUrl(uri, mode: LaunchMode.externalApplication);
                               } else if (context.mounted) {

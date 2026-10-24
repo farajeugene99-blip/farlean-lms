@@ -7,6 +7,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../models/manual_book.dart';
 import '../../repositories/manual_book_repository.dart';
 import '../../services/auth_provider.dart';
+import '../../services/cloudinary_upload_service.dart';
 import '../common/error_view.dart';
 import '../common/loading_indicator.dart';
 import 'create_manual_book_dialog.dart';
@@ -96,7 +97,8 @@ class _ManualBookListScreenState extends State<ManualBookListScreen> {
   Future<void> _openPdf(String fileUrl) async {
     final l10n = AppLocalizations.of(context);
     try {
-      final uri = Uri.parse(fileUrl);
+      final cleanUrl = CloudinaryUploadService.getCleanUrl(fileUrl);
+      final uri = Uri.parse(cleanUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
