@@ -7,6 +7,7 @@ class Classroom {
   final String description;
   final String teacherId;
   final String status; // 'Active' | 'Archived'
+  final String? membershipStatus; // 'active' | 'pending' | 'removed'
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -17,12 +18,16 @@ class Classroom {
     this.description = '',
     required this.teacherId,
     this.status = 'Active',
+    this.membershipStatus,
     this.createdAt,
     this.updatedAt,
   });
 
   bool get isArchived => status.toLowerCase() == 'archived';
   bool get isActive => status.toLowerCase() == 'active';
+  bool get isMembershipPending => membershipStatus?.toLowerCase() == 'pending';
+  bool get isMembershipActive => membershipStatus == null || membershipStatus?.toLowerCase() == 'active';
+  bool get isMembershipRemoved => membershipStatus?.toLowerCase() == 'removed';
 
   factory Classroom.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? {};
@@ -44,6 +49,7 @@ class Classroom {
       description: map['description'] as String? ?? '',
       teacherId: map['teacher_id'] as String? ?? '',
       status: map['status'] as String? ?? 'Active',
+      membershipStatus: map['membership_status'] as String?,
       createdAt: parseDate(map['created_at']),
       updatedAt: parseDate(map['updated_at']),
     );
@@ -56,6 +62,7 @@ class Classroom {
       'description': description,
       'teacher_id': teacherId,
       'status': status,
+      if (membershipStatus != null) 'membership_status': membershipStatus,
       if (createdAt != null) 'created_at': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updated_at': Timestamp.fromDate(updatedAt!),
     };
@@ -67,6 +74,7 @@ class Classroom {
     String? description,
     String? teacherId,
     String? status,
+    String? membershipStatus,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -77,6 +85,7 @@ class Classroom {
       description: description ?? this.description,
       teacherId: teacherId ?? this.teacherId,
       status: status ?? this.status,
+      membershipStatus: membershipStatus ?? this.membershipStatus,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

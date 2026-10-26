@@ -635,5 +635,169 @@ void main() {
       expect(poppedResult!.fileName, equals('tugas_lama.pdf'));
       expect(poppedResult!.fileSize, equals(1536000));
     });
+
+    testWidgets('9. SubmitAssignmentDialog tidak lagi menampilkan input manual URL maupun opsi URL manual', (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final mockUpload = MockCloudinaryServiceForTest();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('id'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () => showDialog<SubmissionFormData>(
+                  context: ctx,
+                  builder: (_) => SubmitAssignmentDialog(
+                    classId: 'class_123',
+                    assignmentId: 'assign_456',
+                    cloudinaryUploadService: mockUpload,
+                  ),
+                ),
+                child: const Text('Buka Dialog'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Buka Dialog'));
+      await tester.pumpAndSettle();
+
+      // Pastikan string/opsi manual tidak pernah ditemukan di UI dialog
+      expect(find.text('Opsi URL manual (opsional)'), findsNothing);
+      expect(find.text('URL Berkas'), findsNothing);
+      expect(find.text('https://res.cloudinary.com/...'), findsNothing);
+      expect(find.text('Pilih Berkas dari Perangkat'), findsOneWidget);
+    });
+
+    testWidgets('10. SubmitAssignmentDialog memblokir submit jika berkas belum dipilih dan menampilkan validasi', (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final mockUpload = MockCloudinaryServiceForTest();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('id'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () => showDialog<SubmissionFormData>(
+                  context: ctx,
+                  builder: (_) => SubmitAssignmentDialog(
+                    classId: 'class_123',
+                    assignmentId: 'assign_456',
+                    cloudinaryUploadService: mockUpload,
+                  ),
+                ),
+                child: const Text('Buka Dialog'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Buka Dialog'));
+      await tester.pumpAndSettle();
+
+      // Langsung klik tombol Kumpulkan Tugas tanpa memilih berkas
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Kumpulkan Tugas'));
+      await tester.pumpAndSettle();
+
+      // Validasi error muncul di UI
+      expect(find.text('Silakan pilih berkas tugas terlebih dahulu.'), findsOneWidget);
+      expect(mockUpload.uploadCallCount, equals(0));
+    });
+
+    testWidgets('11. SubmitAssignmentDialog resubmit memungkinkan mengganti berkas lama dengan berkas baru', (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final newDoc = FakePlatformFile(
+        name: 'tugas_revisi_final.pdf',
+        fakeBytes: Uint8List(3 * 1024 * 1024),
+        fakeSize: 3 * 1024 * 1024,
+      );
+
+      final mockUpload = MockCloudinaryServiceForTest(
+        docToReturn: newDoc,
+        resultToReturn: const CloudinaryUploadResult(
+          secureUrl: 'https://res.cloudinary.com/farlean/assignments/tugas_revisi_final.pdf',
+          fileName: 'tugas_revisi_final.pdf',
+          sizeBytes: 3 * 1024 * 1024,
+        ),
+      );
+
+      SubmissionFormData? poppedResult;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('id'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () async {
+                  poppedResult = await showDialog<SubmissionFormData>(
+                    context: ctx,
+                    builder: (_) => SubmitAssignmentDialog(
+                      isResubmit: true,
+                      initialFileUrl: 'https://res.cloudinary.com/farlean/tugas_lama.pdf',
+                      initialFileName: 'tugas_lama.pdf',
+                      initialFileSize: 1024 * 1024,
+                      classId: 'class_123',
+                      assignmentId: 'assign_456',
+                      cloudinaryUploadService: mockUpload,
+                    ),
+                  );
+                },
+                child: const Text('Buka Dialog Resubmit'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Buka Dialog Resubmit'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('tugas_lama.pdf'), findsOneWidget);
+
+      // Ketuk Ganti Berkas
+      await tester.tap(find.byTooltip('Ganti Berkas'));
+      await tester.pumpAndSettle();
+
+      // UI sekarang menampilkan berkas baru yang dipilih
+      expect(find.text('tugas_revisi_final.pdf'), findsOneWidget);
+      expect(find.text('3.0 MB'), findsOneWidget);
+
+      // Klik tombol Kumpulkan Ulang
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Kumpulkan Ulang'));
+      await tester.pumpAndSettle();
+
+      // Upload terpanggil untuk berkas baru
+      expect(mockUpload.uploadCallCount, equals(1));
+      expect(poppedResult, isNotNull);
+      expect(poppedResult!.fileUrl, equals('https://res.cloudinary.com/farlean/assignments/tugas_revisi_final.pdf'));
+      expect(poppedResult!.fileName, equals('tugas_revisi_final.pdf'));
+      expect(poppedResult!.fileSize, equals(3 * 1024 * 1024));
+    });
   });
 }

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test:unit": "tsx test/admin-bootstrap-guard.test.ts && tsx test/cors.test.ts && tsx test/ai-endpoint.test.ts && tsx test/upload-sign.test.ts",
+    "test:unit": "tsx test/admin-bootstrap-guard.test.ts && tsx test/cors.test.ts && tsx test/ai-endpoint.test.ts && tsx test/upload-sign.test.ts && tsx test/my-classes-unit.test.ts",
     "test:admin-guard": "tsx test/admin-bootstrap-guard.test.ts",
     "test:rules": "tsx test/firestore-rules.test.ts",
     "test:api": "tsx test/api-endpoints.test.ts",

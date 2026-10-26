@@ -271,61 +271,99 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       body: classProvider.isLoading && classProvider.allClasses.isEmpty
           ? LoadingIndicator(message: l10n.dashboardLoadingClasses)
-          : RefreshIndicator(
-              onRefresh: () => classProvider.loadClasses(),
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  // Welcome Banner Card
-                  _buildWelcomeCard(context, classProvider),
-                  if (authProvider.isRoleOutOfSync) ...[
-                    const SizedBox(height: 12),
-                    _buildSyncWarningBanner(context, authProvider),
-                  ],
-                  const SizedBox(height: 20),
-
-                  // Section: Kelas yang Dikelola (Dosen / Pengajar)
-                  if (isStaff) ...[
-                    Text(
-                      l10n.dashboardManagedClassesSection,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    if (classProvider.ownedClasses.isEmpty)
-                      _buildEmptyOwnedCard(context)
-                    else
-                      ...classProvider.ownedClasses.map((c) => _buildClassCard(context, c, isOwner: true)),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // Section: Kelas yang Diikuti (Mahasiswa / Anggota)
-                  Row(
+          : (classProvider.errorMessage != null && classProvider.allClasses.isEmpty)
+              ? _buildClassErrorView(context, classProvider)
+              : RefreshIndicator(
+                  onRefresh: () => classProvider.loadClasses(),
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
                     children: [
-                      Text(
-                        l10n.dashboardJoinedClassesSection,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const Spacer(),
-                      if (classProvider.joinedClasses.isNotEmpty)
-                        TextButton.icon(
-                          onPressed: () => context.push(AppConstants.joinClassRoute),
-                          icon: const Icon(Icons.add_link_rounded, size: 16),
-                          label: Text(l10n.dashboardJoinCodeBtn, style: const TextStyle(fontSize: 12)),
+                      // Welcome Banner Card
+                      _buildWelcomeCard(context, classProvider),
+                      if (authProvider.isRoleOutOfSync) ...[
+                        const SizedBox(height: 12),
+                        _buildSyncWarningBanner(context, authProvider),
+                      ],
+                      const SizedBox(height: 20),
+
+                      // Section: Kelas yang Dikelola (Dosen / Pengajar)
+                      if (isStaff) ...[
+                        Text(
+                          l10n.dashboardManagedClassesSection,
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
+                        const SizedBox(height: 8),
+                        if (classProvider.ownedClasses.isEmpty)
+                          _buildEmptyOwnedCard(context)
+                        else
+                          ...classProvider.ownedClasses.map((c) => _buildClassCard(context, c, isOwner: true)),
+                        const SizedBox(height: 24),
+                      ],
+
+                      // Section: Kelas yang Diikuti (Mahasiswa / Anggota)
+                      Row(
+                        children: [
+                          Text(
+                            l10n.dashboardJoinedClassesSection,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const Spacer(),
+                          if (classProvider.joinedClasses.isNotEmpty)
+                            TextButton.icon(
+                              onPressed: () => context.push(AppConstants.joinClassRoute),
+                              icon: const Icon(Icons.add_link_rounded, size: 16),
+                              label: Text(l10n.dashboardJoinCodeBtn, style: const TextStyle(fontSize: 12)),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      if (classProvider.joinedClasses.isEmpty)
+                        _buildEmptyJoinedCard(context)
+                      else
+                        ...classProvider.joinedClasses.map((c) => _buildClassCard(context, c, isOwner: false)),
+                      const SizedBox(height: 24),
+
+                      // Manual Book Card (Fitur A)
+                      _buildManualBookCard(context),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  if (classProvider.joinedClasses.isEmpty)
-                    _buildEmptyJoinedCard(context)
-                  else
-                    ...classProvider.joinedClasses.map((c) => _buildClassCard(context, c, isOwner: false)),
-                  const SizedBox(height: 24),
+                ),
+    );
+  }
 
-                  // Manual Book Card (Fitur A)
-                  _buildManualBookCard(context),
-                ],
-              ),
+  Widget _buildClassErrorView(BuildContext context, ClassProvider classProvider) {
+    final l10n = AppLocalizations.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.cloud_off_rounded,
+              size: 56,
+              color: AppTheme.error.withAlpha(180),
             ),
+            const SizedBox(height: 16),
+            Text(
+              'Gagal Memuat Kelas',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              classProvider.errorMessage ?? 'Terjadi kesalahan saat memuat daftar kelas.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () => classProvider.loadClasses(),
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text(l10n.labelRetry),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -516,6 +554,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildClassCard(BuildContext context, Classroom classroom, {required bool isOwner}) {
     final l10n = AppLocalizations.of(context);
+    final isPending = classroom.isMembershipPending;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -528,12 +568,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withAlpha(20),
+                    color: isPending
+                        ? AppTheme.warning.withAlpha(25)
+                        : AppTheme.primary.withAlpha(20),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    isOwner ? Icons.workspace_premium_rounded : Icons.school_outlined,
-                    color: AppTheme.primary,
+                    isOwner
+                        ? Icons.workspace_premium_rounded
+                        : (isPending ? Icons.pending_actions_rounded : Icons.school_outlined),
+                    color: isPending ? AppTheme.warning : AppTheme.primary,
                     size: 22,
                   ),
                 ),
@@ -558,7 +602,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
-                _buildStatusBadge(classroom.status),
+                if (isPending)
+                  _buildPendingBadge(context)
+                else
+                  _buildStatusBadge(classroom.status),
               ],
             ),
             const SizedBox(height: 12),
@@ -605,46 +652,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                       ],
-                      FutureBuilder<int>(
-                        future: _meetingRepository.getMeetingCount(classroom.id, isStaff: isOwner),
-                        builder: (context, snapshot) {
-                          final count = snapshot.data;
-                          if (count == null) return const SizedBox.shrink();
-                          return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primary.withAlpha(15),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              l10n.dashboardMeetingCount(count),
-                              style: const TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.primary,
+                      if (!isPending)
+                        FutureBuilder<int>(
+                          future: _meetingRepository.getMeetingCount(classroom.id, isStaff: isOwner),
+                          builder: (context, snapshot) {
+                            final count = snapshot.data;
+                            if (count == null) return const SizedBox.shrink();
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary.withAlpha(15),
+                                borderRadius: BorderRadius.circular(6),
                               ),
-                            ),
-                          );
-                        },
-                      ),
+                              child: Text(
+                                l10n.dashboardMeetingCount(count),
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.primary,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () {
+                    if (isPending) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Permintaan bergabung masih menunggu persetujuan pengajar kelas.'),
+                          backgroundColor: AppTheme.warning,
+                        ),
+                      );
+                      return;
+                    }
                     final classProvider = context.read<ClassProvider>();
                     classProvider.selectClass(classroom.id);
                     context.push('/classes/${classroom.id}');
                   },
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: isPending ? AppTheme.warning : null,
+                    foregroundColor: isPending ? Colors.white : null,
                     minimumSize: const Size(80, 32),
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     textStyle: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
                   ),
                   child: Text(
-                    isOwner ? l10n.dashboardManageClassBtn : l10n.dashboardOpenClassBtn,
+                    isPending
+                        ? 'Menunggu'
+                        : (isOwner ? l10n.dashboardManageClassBtn : l10n.dashboardOpenClassBtn),
                     style: const TextStyle(fontSize: 11.5),
                   ),
                 ),
@@ -652,6 +713,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPendingBadge(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppTheme.warning.withAlpha(25),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: AppTheme.warning.withAlpha(80)),
+      ),
+      child: const Text(
+        'Menunggu Persetujuan',
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.warning),
       ),
     );
   }

@@ -231,6 +231,13 @@ async function seed() {
       joined_at: FieldValue.serverTimestamp(),
     }, { merge: true });
 
+    // Sinkronkan ke enrolled_classes pengguna
+    await db.collection('users').doc(userRecord.uid).collection('enrolled_classes').doc(TEST_CLASS_ID).set({
+      class_id: TEST_CLASS_ID,
+      status: acc.membershipStatus,
+      joined_at: FieldValue.serverTimestamp(),
+    }, { merge: true });
+
     console.log(`🏫 [KELAS] ${acc.key} -> status membership: '${acc.membershipStatus}' di ${TEST_CLASS_ID}`);
   }
 

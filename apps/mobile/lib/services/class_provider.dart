@@ -18,6 +18,10 @@ class ClassProvider extends ChangeNotifier {
 
   List<Classroom> get ownedClasses => List.unmodifiable(_ownedClasses);
   List<Classroom> get joinedClasses => List.unmodifiable(_joinedClasses);
+  List<Classroom> get activeJoinedClasses =>
+      List.unmodifiable(_joinedClasses.where((c) => c.isMembershipActive));
+  List<Classroom> get pendingJoinedClasses =>
+      List.unmodifiable(_joinedClasses.where((c) => c.isMembershipPending));
   List<Classroom> get allClasses => [..._ownedClasses, ..._joinedClasses];
 
   String? get selectedClassId => _selectedClassId;
@@ -55,16 +59,17 @@ class ClassProvider extends ChangeNotifier {
         _selectedClassId = savedId;
       }
 
-      // Validasi keberadaan kelas yang tersimpan
-      final exists = allClasses.any((c) => c.id == _selectedClassId && !c.isArchived);
+      // Validasi keberadaan kelas yang tersimpan (hanya kelas aktif non-arsip dan membership aktif)
+      final exists = allClasses.any((c) => c.id == _selectedClassId && !c.isArchived && c.isMembershipActive);
       if (!exists) {
         _selectedClassId = null;
         await prefs.remove(_prefSelectedClassKey);
       }
 
-      // Smart Tab/Selector: Jika user hanya punya 1 kelas aktif, pilih otomatis
-      if (_selectedClassId == null && hasSingleClass && !allClasses.first.isArchived) {
-        _selectedClassId = allClasses.first.id;
+      // Smart Tab/Selector: Jika user hanya punya 1 kelas aktif yang dapat diakses, pilih otomatis
+      final activeList = [..._ownedClasses, ...activeJoinedClasses].where((c) => !c.isArchived).toList();
+      if (_selectedClassId == null && activeList.length == 1) {
+        _selectedClassId = activeList.first.id;
         await prefs.setString(_prefSelectedClassKey, _selectedClassId!);
       }
     } catch (e) {

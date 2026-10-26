@@ -172,6 +172,11 @@ service cloud.firestore {
         allow read: if isOwner(uid) || isAdmin();
         allow write: if isOwner(uid) || isAdmin();
       }
+
+      match /enrolled_classes/{classId} {
+        allow read: if isOwner(uid) || isStaff();
+        allow write: if false;
+      }
     }
 
     // ============================================================================

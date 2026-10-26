@@ -50,8 +50,6 @@ class SubmitAssignmentDialog extends StatefulWidget {
 
 class _SubmitAssignmentDialogState extends State<SubmitAssignmentDialog> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _urlController;
-  late final TextEditingController _nameController;
   late final TextEditingController _noteController;
   late final CloudinaryUploadService _uploadService;
 
@@ -60,14 +58,11 @@ class _SubmitAssignmentDialogState extends State<SubmitAssignmentDialog> {
   int? _selectedFileSize;
   bool _isUploading = false;
   String? _errorMessage;
-  bool _showManualUrlField = false;
 
   @override
   void initState() {
     super.initState();
     _uploadService = widget.cloudinaryUploadService ?? CloudinaryUploadService();
-    _urlController = TextEditingController(text: widget.initialFileUrl ?? '');
-    _nameController = TextEditingController(text: widget.initialFileName ?? 'tugas.pdf');
     _noteController = TextEditingController(text: widget.initialNote ?? '');
     _selectedFileName = widget.initialFileName;
     _selectedFileSize = widget.initialFileSize;
@@ -75,8 +70,6 @@ class _SubmitAssignmentDialogState extends State<SubmitAssignmentDialog> {
 
   @override
   void dispose() {
-    _urlController.dispose();
-    _nameController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -113,8 +106,6 @@ class _SubmitAssignmentDialogState extends State<SubmitAssignmentDialog> {
         _selectedFile = file;
         _selectedFileName = file.name;
         _selectedFileSize = size;
-        _urlController.clear();
-        _nameController.text = file.name;
         _errorMessage = null;
       });
     } catch (e) {
@@ -130,7 +121,6 @@ class _SubmitAssignmentDialogState extends State<SubmitAssignmentDialog> {
       _selectedFileName = null;
       _selectedFileSize = null;
       _errorMessage = null;
-      _urlController.clear();
     });
   }
 
@@ -139,10 +129,12 @@ class _SubmitAssignmentDialogState extends State<SubmitAssignmentDialog> {
     setState(() => _errorMessage = null);
 
     final hasPickedFile = _selectedFile != null;
-    final hasExistingUrl = _urlController.text.trim().isNotEmpty;
-    final hasExistingResubmitFile = widget.isResubmit && (_selectedFileName != null && _selectedFileName!.isNotEmpty) && (widget.initialFileUrl != null && widget.initialFileUrl!.isNotEmpty);
+    final hasExistingResubmitFile = widget.isResubmit &&
+        _selectedFile == null &&
+        (widget.initialFileUrl != null && widget.initialFileUrl!.isNotEmpty) &&
+        (_selectedFileName != null && _selectedFileName!.isNotEmpty);
 
-    if (!hasPickedFile && !hasExistingUrl && !hasExistingResubmitFile) {
+    if (!hasPickedFile && !hasExistingResubmitFile) {
       setState(() {
         _errorMessage = 'Silakan pilih berkas tugas terlebih dahulu.';
       });
@@ -180,19 +172,13 @@ class _SubmitAssignmentDialogState extends State<SubmitAssignmentDialog> {
           });
         }
       }
-    } else {
-      // Manual URL or unchanged file during resubmit
-      final finalUrl = hasExistingUrl ? _urlController.text.trim() : (widget.initialFileUrl ?? '');
-      final finalName = _nameController.text.trim().isNotEmpty
-          ? _nameController.text.trim()
-          : (_selectedFileName ?? widget.initialFileName ?? 'tugas.pdf');
-      final finalSize = _selectedFileSize ?? widget.initialFileSize ?? 1048576;
-
+    } else if (hasExistingResubmitFile) {
+      // Pengumpulan ulang dengan mempertahankan berkas yang sudah ada sebelumnya
       Navigator.of(context).pop(
         SubmissionFormData(
-          fileUrl: finalUrl,
-          fileName: finalName,
-          fileSize: finalSize,
+          fileUrl: widget.initialFileUrl!,
+          fileName: widget.initialFileName ?? 'tugas.pdf',
+          fileSize: widget.initialFileSize ?? 1048576,
           note: _noteController.text.trim(),
         ),
       );
@@ -311,56 +297,6 @@ class _SubmitAssignmentDialogState extends State<SubmitAssignmentDialog> {
                     maxLines: 2,
                     enabled: !_isUploading,
                   ),
-
-                  const SizedBox(height: 8),
-                  InkWell(
-                    onTap: () => setState(() => _showManualUrlField = !_showManualUrlField),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _showManualUrlField ? Icons.arrow_drop_down_rounded : Icons.arrow_right_rounded,
-                            size: 18,
-                            color: context.textSecondaryColor,
-                          ),
-                          Text(
-                            'Opsi URL manual (opsional)',
-                            style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  if (_showManualUrlField) ...[
-                    const SizedBox(height: 6),
-                    TextFormField(
-                      controller: _urlController,
-                      decoration: InputDecoration(
-                        labelText: l10n.manualBookUrlLabel,
-                        hintText: 'https://res.cloudinary.com/...',
-                        prefixIcon: const Icon(Icons.link_rounded, size: 18),
-                      ),
-                      enabled: !_isUploading,
-                      validator: (v) {
-                        if (_selectedFile == null && v != null && v.trim().isNotEmpty && !v.trim().startsWith('https://')) {
-                          return l10n.manualBookUrlInvalid;
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: l10n.assignmentFileLabel,
-                        prefixIcon: const Icon(Icons.description_outlined, size: 18),
-                      ),
-                      enabled: !_isUploading,
-                    ),
-                  ],
                 ],
               ),
             ),

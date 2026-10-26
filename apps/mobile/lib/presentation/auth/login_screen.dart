@@ -41,15 +41,34 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!success && authProvider.errorMessage != null) {
       final l10n = AppLocalizations.of(context);
-      final msg = AuthErrorLocalization.fromCode(
-        l10n,
-        authProvider.authErrorCode,
-        fallbackMessage: authProvider.errorMessage,
-      );
+      final isUnregisteredOrInvalid = authProvider.authErrorCode == 'user-not-found' ||
+          authProvider.authErrorCode == 'invalid-credential';
+
+      String msg;
+      if (authProvider.authErrorCode == 'invalid-credential') {
+        msg = 'Email belum terdaftar atau kata sandi salah.';
+      } else if (authProvider.authErrorCode == 'user-not-found') {
+        msg = l10n.authErrUserNotFound;
+      } else {
+        msg = AuthErrorLocalization.fromCode(
+          l10n,
+          authProvider.authErrorCode,
+          fallbackMessage: authProvider.errorMessage,
+        );
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(msg),
           backgroundColor: AppTheme.error,
+          duration: const Duration(seconds: 4),
+          action: isUnregisteredOrInvalid
+              ? SnackBarAction(
+                  label: 'Daftar di sini',
+                  textColor: Colors.white,
+                  onPressed: () => context.push(AppConstants.registerRoute),
+                )
+              : null,
         ),
       );
     }

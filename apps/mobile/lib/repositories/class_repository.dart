@@ -29,6 +29,7 @@ class ClassRepository {
 
   /// Mengambil daftar kelas pengguna (yang dimiliki dan yang diikuti)
   Future<Map<String, List<Classroom>>> getMyClasses() async {
+    Object? backendError;
     final token = await _getIdToken();
     if (token != null) {
       try {
@@ -50,8 +51,11 @@ class ClassRepository {
               .toList();
 
           return {'owned': ownedList, 'joined': joinedList};
+        } else {
+          backendError = StateError('Backend API error code: ${response.statusCode}');
         }
       } catch (e) {
+        backendError = e;
         debugPrint('Catatan getMyClasses backend fallback: $e');
       }
     }
@@ -60,20 +64,75 @@ class ClassRepository {
     final firestore = _firestore;
     final uid = _auth?.currentUser?.uid;
     if (firestore == null || uid == null) {
+      if (backendError != null) throw backendError;
       return {'owned': [], 'joined': []};
     }
 
     try {
+      // 1. Kelas yang dimiliki (Owned)
       final ownedSnap = await firestore
           .collection('classes')
           .where('teacher_id', isEqualTo: uid)
           .get();
 
       final owned = ownedSnap.docs.map(Classroom.fromFirestore).toList();
-      return {'owned': owned, 'joined': []};
-    } catch (e) {
-      debugPrint('Catatan Firestore getMyClasses: $e');
-      return {'owned': [], 'joined': []};
+      final ownedIds = owned.map((c) => c.id).toSet();
+
+      // 2. Kelas yang diikuti (Joined) via users/{uid}/enrolled_classes
+      final List<Classroom> joined = [];
+      try {
+        final enrolledSnap = await firestore
+            .collection('users')
+            .doc(uid)
+            .collection('enrolled_classes')
+            .get();
+
+        for (final enrolledDoc in enrolledSnap.docs) {
+          final classId = enrolledDoc.id;
+          if (ownedIds.contains(classId)) continue;
+
+          final enrolledData = enrolledDoc.data();
+          final memberStatus = (enrolledData['status'] as String? ?? 'active').toLowerCase();
+          if (memberStatus == 'removed') continue;
+
+          // Isolasi pembacaan dokumen classes/{classId} per item dengan try-catch
+          try {
+            final classDoc = await firestore.collection('classes').doc(classId).get();
+            if (classDoc.exists) {
+              final classData = classDoc.data() ?? {};
+              joined.add(Classroom.fromMap(
+                {
+                  ...classData,
+                  'membership_status': memberStatus,
+                },
+                id: classDoc.id,
+              ));
+            }
+          } catch (itemErr) {
+            // Isolasi kegagalan per-item (misal class pending belum boleh baca detail kelas penuh)
+            debugPrint('Catatan item fallback kelas $classId: $itemErr');
+            if (memberStatus == 'pending') {
+              joined.add(Classroom(
+                id: classId,
+                name: enrolledData['class_name'] as String? ?? 'Kelas Menunggu Persetujuan',
+                teacherId: '',
+                status: 'Active',
+                membershipStatus: 'pending',
+              ));
+            }
+          }
+        }
+      } catch (enrolledErr) {
+        debugPrint('Catatan baca enrolled_classes: $enrolledErr');
+      }
+
+      return {'owned': owned, 'joined': joined};
+    } catch (firestoreErr) {
+      debugPrint('Catatan Firestore getMyClasses: $firestoreErr');
+      if (backendError != null) {
+        throw StateError('Gagal memuat kelas dari server maupun database lokal: $backendError; $firestoreErr');
+      }
+      rethrow;
     }
   }
 
