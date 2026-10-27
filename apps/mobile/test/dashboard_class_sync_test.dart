@@ -9,6 +9,7 @@ import 'package:mobile/repositories/class_repository.dart';
 import 'package:mobile/services/auth_provider.dart';
 import 'package:mobile/services/class_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'session_pipeline_test.dart';
 
@@ -45,8 +46,28 @@ AuthProvider _createTestStudentAuth() {
   return AuthProvider(authService: mockAuth);
 }
 
+AuthProvider _createTestLecturerAuth() {
+  final fakeUser = FakeUser(uid: 'dosen_sync_test', email: 'dosen@farlean.edu');
+  final mockAuth = MockAuthService(
+    mockCurrentUser: fakeUser,
+    mockProfileToReturn: const AppUser(
+      uid: 'dosen_sync_test',
+      name: 'Dosen Sync Test',
+      email: 'dosen@farlean.edu',
+      accountType: AccountType.dosen,
+      role: UserRole.guru,
+      claimsRole: UserRole.guru,
+    ),
+  );
+  return AuthProvider(authService: mockAuth);
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
 
   group('Classroom Model & Membership Status Tests', () {
     test('Classroom parses membership_status and exposes isMembershipPending / isMembershipActive', () {
@@ -210,6 +231,140 @@ void main() {
 
       // Tentu saja TIDAK menyamarkan error sebagai belum bergabung
       expect(find.text('Belum tergabung ke kelas pembelajaran.'), findsNothing);
+    });
+
+    testWidgets('4. Dosen yang memiliki ownedClasses namun joinedClasses kosong TIDAK melihat seksi Kelas yang Anda Ikuti dan TIDAK melihat kartu kosong', (tester) async {
+      final auth = _createTestLecturerAuth();
+      const ownedClass1 = Classroom(
+        id: 'c_owned_1',
+        name: 'Pemrograman Visual',
+        code: 'PEMVIS25',
+        teacherId: 'dosen_sync_test',
+        status: 'Active',
+      );
+      const ownedClass2 = Classroom(
+        id: 'c_owned_2',
+        name: 'Pemrograman Web',
+        code: 'PEMEB25',
+        teacherId: 'dosen_sync_test',
+        status: 'Active',
+      );
+
+      final fakeRepo = _FakeClassRepoForSyncTest(
+        resultToReturn: {
+          'owned': [ownedClass1, ownedClass2],
+          'joined': [],
+        },
+      );
+      final classProvider = ClassProvider(classRepository: fakeRepo);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('id'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider<AuthProvider>.value(value: auth),
+              ChangeNotifierProvider<ClassProvider>.value(value: classProvider),
+            ],
+            child: const DashboardScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Kelas yang dikelola muncul
+      expect(find.text('Kelas yang Anda Kelola'), findsOneWidget);
+      expect(find.text('Pemrograman Visual'), findsOneWidget);
+      expect(find.text('Pemrograman Web'), findsOneWidget);
+
+      // Seksi Kelas yang Anda Ikuti dan kartu peringatan kosong disembunyikan
+      expect(find.text('Kelas yang Anda Ikuti'), findsNothing);
+      expect(find.text('Belum tergabung ke kelas pembelajaran.'), findsNothing);
+    });
+
+    testWidgets('5. Dosen yang memiliki ownedClasses DAN joinedClasses melihat kedua seksi kelas', (tester) async {
+      final auth = _createTestLecturerAuth();
+      const ownedClass = Classroom(
+        id: 'c_owned_1',
+        name: 'Pemrograman Visual',
+        code: 'PEMVIS25',
+        teacherId: 'dosen_sync_test',
+        status: 'Active',
+      );
+      const joinedClass = Classroom(
+        id: 'c_joined_1',
+        name: 'Metodologi Penelitian',
+        code: 'METOPEL25',
+        teacherId: 'other_dosen',
+        status: 'Active',
+        membershipStatus: 'active',
+      );
+
+      final fakeRepo = _FakeClassRepoForSyncTest(
+        resultToReturn: {
+          'owned': [ownedClass],
+          'joined': [joinedClass],
+        },
+      );
+      final classProvider = ClassProvider(classRepository: fakeRepo);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('id'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider<AuthProvider>.value(value: auth),
+              ChangeNotifierProvider<ClassProvider>.value(value: classProvider),
+            ],
+            child: const DashboardScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Kelas yang Anda Kelola'), findsOneWidget);
+      expect(find.text('Pemrograman Visual'), findsOneWidget);
+
+      expect(find.text('Kelas yang Anda Ikuti'), findsOneWidget);
+      expect(find.text('Metodologi Penelitian'), findsOneWidget);
+      expect(find.text('Belum tergabung ke kelas pembelajaran.'), findsNothing);
+    });
+
+    testWidgets('6. Pengguna yang belum memiliki maupun bergabung ke kelas melihat kartu kosong Belum tergabung', (tester) async {
+      final auth = _createTestStudentAuth();
+      final fakeRepo = _FakeClassRepoForSyncTest(
+        resultToReturn: {
+          'owned': [],
+          'joined': [],
+        },
+      );
+      final classProvider = ClassProvider(classRepository: fakeRepo);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('id'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider<AuthProvider>.value(value: auth),
+              ChangeNotifierProvider<ClassProvider>.value(value: classProvider),
+            ],
+            child: const DashboardScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Kelas yang Anda Ikuti'), findsOneWidget);
+      expect(find.text('Belum tergabung ke kelas pembelajaran.'), findsOneWidget);
     });
   });
 }

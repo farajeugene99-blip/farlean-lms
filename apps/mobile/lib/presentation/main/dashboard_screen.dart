@@ -301,27 +301,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
 
                       // Section: Kelas yang Diikuti (Mahasiswa / Anggota)
-                      Row(
-                        children: [
-                          Text(
-                            l10n.dashboardJoinedClassesSection,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const Spacer(),
-                          if (classProvider.joinedClasses.isNotEmpty)
-                            TextButton.icon(
-                              onPressed: () => context.push(AppConstants.joinClassRoute),
-                              icon: const Icon(Icons.add_link_rounded, size: 16),
-                              label: Text(l10n.dashboardJoinCodeBtn, style: const TextStyle(fontSize: 12)),
+                      // Tampil jika terdapat kelas yang diikuti ATAU pengguna belum memiliki/mengelola kelas sama sekali (empty state utama)
+                      if (classProvider.joinedClasses.isNotEmpty || classProvider.ownedClasses.isEmpty) ...[
+                        Row(
+                          children: [
+                            Text(
+                              l10n.dashboardJoinedClassesSection,
+                              style: Theme.of(context).textTheme.titleMedium,
                             ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      if (classProvider.joinedClasses.isEmpty)
-                        _buildEmptyJoinedCard(context)
-                      else
-                        ...classProvider.joinedClasses.map((c) => _buildClassCard(context, c, isOwner: false)),
-                      const SizedBox(height: 24),
+                            const Spacer(),
+                            if (classProvider.joinedClasses.isNotEmpty)
+                              TextButton.icon(
+                                onPressed: () => context.push(AppConstants.joinClassRoute),
+                                icon: const Icon(Icons.add_link_rounded, size: 16),
+                                label: Text(l10n.dashboardJoinCodeBtn, style: const TextStyle(fontSize: 12)),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        if (classProvider.joinedClasses.isEmpty)
+                          _buildEmptyJoinedCard(context)
+                        else
+                          ...classProvider.joinedClasses.map((c) => _buildClassCard(context, c, isOwner: false)),
+                        const SizedBox(height: 24),
+                      ],
 
                       // Manual Book Card (Fitur A)
                       _buildManualBookCard(context),

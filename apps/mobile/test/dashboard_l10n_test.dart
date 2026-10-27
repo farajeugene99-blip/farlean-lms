@@ -58,12 +58,22 @@ void main() {
     status: 'Active',
   );
 
+  final testJoinedClass = Classroom(
+    id: 'c_dash_joined',
+    name: 'Sistem Operasi',
+    code: 'SISOP1',
+    teacherId: 'u_other',
+    description: 'Mata kuliah sistem operasi.',
+    status: 'Active',
+    membershipStatus: 'active',
+  );
+
   Widget createDashboardHarness({
     required AuthProvider authProvider,
     ClassRepository? classRepo,
     Locale locale = const Locale('id'),
   }) {
-    final cRepo = classRepo ?? _FakeClassRepo(owned: [testClass], joined: []);
+    final cRepo = classRepo ?? _FakeClassRepo(owned: [testClass], joined: [testJoinedClass]);
     final classProvider = ClassProvider(classRepository: cRepo);
 
     return MaterialApp(
