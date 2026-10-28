@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../services/auth_provider.dart';
+import '../common/app_logo.dart';
 import '../common/google_logo.dart';
 import 'auth_error_localization.dart';
 
@@ -99,6 +100,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const Center(child: AppLogo(size: 48)),
+                const SizedBox(height: 16),
                 Text(
                   l10n.authRegisterTitle,
                   style: Theme.of(context).textTheme.headlineMedium,

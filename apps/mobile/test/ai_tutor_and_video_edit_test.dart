@@ -228,7 +228,7 @@ void main() {
       expect(mockAi.askTutorCallCount, equals(0));
 
       // Sambutan pembuka lokal dan suggestion chips tampil
-      expect(find.textContaining('Farlean AI Tutor'), findsOneWidget);
+      expect(find.textContaining('Hutao-AI'), findsWidgets);
       expect(find.text('Jelaskan konsep Polymorphism dalam OOP'), findsOneWidget);
 
       // Bebas RenderFlex overflow

@@ -5,6 +5,7 @@ import '../../core/config/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../services/auth_provider.dart';
+import '../common/app_logo.dart';
 import '../common/google_logo.dart';
 import 'auth_error_localization.dart';
 
@@ -113,19 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withAlpha(25),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.school_rounded,
-                      size: 32,
-                      color: AppTheme.primary,
-                    ),
-                  ),
+                  const AppLogo(size: 56),
                   const SizedBox(height: 16),
                   Text(
                     l10n.authLoginTitle,

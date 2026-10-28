@@ -2366,11 +2366,10 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get aiTutorTitle => 'AI Tutor Pintar';
+  String get aiTutorTitle => 'Hutao-AI';
 
   @override
-  String get aiTutorSubtitle =>
-      'Asisten belajar cerdas bimbingan konsep pembelajaran';
+  String get aiTutorSubtitle => 'Tutor Belajar Cerdas Farlean LMS';
 
   @override
   String get aiTutorHint =>
@@ -2378,7 +2377,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get aiTutorWelcome =>
-      'Halo! Saya Farlean AI Tutor. Ada konsep materi pembelajaran yang ingin kamu diskusikan hari ini?';
+      'Aiya~ Halo! Aku Hutao-AI, asisten tutor belajarmu di Farlean LMS! Konsep materi atau rumus apa yang bikin kamu penasaran hari ini? Ayo kita kupas tuntas bersama! Hehe~';
 
   @override
   String get aiTutorPromptEmpty => 'Pertanyaan tidak boleh kosong';

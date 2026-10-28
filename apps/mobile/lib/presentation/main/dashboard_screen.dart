@@ -10,6 +10,7 @@ import '../../models/classroom.dart';
 import '../../repositories/meeting_repository.dart';
 import '../../services/auth_provider.dart';
 import '../../services/class_provider.dart';
+import '../common/app_logo.dart';
 import '../common/loading_indicator.dart';
 import 'dashboard_profile_error_localization.dart';
 import 'main_shell.dart';
@@ -229,16 +230,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withAlpha(25),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.school_rounded,
-                color: AppTheme.primary,
-                size: 20,
-              ),
+              padding: const EdgeInsets.all(4),
+              child: const AppLogo(size: 26, isCompact: true),
             ),
             const SizedBox(width: 10),
             const Flexible(

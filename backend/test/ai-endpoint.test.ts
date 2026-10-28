@@ -7,6 +7,7 @@ import aiHandler, {
   getFallbackModels,
   generateWithFallback,
   ensureClosedCodeBlocks,
+  HUTAO_AI_SYSTEM_INSTRUCTION,
 } from '../api/ai';
 
 interface MockResponse {
@@ -298,6 +299,46 @@ async function runAiTests() {
     }
     if (res?.text !== 'Success without thinking config') {
       throw new Error(`Hasil tidak sesuai: ${res?.text}`);
+    }
+  });
+
+  // 14. Validasi HUTAO_AI_SYSTEM_INSTRUCTION: Identitas, Larangan LaTeX & Tanda Dolar, Guardrail Pedagogik
+  await test('14. HUTAO_AI_SYSTEM_INSTRUCTION memuat identitas Hutao-AI, larangan tanda dolar ($), dan instruksi Socratic', async () => {
+    if (!HUTAO_AI_SYSTEM_INSTRUCTION || typeof HUTAO_AI_SYSTEM_INSTRUCTION !== 'string') {
+      throw new Error('HUTAO_AI_SYSTEM_INSTRUCTION tidak ditemukan atau bukan string');
+    }
+
+    // Identitas karakter harus ada
+    if (!HUTAO_AI_SYSTEM_INSTRUCTION.includes('Hutao-AI')) {
+      throw new Error('HUTAO_AI_SYSTEM_INSTRUCTION tidak mengandung nama identitas "Hutao-AI"');
+    }
+
+    // Larangan tanda dolar harus eksplisit
+    if (!HUTAO_AI_SYSTEM_INSTRUCTION.includes('$m$') || !HUTAO_AI_SYSTEM_INSTRUCTION.toLowerCase().includes('dilarang')) {
+      throw new Error('HUTAO_AI_SYSTEM_INSTRUCTION tidak memuat aturan larangan notasi tanda dolar secara eksplisit');
+    }
+
+    // Larangan LaTeX harus ada
+    if (!HUTAO_AI_SYSTEM_INSTRUCTION.includes('LaTeX') && !HUTAO_AI_SYSTEM_INSTRUCTION.includes('latex')) {
+      throw new Error('HUTAO_AI_SYSTEM_INSTRUCTION tidak mengandung larangan LaTeX');
+    }
+
+    // Guardrail Socratic: larangan jawaban kuis langsung
+    const hasSocratic =
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('Socratic') ||
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('langkah demi langkah') ||
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('kunci jawaban');
+    if (!hasSocratic) {
+      throw new Error('HUTAO_AI_SYSTEM_INSTRUCTION tidak memuat guardrail metode Socratic / bimbingan bertahap');
+    }
+
+    // Guardrail keamanan: larangan jailbreak
+    const hasSecurity =
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('jailbreak') ||
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('Abaikan aturan') ||
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('system prompt');
+    if (!hasSecurity) {
+      throw new Error('HUTAO_AI_SYSTEM_INSTRUCTION tidak memuat guardrail keamanan / anti-jailbreak');
     }
   });
 

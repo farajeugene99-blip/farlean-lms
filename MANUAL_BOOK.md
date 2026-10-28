@@ -113,7 +113,7 @@ Bagi pengguna baru (khususnya via Google Sign-In):
 Aplikasi Farlean LMS memiliki 5 menu utama pada bilah navigasi bawah:
 1. **Beranda**: Menampilkan ringkasan kelas yang Anda ikuti atau kelola, kartu selamat datang, dan akses buku panduan.
 2. **Materi**: Menampilkan daftar pertemuan terstruktur, silabus, dan modul perkuliahan dari kelas yang sedang aktif dipilih.
-3. **AI Tutor**: Asisten belajar cerdas berbasis AI untuk bertanya seputar materi kuliah.
+3. **Hutao-AI (AI Tutor)**: Asisten belajar cerdas berbasis AI untuk bertanya seputar materi kuliah.
 4. **Diskusi**: Forum tanya jawab dan diskusi kelas bersama rekan dan pengajar.
 5. **Profil**: Informasi akun, pengaturan tema (Gelap/Terang), ganti kata sandi, dan tombol Keluar.
 

@@ -2501,17 +2501,17 @@
     }
   },
 
-  "aiTutorTitle": "AI Tutor Pintar",
-  "@aiTutorTitle": { "description": "Judul AppBar layar AI Tutor" },
+  "aiTutorTitle": "Hutao-AI",
+  "@aiTutorTitle": { "description": "Judul AppBar layar AI Tutor — identitas Hutao-AI" },
 
-  "aiTutorSubtitle": "Asisten belajar cerdas bimbingan konsep pembelajaran",
-  "@aiTutorSubtitle": { "description": "Subjudul sambutan AI Tutor" },
+  "aiTutorSubtitle": "Tutor Belajar Cerdas Farlean LMS",
+  "@aiTutorSubtitle": { "description": "Subjudul sambutan Hutao-AI" },
 
   "aiTutorHint": "Tanyakan konsep materi, rumus, atau logika pemrograman...",
   "@aiTutorHint": { "description": "Placeholder input pesan AI Tutor" },
 
-  "aiTutorWelcome": "Halo! Saya Farlean AI Tutor. Ada konsep materi pembelajaran yang ingin kamu diskusikan hari ini?",
-  "@aiTutorWelcome": { "description": "Pesan sambutan pembuka AI Tutor" },
+  "aiTutorWelcome": "Aiya~ Halo! Aku Hutao-AI, asisten tutor belajarmu di Farlean LMS! Konsep materi atau rumus apa yang bikin kamu penasaran hari ini? Ayo kita kupas tuntas bersama! Hehe~",
+  "@aiTutorWelcome": { "description": "Pesan sambutan pembuka Hutao-AI" },
 
   "aiTutorPromptEmpty": "Pertanyaan tidak boleh kosong",
   "@aiTutorPromptEmpty": { "description": "Peringatan input pertanyaan kosong" },

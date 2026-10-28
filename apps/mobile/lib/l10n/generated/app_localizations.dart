@@ -4004,16 +4004,16 @@ abstract class AppLocalizations {
   /// **'Gagal membuat PDF: {error}'**
   String materialExportPdfFailed(String error);
 
-  /// Judul AppBar layar AI Tutor
+  /// Judul AppBar layar AI Tutor — identitas Hutao-AI
   ///
   /// In id, this message translates to:
-  /// **'AI Tutor Pintar'**
+  /// **'Hutao-AI'**
   String get aiTutorTitle;
 
-  /// Subjudul sambutan AI Tutor
+  /// Subjudul sambutan Hutao-AI
   ///
   /// In id, this message translates to:
-  /// **'Asisten belajar cerdas bimbingan konsep pembelajaran'**
+  /// **'Tutor Belajar Cerdas Farlean LMS'**
   String get aiTutorSubtitle;
 
   /// Placeholder input pesan AI Tutor
@@ -4022,10 +4022,10 @@ abstract class AppLocalizations {
   /// **'Tanyakan konsep materi, rumus, atau logika pemrograman...'**
   String get aiTutorHint;
 
-  /// Pesan sambutan pembuka AI Tutor
+  /// Pesan sambutan pembuka Hutao-AI
   ///
   /// In id, this message translates to:
-  /// **'Halo! Saya Farlean AI Tutor. Ada konsep materi pembelajaran yang ingin kamu diskusikan hari ini?'**
+  /// **'Aiya~ Halo! Aku Hutao-AI, asisten tutor belajarmu di Farlean LMS! Konsep materi atau rumus apa yang bikin kamu penasaran hari ini? Ayo kita kupas tuntas bersama! Hehe~'**
   String get aiTutorWelcome;
 
   /// Peringatan input pertanyaan kosong

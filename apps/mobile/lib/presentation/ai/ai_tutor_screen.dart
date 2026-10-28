@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../services/ai_service.dart';
+import '../common/hutao_avatar.dart';
 
 class _ChatMessage {
   final String text;
@@ -164,14 +165,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withAlpha(25),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.auto_awesome_rounded, color: AppTheme.primary, size: 20),
-            ),
+            const HutaoAvatar(size: 30),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -364,15 +358,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            CircleAvatar(
-              radius: 14,
-              backgroundColor: isWarning ? AppTheme.warning.withAlpha(30) : AppTheme.primary.withAlpha(25),
-              child: Icon(
-                isWarning ? Icons.warning_amber_rounded : Icons.auto_awesome_rounded,
-                size: 16,
-                color: isWarning ? AppTheme.warning : AppTheme.primary,
-              ),
-            ),
+            HutaoAvatar(size: 28, isWarning: isWarning),
             const SizedBox(width: 8),
           ],
           Flexible(
@@ -439,11 +425,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: AppTheme.primary.withAlpha(25),
-            child: const Icon(Icons.auto_awesome_rounded, size: 16, color: AppTheme.primary),
-          ),
+          const HutaoAvatar(size: 28),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
