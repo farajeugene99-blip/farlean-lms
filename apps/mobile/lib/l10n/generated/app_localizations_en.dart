@@ -2381,7 +2381,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiTutorWelcome =>
-      'Aiya~ Hello! I\'m Hutao-AI, your study tutor in Farlean LMS! Which learning concept or formula is puzzling you today? Let\'s unravel it together! Hehe~';
+      'Aiya~! Welcome to Farlean LMS! I\'m Hutao-AI, your study friend ready to accompany your learning adventure. Hehe~ Want to discuss programming, math, or try some brain-teasing problems today?';
 
   @override
   String get aiTutorPromptEmpty => 'Question cannot be empty';

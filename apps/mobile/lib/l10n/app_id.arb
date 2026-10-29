@@ -2510,7 +2510,7 @@
   "aiTutorHint": "Tanyakan konsep materi, rumus, atau logika pemrograman...",
   "@aiTutorHint": { "description": "Placeholder input pesan AI Tutor" },
 
-  "aiTutorWelcome": "Aiya~ Halo! Aku Hutao-AI, asisten tutor belajarmu di Farlean LMS! Konsep materi atau rumus apa yang bikin kamu penasaran hari ini? Ayo kita kupas tuntas bersama! Hehe~",
+  "aiTutorWelcome": "Aiya~! Selamat datang di Farlean LMS! Aku Hutao-AI, teman belajarmu yang siap menemani petualangan memahami materi. Hehe~ Mau membahas pemrograman, matematika, atau mencoba soal yang bikin otak sedikit berasap hari ini?",
   "@aiTutorWelcome": { "description": "Pesan sambutan pembuka Hutao-AI" },
 
   "aiTutorPromptEmpty": "Pertanyaan tidak boleh kosong",

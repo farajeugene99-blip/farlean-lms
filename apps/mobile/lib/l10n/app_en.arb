@@ -711,7 +711,7 @@
   "aiTutorTitle": "Hutao-AI",
   "aiTutorSubtitle": "Farlean LMS Smart Study Tutor",
   "aiTutorHint": "Ask about material concepts, formulas, or programming logic...",
-  "aiTutorWelcome": "Aiya~ Hello! I'm Hutao-AI, your study tutor in Farlean LMS! Which learning concept or formula is puzzling you today? Let's unravel it together! Hehe~",
+  "aiTutorWelcome": "Aiya~! Welcome to Farlean LMS! I'm Hutao-AI, your study friend ready to accompany your learning adventure. Hehe~ Want to discuss programming, math, or try some brain-teasing problems today?",
   "aiTutorPromptEmpty": "Question cannot be empty",
   "aiTutorExamLocked": "AI Tutor feature is temporarily disabled while you are taking a quiz/exam session.",
   "aiVideoDraftBtn": "Draft with AI",

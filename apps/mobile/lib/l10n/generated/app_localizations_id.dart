@@ -2377,7 +2377,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get aiTutorWelcome =>
-      'Aiya~ Halo! Aku Hutao-AI, asisten tutor belajarmu di Farlean LMS! Konsep materi atau rumus apa yang bikin kamu penasaran hari ini? Ayo kita kupas tuntas bersama! Hehe~';
+      'Aiya~! Selamat datang di Farlean LMS! Aku Hutao-AI, teman belajarmu yang siap menemani petualangan memahami materi. Hehe~ Mau membahas pemrograman, matematika, atau mencoba soal yang bikin otak sedikit berasap hari ini?';
 
   @override
   String get aiTutorPromptEmpty => 'Pertanyaan tidak boleh kosong';

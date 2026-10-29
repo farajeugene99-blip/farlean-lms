@@ -342,6 +342,61 @@ async function runAiTests() {
     }
   });
 
+  // 15. Validasi larangan identitas lama "Farlean AI Tutor" dan pemisahan nama produk
+  await test('15. HUTAO_AI_SYSTEM_INSTRUCTION melarang identitas "Farlean AI Tutor" dan memisahkan nama AI dari nama produk', async () => {
+    // Instruksi WAJIB mengandung larangan menyebut diri sebagai "Farlean AI Tutor"
+    const forbidsFarleanAiTutor =
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('Farlean AI Tutor') ||
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('DILARANG KERAS menyebut diri') ||
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('LARANGAN MUTLAK');
+    if (!forbidsFarleanAiTutor) {
+      throw new Error('HUTAO_AI_SYSTEM_INSTRUCTION tidak memuat larangan identitas "Farlean AI Tutor" secara eksplisit');
+    }
+
+    // Instruksi WAJIB memisahkan nama AI (Hutao-AI) dari nama produk (Farlean LMS)
+    const separatesProductName =
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('Farlean LMS') &&
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('Hutao-AI');
+    if (!separatesProductName) {
+      throw new Error('HUTAO_AI_SYSTEM_INSTRUCTION tidak memuat pemisahan nama AI "Hutao-AI" dan nama produk "Farlean LMS"');
+    }
+  });
+
+  // 16. Validasi pedoman anti-redundansi sapaan (stateless single-turn awareness)
+  await test('16. HUTAO_AI_SYSTEM_INSTRUCTION memuat pedoman sapaan anti-redundan untuk endpoint stateless', async () => {
+    // Instruksi harus membedakan kondisi sapaan murni vs pertanyaan materi
+    const hasGreetingGuidance =
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('sapaan') ||
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('menanyakan identitas') ||
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('JIKA pengguna');
+    if (!hasGreetingGuidance) {
+      throw new Error('HUTAO_AI_SYSTEM_INSTRUCTION tidak memuat pedoman diferensiasi jenis pesan (sapaan vs pertanyaan materi)');
+    }
+
+    // Instruksi harus melarang perkenalan ulang saat pengguna langsung bertanya materi
+    const hasNoRedundantIntro =
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('DILARANG mengulang') ||
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('jangan mengulang') ||
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('JANGAN memperkenalkan diri lagi') ||
+      HUTAO_AI_SYSTEM_INSTRUCTION.toLowerCase().includes('dilarang mengulang kalimat perkenalan');
+    if (!hasNoRedundantIntro) {
+      throw new Error('HUTAO_AI_SYSTEM_INSTRUCTION tidak memuat aturan larangan pengulangan perkenalan diri pada pertanyaan materi');
+    }
+  });
+
+  // 17. Validasi pedoman mode formal atas permintaan pengguna
+  await test('17. HUTAO_AI_SYSTEM_INSTRUCTION memuat pedoman beralih ke mode formal saat diminta pengguna', async () => {
+    const hasFormalMode =
+      HUTAO_AI_SYSTEM_INSTRUCTION.includes('formal') &&
+      (HUTAO_AI_SYSTEM_INSTRUCTION.includes('tanpa humor') ||
+       HUTAO_AI_SYSTEM_INSTRUCTION.includes('tanpa interjeksi') ||
+       HUTAO_AI_SYSTEM_INSTRUCTION.includes('tanpa bercanda') ||
+       HUTAO_AI_SYSTEM_INSTRUCTION.includes('mode formal'));
+    if (!hasFormalMode) {
+      throw new Error('HUTAO_AI_SYSTEM_INSTRUCTION tidak memuat pedoman beralih ke mode formal saat pengguna memintanya');
+    }
+  });
+
   console.log('\n========================================');
   console.log(`AI ENDPOINT TEST SUMMARY: ${passed} PASSED, ${failed} FAILED`);
   console.log('========================================\n');

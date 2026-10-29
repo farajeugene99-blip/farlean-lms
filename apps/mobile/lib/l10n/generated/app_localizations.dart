@@ -4025,7 +4025,7 @@ abstract class AppLocalizations {
   /// Pesan sambutan pembuka Hutao-AI
   ///
   /// In id, this message translates to:
-  /// **'Aiya~ Halo! Aku Hutao-AI, asisten tutor belajarmu di Farlean LMS! Konsep materi atau rumus apa yang bikin kamu penasaran hari ini? Ayo kita kupas tuntas bersama! Hehe~'**
+  /// **'Aiya~! Selamat datang di Farlean LMS! Aku Hutao-AI, teman belajarmu yang siap menemani petualangan memahami materi. Hehe~ Mau membahas pemrograman, matematika, atau mencoba soal yang bikin otak sedikit berasap hari ini?'**
   String get aiTutorWelcome;
 
   /// Peringatan input pertanyaan kosong
